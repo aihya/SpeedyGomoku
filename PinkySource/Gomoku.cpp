@@ -51,13 +51,9 @@ void Gomoku::print_board()
 
     for (size_t y = 0; y < board->board_width; y++)
     {
-        for (size_t x = 0; x < board->board_width * 2; x += 2)
+        for (size_t x = 0; x < board->board_width; x++)
         {
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-            int piece = (board->board_buffer[y] >> x) & 0b11;
-#else
-            int piece = (board->board_buffer[y] << x) & 0b11;;
-#endif
+            t_piece piece = this->get_piece(board, (t_coord){x, y});
             if (piece == Gomoku::BLACK)
                 std::cout << "X ";
             else if (piece == Gomoku::WHITE)
