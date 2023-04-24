@@ -72,5 +72,6 @@ class Gomoku
         t_board     *minimize(t_board *board, t_piece piece, size_t depth, size_t beta);
         uint64_t    evaluate_move(t_board *board, t_coord piece_coord, t_piece piece);
         uint64_t    evaluate_dir(t_board *board, t_coord piece_coord, t_piece piece, t_coord direction);
+        uint64_t    evaluate_board(t_board *board, t_piece piece);
 
 };
