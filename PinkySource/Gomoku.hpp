@@ -1,7 +1,8 @@
 #pragma once
 
 #include <iostream>
-
+#include <limits>
+#include <map>
 /**
  * @brief Game class
  * This game is a simple implementation of the gomoku game using minimax algorithm.
@@ -32,21 +33,23 @@ class Gomoku
 
         typedef struct      s_coord
         {
-            size_t          x;
-            size_t          y;
+            short           x;
+            short           y;
         }                   t_coord;
 
     private:
         typedef struct      s_board
         {
             uint64_t        *board_buffer;
-            size_t          byte_board_size;
-            size_t          board_width;
+            short           board_width;
             struct s_board  *next;
             struct s_board  *prev;
         }                   t_board;
 
     private:
+        const static std::map< Gomoku::e_piece, std::vector<std::pair<uint16_t, uint16_t>> > _win_patterns;
+        const static std::vector<t_coord> _directions;
+    public:
         t_board         *_move_history;
         t_piece         _ai_color;
         t_difficulty    _difficulty;
@@ -59,10 +62,15 @@ class Gomoku
         void    print_board();
 
     public:
-        size_t  byte_board_size(size_t board_size);
-        t_board *update_board(t_board *board, t_coord piece_coord, t_piece piece);
-        t_board *new_board(size_t board_size);
-        t_board *copy_board(t_board *board);
-        t_piece get_piece(t_board *board, t_coord piece_coord);
-        void    push_move(t_board *board);
+        t_board     *update_board(t_board *board, t_coord piece_coord, t_piece piece);
+        t_board     *new_board(size_t board_size);
+        t_board     *copy_board(t_board *board);
+        t_piece     get_piece(t_board *board, t_coord piece_coord);
+        void        push_move(t_board *board);
+        t_board     *minimax(t_board *board, t_piece piece, size_t depth);
+        t_board     *maximize(t_board *board, t_piece piece, size_t depth, size_t aplha);
+        t_board     *minimize(t_board *board, t_piece piece, size_t depth, size_t beta);
+        uint64_t    evaluate_move(t_board *board, t_coord piece_coord, t_piece piece);
+        uint64_t    evaluate_dir(t_board *board, t_coord piece_coord, t_piece piece, t_coord direction);
+
 };
