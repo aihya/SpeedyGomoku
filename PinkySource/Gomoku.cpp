@@ -1,6 +1,6 @@
 #include "Gomoku.hpp"
 
-const std::map< Gomoku::e_piece, std::vector<std::pair<uint16_t, uint16_t>> > Gomoku::_win_patterns = {
+const Gomoku::t_patterns Gomoku::_attack_patterns = {
     {
         Gomoku::BLACK, {
             { 0b0101010101, INTMAX_MAX },
@@ -41,6 +41,36 @@ const std::map< Gomoku::e_piece, std::vector<std::pair<uint16_t, uint16_t>> > Go
             { 0b1000000000, 1 },
         },
     }
+};
+
+const Gomoku::t_patterns Gomoku::_defense_patterns = 
+{
+    {
+        Gomoku::BLACK, {
+            { 0b0110101010, INTMAX_MAX },
+            { 0b1001101010, INTMAX_MAX },
+            { 0b1010011010, INTMAX_MAX },
+            { 0b1010100110, INTMAX_MAX },
+            { 0b1010101001, INTMAX_MAX },
+            /**
+             * @brief TODO: Add more patterns
+             * The logic here is to catch any patterns that can be used to attack
+             */
+        },
+    }
+    {
+        Gomoku::WHITE, {
+            { 0b1001010101, INTMAX_MAX },
+            { 0b0110010101, INTMAX_MAX },
+            { 0b0101100101, INTMAX_MAX },
+            { 0b0101011001, INTMAX_MAX },
+            { 0b0101010110, INTMAX_MAX },
+            /**
+             * @brief TODO: Add more patterns
+             * The logic here is to catch any patterns that can be used to attack
+             */
+        }
+    },
 };
 
 const std::vector<Gomoku::t_coord> Gomoku::_directions = {
@@ -177,9 +207,8 @@ uint64_t Gomoku::evaluate_dir(t_board *board, t_coord piece_coord, t_piece piece
                 break;
             current_pattern <<= 2;
             current_pattern |= this->get_piece(board, current_position);
-            for (auto& x: _win_patterns.at(piece))
-                if (current_pattern == x.first && x.second > score)
-                    score = x.second;
+            if (_attack_patterns.at(piece).contains(current_pattern))
+                score = _attack_patterns.at(piece).at(current_pattern);
             current_position.y += direction.y;
         } while(direction.y && std::abs(piece_coord.y - current_position.y) < 5);
         current_position.x += direction.x;
@@ -200,7 +229,7 @@ uint64_t Gomoku::evaluate_move(t_board *board, t_coord piece_coord, t_piece piec
 uint64_t Gomoku::evaluate_board(t_board *board, t_piece piece)
 {
     uint64_t score = 0;
-    for (int i = 0;  i < 200; i ++)
+    for (int i = 0;  i < 20; i ++)
     {
         for (short y = 0; y < board->board_width; y++)
             for (short x = 0; x < board->board_width; x++)

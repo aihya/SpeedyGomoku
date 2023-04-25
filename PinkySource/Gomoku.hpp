@@ -47,8 +47,10 @@ class Gomoku
         }                   t_board;
 
     private:
-        const static std::map< Gomoku::e_piece, std::vector<std::pair<uint16_t, uint16_t>> > _win_patterns;
-        const static std::vector<t_coord> _directions;
+        typedef std::map< Gomoku::e_piece, std::map<uint16_t, uint16_t> > t_patterns;
+        const static std::vector<t_coord>   _directions;
+        const static t_patterns             _attack_patterns;
+        const static t_patterns             _defense_patterns;
     public:
         t_board         *_move_history;
         t_piece         _ai_color;
