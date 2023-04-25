@@ -57,7 +57,7 @@ const Gomoku::t_patterns Gomoku::_defense_patterns =
              * The logic here is to catch any patterns that can be used to attack
              */
         },
-    }
+    },
     {
         Gomoku::WHITE, {
             { 0b1001010101, INTMAX_MAX },
