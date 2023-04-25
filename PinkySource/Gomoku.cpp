@@ -91,7 +91,7 @@ Gomoku::t_board *Gomoku::new_board(size_t board_size)
 
     board = new t_board;
     board->board_buffer = new uint64_t[board_size];
-    board->board_width = board_size;
+    board->board_size = board_size;
     board->next = NULL;
     board->prev = NULL;
     return (board);
@@ -101,9 +101,9 @@ Gomoku::t_board *Gomoku::copy_board(t_board *board)
 {
     t_board *board_copy;
 
-    board_copy = new_board(board->board_width);
+    board_copy = new_board(board->board_size);
     memcpy(board_copy->board_buffer, board->board_buffer,
-            board->board_width * sizeof(uint64_t));
+            board->board_size * sizeof(uint64_t));
     return (board_copy);
 }
 
@@ -133,9 +133,9 @@ void Gomoku::print_board()
 {
     t_board *board = this->_move_history;
 
-    for (short y = 0; y < board->board_width; y++)
+    for (short y = 0; y < board->board_size; y++)
     {
-        for (short x = 0; x < board->board_width; x++)
+        for (short x = 0; x < board->board_size; x++)
         {
             t_piece piece = this->get_piece(board, (t_coord){x, y});
             if (piece == Gomoku::BLACK)
@@ -149,13 +149,14 @@ void Gomoku::print_board()
     }
 }
 
-Gomoku::Gomoku(size_t board_size, t_piece ai_color, t_difficulty difficulty):
-    _move_history(NULL), _ai_color(ai_color), _difficulty(difficulty), _turn(0)
+Gomoku::Gomoku(uint8_t board_size, t_piece player_color, t_difficulty difficulty):
+    _move_history(NULL), _player_color(player_color), _difficulty(difficulty), _turn(0)
 {
 
     if (board_size < 5 || board_size > 19)
         throw std::invalid_argument("Board size must be between 5 and 19");
    this->push_move(this->new_board(board_size));
+   this->_ai_color = (this->_player_color == Gomoku::BLACK) ? Gomoku::WHITE : Gomoku::BLACK;
 }
 
 Gomoku::~Gomoku()
@@ -192,29 +193,32 @@ uint64_t Gomoku::evaluate_dir(t_board *board, t_coord piece_coord, t_piece piece
     uint64_t    score;
     uint16_t    current_pattern;
     t_coord     current_position;
+    const std::map<uint16_t, uint16_t> &attack_patterns = Gomoku::_attack_patterns.at(piece);
+    const std::map<uint16_t, uint16_t> &defense_patterns = Gomoku::_defense_patterns.at(piece);
 
     score = 0;
     current_pattern = 0;
     current_position = piece_coord;
     do
     {
-        if (current_position.x < 0 || current_position.x >= board->board_width)
+        if (current_position.x < 0 || current_position.x >= board->board_size)
             break;
         current_position.y = piece_coord.y;
         do
         {
-            if (current_position.y < 0 || current_position.y >= board->board_width)
+            if (current_position.y < 0 || current_position.y >= board->board_size)
                 break;
             current_pattern <<= 2;
             current_pattern |= this->get_piece(board, current_position);
-            if (_attack_patterns.at(piece).contains(current_pattern))
-                score = _attack_patterns.at(piece).at(current_pattern);
+            if (attack_patterns.contains(current_pattern))
+                score += attack_patterns.at(current_pattern);
             current_position.y += direction.y;
         } while(direction.y && std::abs(piece_coord.y - current_position.y) < 5);
         current_position.x += direction.x;
     } while(direction.x && std::abs(piece_coord.x - current_position.x) < 5);
     return (score);
 }
+
 
 uint64_t Gomoku::evaluate_move(t_board *board, t_coord piece_coord, t_piece piece)
 {
@@ -226,13 +230,14 @@ uint64_t Gomoku::evaluate_move(t_board *board, t_coord piece_coord, t_piece piec
 }
 
 
-uint64_t Gomoku::evaluate_board(t_board *board, t_piece piece)
+uint64_t Gomoku::test_evaluate_board(t_piece piece)
 {
     uint64_t score = 0;
-    for (int i = 0;  i < 20; i ++)
+    t_board *board = this->_move_history;
+    for (int i = 0;  i < 9320; i ++)
     {
-        for (short y = 0; y < board->board_width; y++)
-            for (short x = 0; x < board->board_width; x++)
+        for (short y = 0; y < board->board_size; y++)
+            for (short x = 0; x < board->board_size; x++)
                 score += this->evaluate_move(board, (t_coord){x, y}, piece);
     }
     return (score);
@@ -257,7 +262,7 @@ int main()
     // std::cout << game.evaluate_move(game._move_history, (Gomoku::t_coord){17, 18},  Gomoku::WHITE) << std::endl;
     // game.print_board();
     // std::cout << "-----------------------" << std::endl;
-    game.evaluate_board(game._move_history, Gomoku::WHITE);
+    game.test_evaluate_board(Gomoku::WHITE);
 
     return (0);
 }

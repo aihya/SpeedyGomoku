@@ -41,7 +41,7 @@ class Gomoku
         typedef struct      s_board
         {
             uint64_t        *board_buffer;
-            short           board_width;
+            uint8_t         board_size;
             struct s_board  *next;
             struct s_board  *prev;
         }                   t_board;
@@ -51,19 +51,22 @@ class Gomoku
         const static std::vector<t_coord>   _directions;
         const static t_patterns             _attack_patterns;
         const static t_patterns             _defense_patterns;
-    public:
+    
+    private:
         t_board         *_move_history;
         t_piece         _ai_color;
+        t_piece         _player_color;
         t_difficulty    _difficulty;
         size_t          _turn;
 
     public:
-                Gomoku(size_t board_size, t_piece ai_color, t_difficulty difficulty);
+                Gomoku(uint8_t board_size, t_piece player_color, t_difficulty difficulty);
                 ~Gomoku();
         void    register_move(t_coord piece_coord, t_piece piece);
-        void    print_board();
+        void        print_board();
+        uint64_t    test_evaluate_board(t_piece piece);
 
-    public:
+    private:
         t_board     *update_board(t_board *board, t_coord piece_coord, t_piece piece);
         t_board     *new_board(size_t board_size);
         t_board     *copy_board(t_board *board);
@@ -74,6 +77,5 @@ class Gomoku
         t_board     *minimize(t_board *board, t_piece piece, size_t depth, size_t beta);
         uint64_t    evaluate_move(t_board *board, t_coord piece_coord, t_piece piece);
         uint64_t    evaluate_dir(t_board *board, t_coord piece_coord, t_piece piece, t_coord direction);
-        uint64_t    evaluate_board(t_board *board, t_piece piece);
 
 };
