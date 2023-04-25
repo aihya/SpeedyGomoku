@@ -63,8 +63,6 @@ class Gomoku
 
     private:
         t_piece     get_piece(uint64_t *board, t_coord piece_coord);
-        void        push_move(uint64_t *board);
-        uint64_t    *new_board(size_t board_size);
         uint64_t    *copy_board(uint64_t *board);
         uint64_t    *update_board(uint64_t *board, t_coord piece_coord, t_piece piece);
         uint64_t    evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);

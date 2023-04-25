@@ -216,6 +216,7 @@ uint64_t Gomoku::test_evaluate_board(t_piece piece)
 {
     uint64_t score = 0;
     uint64_t *board = this->_move_history.front();
+
     for (int i = 0;  i < 9320; i ++)
     {
         for (short y = 0; y < this->_board_size; y++)
