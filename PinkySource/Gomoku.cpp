@@ -171,19 +171,17 @@ void    Gomoku::register_move(t_coord piece_coord, t_piece piece)
 
 uint64_t Gomoku::evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction)
 {
-    uint32_t    score;
-    uint16_t    current_pattern;
-    t_coord     current_position;
-    t_coord     pattern_position;
-    const std::map<uint16_t, uint32_t> &attack_patterns = Gomoku::_attack_patterns.at(piece);
-    const std::map<uint16_t, uint32_t> &defense_patterns = Gomoku::_defense_patterns.at(piece);
+    uint32_t                            score;
+    uint16_t                            current_pattern;
+    t_coord                             pattern_position;
+    const std::map<uint16_t, uint32_t>  &attack_patterns  = Gomoku::_attack_patterns.at(piece);
+    const std::map<uint16_t, uint32_t>  &defense_patterns = Gomoku::_defense_patterns.at(piece);
 
     score = 0;
-    current_position = piece_coord;
     for (int i = 0; i < 5; i++)
     {
         current_pattern = 0;
-        pattern_position = current_position;
+        pattern_position = piece_coord;
         for (int j = 0; j < 5; j++)
         {
             current_pattern <<= 2;
@@ -197,8 +195,8 @@ uint64_t Gomoku::evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piec
             score = std::max(attack_patterns.at(current_pattern), score);
         else
             break;
-        current_position.y -= direction.y;
-        current_position.x -= direction.x;
+        piece_coord.y -= direction.y;
+        piece_coord.x -= direction.x;
     }
     return (score);
 }
@@ -230,25 +228,25 @@ uint64_t Gomoku::test_evaluate_board(t_piece piece)
 int main()
 {
     Gomoku game(19, Gomoku::BLACK, Gomoku::EASY);
-    game.register_move((Gomoku::t_coord){18, 18}, Gomoku::WHITE);
+    // game.register_move((Gomoku::t_coord){18, 18}, Gomoku::WHITE);
+    // // std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){18, 18},  Gomoku::WHITE) << std::endl;
+    // // game.print_board();
+    // // std::cout << "-----------------------" << std::endl;
+    // game.register_move((Gomoku::t_coord){18, 17}, Gomoku::WHITE);
+    // // std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){16, 18},  Gomoku::WHITE) << std::endl;
+    // // game.print_board();
+    // // std::cout << "-----------------------" << std::endl;
+    // game.register_move((Gomoku::t_coord){18, 16}, Gomoku::WHITE);
+    // // std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){18, 17},  Gomoku::WHITE) << std::endl;
+    // // game.print_board();
+    // // std::cout << "-----------------------" << std::endl;
+    // game.register_move((Gomoku::t_coord){18, 15}, Gomoku::WHITE);
+    // // std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){17, 18},  Gomoku::WHITE) << std::endl;
+    // // game.print_board();
+    // std::cout << "-----------------------" << std::endl;
+    // // game.register_move((Gomoku::t_coord){18, 14}, Gomoku::WHITE);
     // std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){18, 18},  Gomoku::WHITE) << std::endl;
     // game.print_board();
-    // std::cout << "-----------------------" << std::endl;
-    game.register_move((Gomoku::t_coord){18, 17}, Gomoku::WHITE);
-    // std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){16, 18},  Gomoku::WHITE) << std::endl;
-    // game.print_board();
-    // std::cout << "-----------------------" << std::endl;
-    game.register_move((Gomoku::t_coord){18, 16}, Gomoku::WHITE);
-    // std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){18, 17},  Gomoku::WHITE) << std::endl;
-    // game.print_board();
-    // std::cout << "-----------------------" << std::endl;
-    game.register_move((Gomoku::t_coord){18, 15}, Gomoku::WHITE);
-    // std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){17, 18},  Gomoku::WHITE) << std::endl;
-    // game.print_board();
-    std::cout << "-----------------------" << std::endl;
-    // game.register_move((Gomoku::t_coord){18, 14}, Gomoku::WHITE);
-    std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){18, 18},  Gomoku::WHITE) << std::endl;
-    game.print_board();
     game.test_evaluate_board(Gomoku::WHITE);
 
     return (0);
