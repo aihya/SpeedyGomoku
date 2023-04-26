@@ -139,6 +139,8 @@ Gomoku::Gomoku(uint8_t board_size, t_piece player_color, t_difficulty difficulty
 
     if (board_size < 5 || board_size > 19)
         throw std::invalid_argument("Board size must be between 5 and 19");
+    if (player_color != Gomoku::BLACK && player_color != Gomoku::WHITE)
+        throw std::invalid_argument("Player color must be BLACK or WHITE");
    this->_move_history.push_front(new uint64_t[board_size]());
    this->_ai_color = (this->_player_color == Gomoku::BLACK) ? Gomoku::WHITE : Gomoku::BLACK;
 }
@@ -213,8 +215,8 @@ uint64_t Gomoku::evaluate_move(uint64_t *board, t_coord piece_coord, t_piece pie
 
 uint64_t Gomoku::test_evaluate_board(t_piece piece)
 {
-    uint64_t score = 0;
-    uint64_t *board = this->_move_history.front();
+    uint64_t    score  = 0;
+    uint64_t    *board = this->_move_history.front();
 
     for (int i = 0;  i < 9320; i ++)
     {
