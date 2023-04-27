@@ -45,19 +45,22 @@ class Gomoku
                 return  (f_coord.x == s_coord.x) ? f_coord.y < s_coord.y : f_coord.x < s_coord.x;
             }
         };
+
     private:
-        typedef std::map< Gomoku::e_piece, std::map<uint16_t, uint32_t> > t_patterns;
+        typedef std::map< Gomoku::e_piece, std::map<uint16_t, uint32_t> >   t_patterns;
+        typedef std::set<t_coord, coordComparator>                          t_moveset;
         const static std::vector<t_coord>   _directions;
         const static t_patterns             _attack_patterns;
         const static t_patterns             _defense_patterns;
-    public:
         uint8_t                             _board_size;
-        std::list<uint64_t*>                _move_history;
-        std::set<t_coord, coordComparator>  _possible_moves;
+        t_moveset                           _possible_moves;
         t_piece                             _ai_color;
         t_piece                             _player_color;
         t_difficulty                        _difficulty;
         size_t                              _turn;
+    public:
+
+        std::list<uint64_t*>                _move_history;
 
     public:
                     Gomoku(uint8_t board_size, t_piece player_color, t_difficulty difficulty);
@@ -69,6 +72,7 @@ class Gomoku
 
     private:
         t_piece     get_piece(uint64_t *board, t_coord piece_coord);
+        void        update_possible_moves(t_moveset &possible_moves, t_coord piece_coord);
         uint64_t    *copy_board(uint64_t *board);
         uint64_t    *update_board(uint64_t *board, t_coord piece_coord, t_piece piece);
         uint64_t    evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);

@@ -168,15 +168,13 @@ Gomoku::t_piece Gomoku::get_piece(uint64_t *board, t_coord piece_coord)
     return (t_piece(piece));
 }
 
-void    Gomoku::register_move(t_coord piece_coord, t_piece piece)
+void Gomoku::update_possible_moves(t_moveset &possible_moves, t_coord piece_coord)
 {
     t_coord new_move;
 
-    this->_move_history.push_front(this->update_board(this->_move_history.front(), piece_coord, piece));
-    this->_possible_moves.erase(piece_coord);
-    for (auto direction : Gomoku::_directions)
+    for (auto& direction : Gomoku::_directions)
     {
-        for (auto factor: {-1, 1})
+        for (auto& factor: {-1, 1})
         {
             new_move.x = piece_coord.x + factor * direction.x;
             new_move.y = piece_coord.y + factor * direction.y;
@@ -184,6 +182,13 @@ void    Gomoku::register_move(t_coord piece_coord, t_piece piece)
                 this->_possible_moves.insert(new_move);
         }
     }
+}
+
+void    Gomoku::register_move(t_coord piece_coord, t_piece piece)
+{
+    this->_move_history.push_front(this->update_board(this->_move_history.front(), piece_coord, piece));
+    this->_possible_moves.erase(piece_coord);
+    this->update_possible_moves(this->_possible_moves, piece_coord);
     this->_turn++;
 }
 
