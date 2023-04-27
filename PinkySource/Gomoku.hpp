@@ -4,6 +4,7 @@
 #include <limits>
 #include <map>
 #include <list>
+#include <set>
 #include <algorithm>
 /**
  * @brief Game class
@@ -39,20 +40,24 @@ class Gomoku
             short           x;
             short           y;
         }                   t_coord;
-
+        struct coordComparator {
+            inline bool operator()(const t_coord& f_coord, const t_coord& s_coord) const {
+                return  (f_coord.x == s_coord.x) ? f_coord.y < s_coord.y : f_coord.x < s_coord.x;
+            }
+        };
     private:
         typedef std::map< Gomoku::e_piece, std::map<uint16_t, uint32_t> > t_patterns;
         const static std::vector<t_coord>   _directions;
         const static t_patterns             _attack_patterns;
         const static t_patterns             _defense_patterns;
-    
     public:
-        uint8_t                 _board_size;
-        std::list<uint64_t*>    _move_history;
-        t_piece                 _ai_color;
-        t_piece                 _player_color;
-        t_difficulty            _difficulty;
-        size_t                  _turn;
+        uint8_t                             _board_size;
+        std::list<uint64_t*>                _move_history;
+        std::set<t_coord, coordComparator>  _possible_moves;
+        t_piece                             _ai_color;
+        t_piece                             _player_color;
+        t_difficulty                        _difficulty;
+        size_t                              _turn;
 
     public:
                     Gomoku(uint8_t board_size, t_piece player_color, t_difficulty difficulty);

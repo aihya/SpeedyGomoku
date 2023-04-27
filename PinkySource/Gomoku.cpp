@@ -122,7 +122,10 @@ void Gomoku::print_board()
                     std::cout << "O ";
                     break;
                 case Gomoku::EMPTY:
-                    std::cout << ". ";
+                    if (this->_possible_moves.count((t_coord){x, y}))
+                        std::cout << "\033[1;31m. \033[0m";
+                    else
+                        std::cout << ". ";
                     break;
                 default:
                     std::cout << "? ";
@@ -167,7 +170,20 @@ Gomoku::t_piece Gomoku::get_piece(uint64_t *board, t_coord piece_coord)
 
 void    Gomoku::register_move(t_coord piece_coord, t_piece piece)
 {
+    t_coord new_move;
+
     this->_move_history.push_front(this->update_board(this->_move_history.front(), piece_coord, piece));
+    this->_possible_moves.erase(piece_coord);
+    for (auto direction : Gomoku::_directions)
+    {
+        for (auto factor: {-1, 1})
+        {
+            new_move.x = piece_coord.x + factor * direction.x;
+            new_move.y = piece_coord.y + factor * direction.y;
+            if (this->get_piece(this->_move_history.front(), new_move) == Gomoku::EMPTY)
+                this->_possible_moves.insert(new_move);
+        }
+    }
     this->_turn++;
 }
 
@@ -230,26 +246,26 @@ uint64_t Gomoku::test_evaluate_board(t_piece piece)
 int main()
 {
     Gomoku game(19, Gomoku::BLACK, Gomoku::EASY);
-    // game.register_move((Gomoku::t_coord){18, 18}, Gomoku::WHITE);
-    // // std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){18, 18},  Gomoku::WHITE) << std::endl;
-    // // game.print_board();
-    // // std::cout << "-----------------------" << std::endl;
-    // game.register_move((Gomoku::t_coord){18, 17}, Gomoku::WHITE);
-    // // std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){16, 18},  Gomoku::WHITE) << std::endl;
-    // // game.print_board();
-    // // std::cout << "-----------------------" << std::endl;
-    // game.register_move((Gomoku::t_coord){18, 16}, Gomoku::WHITE);
-    // // std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){18, 17},  Gomoku::WHITE) << std::endl;
-    // // game.print_board();
-    // // std::cout << "-----------------------" << std::endl;
-    // game.register_move((Gomoku::t_coord){18, 15}, Gomoku::WHITE);
-    // // std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){17, 18},  Gomoku::WHITE) << std::endl;
-    // // game.print_board();
-    // std::cout << "-----------------------" << std::endl;
-    // // game.register_move((Gomoku::t_coord){18, 14}, Gomoku::WHITE);
-    // std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){18, 18},  Gomoku::WHITE) << std::endl;
-    // game.print_board();
-    game.test_evaluate_board(Gomoku::WHITE);
+    game.register_move((Gomoku::t_coord){8, 18}, Gomoku::WHITE);
+    std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){8, 18},  Gomoku::WHITE) << std::endl;
+    game.print_board();
+    std::cout << "-----------------------" << std::endl;
+    game.register_move((Gomoku::t_coord){8, 17}, Gomoku::WHITE);
+    std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){8, 17},  Gomoku::WHITE) << std::endl;
+    game.print_board();
+    std::cout << "-----------------------" << std::endl;
+    game.register_move((Gomoku::t_coord){8, 16}, Gomoku::WHITE);
+    std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){8, 16},  Gomoku::WHITE) << std::endl;
+    game.print_board();
+    std::cout << "-----------------------" << std::endl;
+    game.register_move((Gomoku::t_coord){8, 15}, Gomoku::WHITE);
+    std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){8, 15},  Gomoku::WHITE) << std::endl;
+    game.print_board();
+    std::cout << "-----------------------" << std::endl;
+    game.register_move((Gomoku::t_coord){8, 14}, Gomoku::WHITE);
+    std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){8, 14},  Gomoku::WHITE) << std::endl;
+    game.print_board();
+    // game.test_evaluate_board(Gomoku::WHITE);
 
     return (0);
 }
