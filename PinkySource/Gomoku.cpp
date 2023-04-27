@@ -107,7 +107,6 @@ uint64_t *Gomoku::update_board(uint64_t *board, t_coord piece_coord, t_piece pie
 void Gomoku::print_board()
 {
     uint64_t *board = this->_move_history.front();
-
     for (short y = 0; y < this->_board_size; y++)
     {
         for (short x = 0; x < this->_board_size; x++)
@@ -122,7 +121,7 @@ void Gomoku::print_board()
                     std::cout << "O ";
                     break;
                 case Gomoku::EMPTY:
-                    if (this->_possible_moves.count((t_coord){x, y}))
+                    if (this->_ai_moveset.count((t_coord){x, y}))
                         std::cout << "\033[1;31m. \033[0m";
                     else
                         std::cout << ". ";
@@ -132,8 +131,13 @@ void Gomoku::print_board()
                     break;
             }
         }
+        if (y < 10) std::cout << "0";
+        std::cout << y << " ";
         std::cout << std::endl;
     }
+    for (short y = 0; y < this->_board_size; y++)
+        std::cout << (char)('A' + y) << " ";
+    std::cout << std::endl;
 }
 
 Gomoku::Gomoku(uint8_t board_size, t_piece player_color, t_difficulty difficulty):
@@ -168,7 +172,7 @@ Gomoku::t_piece Gomoku::get_piece(uint64_t *board, t_coord piece_coord)
     return (t_piece(piece));
 }
 
-void Gomoku::update_possible_moves(t_moveset &possible_moves, t_coord piece_coord)
+void Gomoku::update_ai_moveset(t_moveset &possible_moves, t_coord piece_coord)
 {
     t_coord new_move;
 
@@ -179,16 +183,33 @@ void Gomoku::update_possible_moves(t_moveset &possible_moves, t_coord piece_coor
             new_move.x = piece_coord.x + factor * direction.x;
             new_move.y = piece_coord.y + factor * direction.y;
             if (this->get_piece(this->_move_history.front(), new_move) == Gomoku::EMPTY)
-                this->_possible_moves.insert(new_move);
+                this->_ai_moveset.insert(new_move);
         }
     }
 }
 
-void    Gomoku::register_move(t_coord piece_coord, t_piece piece)
+/**
+ * @brief Check the validity of the move.
+ * TODO: Check for the presence of double threes
+*/
+
+bool    Gomoku::is_move_valid(t_coord piece_coord)
 {
+    if (this->get_piece(this->_move_history.front(), piece_coord) != Gomoku::EMPTY)
+        return (false);
+    return (true);
+}
+
+void    Gomoku::register_move(t_coord piece_coord)
+{
+    t_piece piece;
+
+    piece = (this->_turn % 2 == 0) ? Gomoku::BLACK : Gomoku::WHITE;
     this->_move_history.push_front(this->update_board(this->_move_history.front(), piece_coord, piece));
-    this->_possible_moves.erase(piece_coord);
-    this->update_possible_moves(this->_possible_moves, piece_coord);
+    this->_ai_moveset.erase(piece_coord);
+    this->update_ai_moveset(this->_ai_moveset, piece_coord);
+    // this evaluate_move call is here just for testing, it will be removed later.
+    std::cout << "move score: " << this->evaluate_move(this->_move_history.front(), piece_coord, piece) << std::endl;
     this->_turn++;
 }
 
@@ -248,29 +269,42 @@ uint64_t Gomoku::test_evaluate_board(t_piece piece)
     return (score);
 }
 
+/**
+ * @brief Update the board with the new move.
+ * The use of this main is to test what's done so far
+
+ * NB: The main is not protected against invalid inputs.
+ */
+
 int main()
 {
-    Gomoku game(19, Gomoku::BLACK, Gomoku::EASY);
-    game.register_move((Gomoku::t_coord){8, 18}, Gomoku::WHITE);
-    std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){8, 18},  Gomoku::WHITE) << std::endl;
-    game.print_board();
-    std::cout << "-----------------------" << std::endl;
-    game.register_move((Gomoku::t_coord){8, 17}, Gomoku::WHITE);
-    std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){8, 17},  Gomoku::WHITE) << std::endl;
-    game.print_board();
-    std::cout << "-----------------------" << std::endl;
-    game.register_move((Gomoku::t_coord){8, 16}, Gomoku::WHITE);
-    std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){8, 16},  Gomoku::WHITE) << std::endl;
-    game.print_board();
-    std::cout << "-----------------------" << std::endl;
-    game.register_move((Gomoku::t_coord){8, 15}, Gomoku::WHITE);
-    std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){8, 15},  Gomoku::WHITE) << std::endl;
-    game.print_board();
-    std::cout << "-----------------------" << std::endl;
-    game.register_move((Gomoku::t_coord){8, 14}, Gomoku::WHITE);
-    std::cout << game.evaluate_move(game._move_history.front(), (Gomoku::t_coord){8, 14},  Gomoku::WHITE) << std::endl;
-    game.print_board();
-    // game.test_evaluate_board(Gomoku::WHITE);
+    int             row;
+    char            col;
+    Gomoku::t_coord new_move;
 
+    Gomoku game(19, Gomoku::BLACK, Gomoku::EASY);
+    for(;;)
+    {
+        game.print_board();
+        try
+        {
+            std::cout << "-----------------------" << std::endl;
+            std::cout << "Enter move: " << std::endl;
+            std::cout << "-row: ";
+            std::cin >> row;
+            std::cout << "-col: ";
+            std::cin >> col;
+        }
+        catch(const std::exception& e)
+        {
+            break;
+        }
+        if (row < 0 || row > 18 || col < 'A' || col > 'S')
+            break;
+        new_move.y = row;
+        new_move.x = col - 'A';
+        game.register_move(new_move);
+    }
+    std::cout << "Invalid move." << std::endl;
     return (0);
 }

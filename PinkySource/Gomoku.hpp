@@ -56,7 +56,7 @@ class Gomoku
         const static t_patterns                 _defense_patterns;
 
         uint8_t                                 _board_size;
-        t_moveset                               _possible_moves;
+        t_moveset                               _ai_moveset;
         t_piece                                 _ai_color;
         t_piece                                 _player_color;
         t_difficulty                            _difficulty;
@@ -68,14 +68,15 @@ class Gomoku
     public:
                     Gomoku(uint8_t board_size, t_piece player_color, t_difficulty difficulty);
                     ~Gomoku();
-        void        register_move(t_coord piece_coord, t_piece piece);
+        void        register_move(t_coord piece_coord);
         void        print_board();
         uint64_t    test_evaluate_board(t_piece piece);
         uint64_t    evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
+        bool        is_move_valid(t_coord piece_coord);
 
     private:
         t_piece     get_piece(uint64_t *board, t_coord piece_coord);
-        void        update_possible_moves(t_moveset &possible_moves, t_coord piece_coord);
+        void        update_ai_moveset(t_moveset &possible_moves, t_coord piece_coord);
         uint64_t    *copy_board(uint64_t *board);
         uint64_t    *update_board(uint64_t *board, t_coord piece_coord, t_piece piece);
         uint64_t    evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
