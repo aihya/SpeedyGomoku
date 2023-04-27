@@ -47,20 +47,23 @@ class Gomoku
         };
 
     private:
+
         typedef std::map< Gomoku::e_piece, std::map<uint16_t, uint32_t> >   t_patterns;
         typedef std::set<t_coord, coordComparator>                          t_moveset;
-        const static std::vector<t_coord>   _directions;
-        const static t_patterns             _attack_patterns;
-        const static t_patterns             _defense_patterns;
-        uint8_t                             _board_size;
-        t_moveset                           _possible_moves;
-        t_piece                             _ai_color;
-        t_piece                             _player_color;
-        t_difficulty                        _difficulty;
-        size_t                              _turn;
-    public:
 
-        std::list<uint64_t*>                _move_history;
+        const static std::array<t_coord, 4>     _directions;
+        const static t_patterns                 _attack_patterns;
+        const static t_patterns                 _defense_patterns;
+
+        uint8_t                                 _board_size;
+        t_moveset                               _possible_moves;
+        t_piece                                 _ai_color;
+        t_piece                                 _player_color;
+        t_difficulty                            _difficulty;
+        size_t                                  _turn;
+
+    public:
+        std::list<uint64_t*>                    _move_history;
 
     public:
                     Gomoku(uint8_t board_size, t_piece player_color, t_difficulty difficulty);

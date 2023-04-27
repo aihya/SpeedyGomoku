@@ -73,12 +73,12 @@ const Gomoku::t_patterns Gomoku::_defense_patterns =
     },
 };
 
-const std::vector<Gomoku::t_coord> Gomoku::_directions = {
+const std::array<Gomoku::t_coord, 4> Gomoku::_directions {{
     {0, -1},
     {-1, 0},
     {1, -1},
     {1, 1}
-};
+}};
 
 
 uint64_t *Gomoku::copy_board(uint64_t *board)
