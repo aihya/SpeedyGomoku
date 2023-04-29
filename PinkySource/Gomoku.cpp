@@ -3,12 +3,12 @@
 const Gomoku::t_patterns Gomoku::_attack_patterns = {
     {
         Gomoku::BLACK, {
-            { 0b0101010101, INTMAX_MAX },
-            { 0b0001010101, 400 },
-            { 0b0101010100, 400 },
-            { 0b0000010101, 300 },
-            { 0b0001010100, 300 },
-            { 0b0101010000, 300 },
+            { 0b0101010101, INT32_MAX },
+            { 0b0001010101, 1200 },
+            { 0b0101010100, 1200 },
+            { 0b0000010101, 400 },
+            { 0b0001010100, 400 },
+            { 0b0101010000, 400 },
             { 0b0000000101, 200 },
             { 0b0000010100, 200 },
             { 0b0001010000, 200 },
@@ -23,12 +23,12 @@ const Gomoku::t_patterns Gomoku::_attack_patterns = {
     },
     {
         Gomoku::WHITE, {
-            { 0b1010101010, INTMAX_MAX },
-            { 0b0010101010, 400 },
-            { 0b1010101000, 400 },
-            { 0b0000101010, 300 },
-            { 0b0010101000, 300 },
-            { 0b1010100000, 300 },
+            { 0b1010101010, INT32_MAX },
+            { 0b0010101010, 1200 },
+            { 0b1010101000, 1200 },
+            { 0b0000101010, 400 },
+            { 0b0010101000, 400 },
+            { 0b1010100000, 400 },
             { 0b0000001010, 200 },
             { 0b0000101000, 200 },
             { 0b0010100000, 200 },
@@ -43,32 +43,72 @@ const Gomoku::t_patterns Gomoku::_attack_patterns = {
     }
 };
 
+
+/**
+ * @brief : Those are defence patterns but
+ * we may not need them since we got minimax
+ */
+
 const Gomoku::t_patterns Gomoku::_defense_patterns = 
 {
     {
         Gomoku::BLACK, {
-            { 0b0110101010, INTMAX_MAX },
-            { 0b1001101010, INTMAX_MAX },
-            { 0b1010011010, INTMAX_MAX },
-            { 0b1010100110, INTMAX_MAX },
-            { 0b1010101001, INTMAX_MAX },
-            /**
-             * @brief TODO: Add more patterns
-             * The logic here is to catch any patterns that can be used to attack
-             */
+            { 0b0110101010, 400000 },
+            { 0b1001101010, 400000 },
+            { 0b1010011010, 400000 },
+            { 0b1010100110, 400000 },
+            { 0b1010101001, 400000 },
+
+            { 0b0110101000, 3200 },
+            { 0b0001101010, 3200 },
+            { 0b1010100100, 3200 },
+            { 0b0010101001, 3200 },
+
+            { 0b1010010000, 200 },
+            { 0b0010100100, 200 },
+            { 0b0000101001, 200 },
+            { 0b0110100000, 200 },
+            { 0b0001101000, 200 },
+            { 0b0000011010, 200 },
+
+            { 0b0000001001, 50 },
+            { 0b0000100100, 50 },
+            { 0b0010010000, 50 },
+            { 0b1001000000, 50 },
+            { 0b0110000000, 50 },
+            { 0b0001100000, 50 },
+            { 0b0000011000, 50 },
+            { 0b0000000110, 50 },
         },
     },
     {
         Gomoku::WHITE, {
-            { 0b1001010101, INTMAX_MAX },
-            { 0b0110010101, INTMAX_MAX },
-            { 0b0101100101, INTMAX_MAX },
-            { 0b0101011001, INTMAX_MAX },
-            { 0b0101010110, INTMAX_MAX },
-            /**
-             * @brief TODO: Add more patterns
-             * The logic here is to catch any patterns that can be used to attack
-             */
+            { 0b1001010101, 400000 },
+            { 0b0110010101, 400000 },
+            { 0b0101100101, 400000 },
+            { 0b0101011001, 400000 },
+            { 0b0101010110, 400000 },
+
+            { 0b1001010100, 3200 },
+            { 0b0010010101, 3200 },
+            { 0b0101011000, 3200 },
+            { 0b0001010110, 3200 },
+
+            { 0b0101100000, 200 },
+            { 0b0001011000, 200 },
+            { 0b0000010110, 200 },
+            { 0b1001010000, 200 },
+            { 0b0010010100, 200 },
+            { 0b0000100101, 200 },
+
+            { 0b0000000110, 50 },
+            { 0b0000011000, 50 },
+            { 0b0001100000, 50 },
+            { 0b0110000000, 50 },
+            { 0b1001000000, 50 },
+            { 0b0010010000, 50 },
+            { 0b0000100100, 50 },
+            { 0b0000001001, 50 },
         }
     },
 };
@@ -91,17 +131,13 @@ uint64_t *Gomoku::copy_board(uint64_t *board)
     return (board_copy);
 }
 
-uint64_t *Gomoku::update_board(uint64_t *board, t_coord piece_coord, t_piece piece)
+void Gomoku::update_board(uint64_t *board, t_coord piece_coord, t_piece piece)
 {
-    uint64_t *new_board;
-
-    new_board = copy_board(board);
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-    new_board[piece_coord.y] |= uint64_t(piece) << (piece_coord.x * 2);
+    board[piece_coord.y] |= uint64_t(piece) << (piece_coord.x * 2);
 #else
-    new_board[piece_coord.y] |= uint64_t(piece) >> (piece_coord.x * 2);
+    board[piece_coord.y] |= uint64_t(piece) >> (piece_coord.x * 2);
 # endif
-    return (new_board);
 }
 
 void Gomoku::print_board()
@@ -140,6 +176,41 @@ void Gomoku::print_board()
     std::cout << std::endl;
 }
 
+void Gomoku::print_board(uint64_t *board, t_moveset &moveset)
+{
+    for (short y = 0; y < this->_board_size; y++)
+    {
+        for (short x = 0; x < this->_board_size; x++)
+        {
+            t_piece piece = this->get_piece(board, (t_coord){x, y});
+            switch (piece)
+            {
+                case Gomoku::BLACK:
+                    std::cout << "X ";
+                    break;
+                case Gomoku::WHITE:
+                    std::cout << "O ";
+                    break;
+                case Gomoku::EMPTY:
+                    if (moveset.count((t_coord){x, y}))
+                        std::cout << "\033[1;31m. \033[0m";
+                    else
+                        std::cout << ". ";
+                    break;
+                default:
+                    std::cout << "? ";
+                    break;
+            }
+        }
+        if (y < 10) std::cout << "0";
+        std::cout << y << " ";
+        std::cout << std::endl;
+    }
+    for (short y = 0; y < this->_board_size; y++)
+        std::cout << (char)('A' + y) << " ";
+    std::cout << std::endl;
+}
+
 Gomoku::Gomoku(uint8_t board_size, t_piece player_color, t_difficulty difficulty):
     _player_color(player_color), _difficulty(difficulty), _turn(0), _board_size(board_size)
 {
@@ -150,6 +221,7 @@ Gomoku::Gomoku(uint8_t board_size, t_piece player_color, t_difficulty difficulty
         throw std::invalid_argument("Player color must be BLACK or WHITE");
    this->_move_history.push_front(new uint64_t[board_size]());
    this->_ai_color = (this->_player_color == Gomoku::BLACK) ? Gomoku::WHITE : Gomoku::BLACK;
+   this->_depth = 4;
 }
 
 Gomoku::~Gomoku()
@@ -172,7 +244,7 @@ Gomoku::t_piece Gomoku::get_piece(uint64_t *board, t_coord piece_coord)
     return (t_piece(piece));
 }
 
-void Gomoku::update_ai_moveset(t_moveset &possible_moves, t_coord piece_coord)
+void Gomoku::update_ai_moveset(uint64_t *board, t_moveset &possible_moves, t_coord piece_coord)
 {
     t_coord new_move;
 
@@ -182,8 +254,8 @@ void Gomoku::update_ai_moveset(t_moveset &possible_moves, t_coord piece_coord)
         {
             new_move.x = piece_coord.x + factor * direction.x;
             new_move.y = piece_coord.y + factor * direction.y;
-            if (this->get_piece(this->_move_history.front(), new_move) == Gomoku::EMPTY)
-                this->_ai_moveset.insert(new_move);
+            if (this->get_piece(board, new_move) == Gomoku::EMPTY)
+                possible_moves.insert(new_move);
         }
     }
 }
@@ -200,28 +272,24 @@ bool    Gomoku::is_move_valid(t_coord piece_coord)
     return (true);
 }
 
-void    Gomoku::register_move(t_coord piece_coord)
+void    Gomoku::register_move(t_coord piece_coord, t_piece piece, uint64_t* board, t_moveset& moveset)
 {
-    t_piece piece;
-
-    piece = (this->_turn % 2 == 0) ? Gomoku::BLACK : Gomoku::WHITE;
-    this->_move_history.push_front(this->update_board(this->_move_history.front(), piece_coord, piece));
-    this->_ai_moveset.erase(piece_coord);
-    this->update_ai_moveset(this->_ai_moveset, piece_coord);
-    // this evaluate_move call is here just for testing, it will be removed later.
-    std::cout << "move score: " << this->evaluate_move(this->_move_history.front(), piece_coord, piece) << std::endl;
-    this->_turn++;
+    this->update_board(board, piece_coord, piece);
+    moveset.erase(piece_coord);
+    this->update_ai_moveset(board, moveset, piece_coord);
 }
 
 uint64_t Gomoku::evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction)
 {
-    uint32_t                            score;
+    uint32_t                            attack_score;
+    uint32_t                            defence_score;
     uint16_t                            current_pattern;
     t_coord                             pattern_position;
     const std::map<uint16_t, uint32_t>  &attack_patterns  = Gomoku::_attack_patterns.at(piece);
     const std::map<uint16_t, uint32_t>  &defense_patterns = Gomoku::_defense_patterns.at(piece);
 
-    score = 0;
+    attack_score = 0;
+    defence_score = 0;
     for (int i = 0; i < 5; i++)
     {
         current_pattern = 0;
@@ -236,45 +304,122 @@ uint64_t Gomoku::evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piec
             pattern_position.x += direction.x;
         }
         if (attack_patterns.contains(current_pattern))
-            score = std::max(attack_patterns.at(current_pattern), score);
+            attack_score = std::max(attack_patterns.at(current_pattern), attack_score);
         else
             break;
         piece_coord.y -= direction.y;
         piece_coord.x -= direction.x;
     }
-    return (score);
+    return (attack_score + defence_score);
 }
 
 uint64_t Gomoku::evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece)
 {
     uint64_t score = 0;
 
-    for (auto& x: _directions)
-        score += this->evaluate_dir(board, piece_coord, piece, x);
+    for (auto& dir: this->_directions)
+        score = std::max(score, this->evaluate_dir(board, piece_coord, piece, dir));
     return (score);
 }
 
 
-uint64_t Gomoku::test_evaluate_board(t_piece piece)
+int64_t Gomoku::evaluate_board(uint64_t *board)
 {
-    uint64_t    score  = 0;
-    uint64_t    *board = this->_move_history.front();
-
-    for (int i = 0;  i < 9320; i ++)
+    int64_t    score;
+    t_coord     piece_coord;
+    
+    score = 0;
+    for (piece_coord.y = 0; piece_coord.y < this->_board_size; piece_coord.y++)
     {
-        for (short y = 0; y < this->_board_size; y++)
-            for (short x = 0; x < this->_board_size; x++)
-                score += this->evaluate_move(board, (t_coord){x, y}, piece);
+        for (piece_coord.x = 0; piece_coord.x < this->_board_size; piece_coord.x++)
+        {
+            if (this->get_piece(board, piece_coord) == this->_ai_color)
+                score += this->evaluate_move(board, piece_coord, this->_ai_color);
+            else if (this->get_piece(board, piece_coord) == this->_player_color)
+                score -= this->evaluate_move(board, piece_coord, this->_player_color);
+        }
     }
+
     return (score);
 }
 
-/**
- * @brief Update the board with the new move.
- * The use of this main is to test what's done so far
 
- * NB: The main is not protected against invalid inputs.
- */
+int64_t Gomoku::minimax(t_moveset moveset, uint64_t* board, uint8_t depth,
+                            int64_t alpha, int64_t beta, bool max)
+{
+    t_piece     current_color;
+    t_moveset   new_moveset;
+    int64_t     move_eval;
+    uint64_t    *new_board;
+
+    current_color = (max) ? this->_ai_color : this->_player_color;
+    if (depth == 0)
+        return this->evaluate_board(board);
+    if (max)
+    {
+        int64_t max_eval = INTMAX_MIN;
+        for (auto& move: moveset)
+        {
+            new_board = this->copy_board(board);
+            new_moveset = t_moveset(moveset);
+            this->register_move(move, current_color, new_board, new_moveset);
+            move_eval = minimax(new_moveset, new_board, depth - 1, alpha, beta, false);
+            if (move_eval > max_eval)
+            {
+                max_eval = move_eval;
+                if (depth == this->_depth)
+                    this->_best_move = move;
+            }
+            alpha = std::max(alpha, move_eval);
+            if (beta <= alpha)
+                break;
+        }
+        return max_eval;
+    }
+    else
+    {
+        int64_t min_eval = INTMAX_MAX;
+        for (auto& move: moveset)
+        {
+            new_board = this->copy_board(board);
+            new_moveset = t_moveset(moveset);
+            this->register_move(move, current_color, new_board, new_moveset);
+            move_eval = minimax(new_moveset, new_board, depth - 1, alpha, beta, true);
+            min_eval = std::min(min_eval, move_eval);
+            beta = std::min(beta, move_eval);
+            if (beta <= alpha)
+                break;
+        }
+        return min_eval;
+    }
+}
+
+void    Gomoku::make_move()
+{
+    uint64_t    *new_board;
+
+    new_board = copy_board(this->_move_history.front());
+    this->minimax(this->_ai_moveset, new_board, this->_depth, INTMAX_MIN, INTMAX_MAX, true);
+    this->register_move(this->_best_move, this->_ai_color, new_board, this->_ai_moveset);
+    this->_move_history.push_front(new_board);
+}
+
+void Gomoku::make_move(t_coord piece_coord)
+{
+    uint64_t    *new_board;
+    t_piece     piece;
+
+    piece = (this->_turn % 2 == 0) ? Gomoku::WHITE : Gomoku::BLACK;
+    if (piece == this->_ai_color)
+        this->make_move();
+    else
+    {
+        new_board = this->copy_board(this->_move_history.front());
+        this->register_move(piece_coord, piece, new_board, this->_ai_moveset);
+        this->_move_history.push_front(new_board);
+    }
+    this->_turn++;
+}
 
 int main()
 {
@@ -282,28 +427,36 @@ int main()
     char            col;
     Gomoku::t_coord new_move;
 
-    Gomoku game(19, Gomoku::BLACK, Gomoku::EASY);
+    Gomoku game(19, Gomoku::WHITE, Gomoku::EASY);
     for(;;)
     {
         game.print_board();
-        try
+        std::cout << "-----------------------" << std::endl;
+        if (game.is_player_turn())
         {
-            std::cout << "-----------------------" << std::endl;
-            std::cout << "Enter move: " << std::endl;
-            std::cout << "-row: ";
-            std::cin >> row;
-            std::cout << "-col: ";
-            std::cin >> col;
+            try
+            {
+                std::cout << "Enter move: " << std::endl;
+                std::cout << "-row (0 - 18): ";
+                std::cin >> row;
+                std::cout << "-col (A - S): ";
+                std::cin >> col;
+            }
+            catch(const std::exception& e)
+            {
+                break;
+            }
+            if (row < 0 || row > 18 || col < 'A' || col > 'S')
+                break;
+            new_move.y = row;
+            new_move.x = col - 'A';
+            if (game.is_move_valid(new_move))
+                game.make_move(new_move);
+            else
+                std::cout << "Invalid move." << std::endl;
         }
-        catch(const std::exception& e)
-        {
-            break;
-        }
-        if (row < 0 || row > 18 || col < 'A' || col > 'S')
-            break;
-        new_move.y = row;
-        new_move.x = col - 'A';
-        game.register_move(new_move);
+        else
+            game.make_move(new_move);
     }
     std::cout << "Invalid move." << std::endl;
     return (0);

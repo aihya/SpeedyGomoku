@@ -48,18 +48,22 @@ class Gomoku
 
     private:
 
-        typedef std::map< Gomoku::e_piece, std::map<uint16_t, uint32_t> >   t_patterns;
+        typedef std::map< Gomoku::e_piece, std::map<uint16_t, uint32_t> >    t_patterns;
         typedef std::set<t_coord, coordComparator>                          t_moveset;
 
         const static std::array<t_coord, 4>     _directions;
         const static t_patterns                 _attack_patterns;
         const static t_patterns                 _defense_patterns;
+        const static t_patterns                 _illegal_patterns;
+        const static t_patterns                 _capture_patterns;
 
         uint8_t                                 _board_size;
+        uint8_t                                 _depth;
         t_moveset                               _ai_moveset;
         t_piece                                 _ai_color;
         t_piece                                 _player_color;
         t_difficulty                            _difficulty;
+        t_coord                                 _best_move;
         size_t                                  _turn;
 
     public:
@@ -68,19 +72,27 @@ class Gomoku
     public:
                     Gomoku(uint8_t board_size, t_piece player_color, t_difficulty difficulty);
                     ~Gomoku();
-        void        register_move(t_coord piece_coord);
+        void        register_move(t_coord piece_coord, t_piece piece, uint64_t* board, t_moveset& moveset);
         void        print_board();
-        uint64_t    test_evaluate_board(t_piece piece);
+        void        print_board(uint64_t *board, t_moveset &moveset);
+        void        make_move(t_coord piece_coord);
+        int64_t     evaluate_board(uint64_t *board);
         uint64_t    evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
         bool        is_move_valid(t_coord piece_coord);
+        bool        is_player_turn()
+        {
+            return (this->_player_color == ((this->_turn % 2 == 0) ? Gomoku::WHITE : Gomoku::BLACK));
+        }
 
     private:
         t_piece     get_piece(uint64_t *board, t_coord piece_coord);
-        void        update_ai_moveset(t_moveset &possible_moves, t_coord piece_coord);
+        void        make_move();
+        void        update_ai_moveset(uint64_t *board, t_moveset &possible_moves, t_coord piece_coord);
+        void        update_board(uint64_t *board, t_coord piece_coord, t_piece piece);
         uint64_t    *copy_board(uint64_t *board);
-        uint64_t    *update_board(uint64_t *board, t_coord piece_coord, t_piece piece);
         uint64_t    evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
-        uint64_t    *minimax(uint64_t *board, size_t depth);
+        int64_t     minimax(t_moveset moveset, uint64_t* board, uint8_t depth,
+                                int64_t alpha, int64_t beta, bool max);
         uint64_t    *maximize(uint64_t *board, t_piece piece, size_t depth, size_t aplha);
         uint64_t    *minimize(uint64_t *board, t_piece piece, size_t depth, size_t beta);
 
