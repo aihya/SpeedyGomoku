@@ -374,8 +374,7 @@ int64_t Gomoku::evaluate_board(uint64_t *board)
                 score += this->evaluate_move(board, piece_coord, this->_ai_color);
             else if (piece == this->_player_color)
                 score -= this->evaluate_move(board, piece_coord, this->_player_color);
-        }
-        while (piece_coord.x < this->_board_size);
+        } while (piece_coord.x < this->_board_size);
     }
 
     return (score);
@@ -434,14 +433,20 @@ int64_t Gomoku::minimax(t_moveset& moveset, uint64_t* board, uint8_t depth,
     }
 }
 
+#include <chrono>
+
 void    Gomoku::make_move()
 {
     uint64_t    *new_board;
 
+    auto start = std::chrono::steady_clock::now();
     new_board = copy_board(this->_move_history.front());
     this->minimax(this->_ai_moveset, new_board, this->_depth, INTMAX_MIN, INTMAX_MAX, true);
     this->register_move(this->_best_move, this->_ai_color, new_board, this->_ai_moveset);
     this->_move_history.push_front(new_board);
+    auto end = std::chrono::steady_clock::now();
+    auto diff = end - start;
+    std::cout << "AI move took " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
 }
 
 void Gomoku::make_move(t_coord piece_coord)
