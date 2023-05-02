@@ -143,41 +143,7 @@ void Gomoku::update_board(uint64_t *board, t_coord piece_coord, t_piece piece)
 void Gomoku::print_board()
 {
     uint64_t *board = this->_move_history.front();
-    for (short y = 0; y < this->_board_size; y++)
-    {
-        for (short x = 0; x < this->_board_size; x++)
-        {
-            t_piece piece = this->get_piece(board, (t_coord){x, y});
-            switch (piece)
-            {
-                case Gomoku::BLACK:
-                    std::cout << "X ";
-                    break;
-                case Gomoku::WHITE:
-                    std::cout << "O ";
-                    break;
-                case Gomoku::EMPTY:
-                    if (this->_ai_moveset.count((t_coord){x, y}))
-                        std::cout << "\033[1;31m. \033[0m";
-                    else
-                        std::cout << ". ";
-                    break;
-                default:
-                    std::cout << "? ";
-                    break;
-            }
-        }
-        if (y < 10) std::cout << "0";
-        std::cout << y << " ";
-        std::cout << std::endl;
-    }
-    for (short y = 0; y < this->_board_size; y++)
-        std::cout << (char)('A' + y) << " ";
-    std::cout << std::endl;
-}
-
-void Gomoku::print_board(uint64_t *board, t_moveset &moveset)
-{
+    t_moveset &moveset = this->_ai_moveset;
     for (short y = 0; y < this->_board_size; y++)
     {
         for (short x = 0; x < this->_board_size; x++)
@@ -322,32 +288,6 @@ uint64_t Gomoku::evaluate_move(uint64_t *board, t_coord piece_coord, t_piece pie
     return (score);
 }
 
-
-// int64_t Gomoku::evaluate_board(uint64_t *board)
-// {
-//     int64_t    score;
-//     t_coord     piece_coord;
-    
-//     score = 0;
-//     for (piece_coord.y = 0; piece_coord.y < this->_board_size; piece_coord.y++)
-//     {
-//         if (board[piece_coord.y] == 0)
-//             continue;
-//         piece_coord.x = ffs(board[piece_coord.y]) - 1;
-//         piece_coord.x = (piece_coord.x % 2) ? piece_coord.x >> 1 : ((piece_coord.x - 1) >> 2);
-//         for (; piece_coord.x < this->_board_size; piece_coord.x++)
-//         {
-//             if (this->get_piece(board, piece_coord) == this->_ai_color)
-//                 score += this->evaluate_move(board, piece_coord, this->_ai_color);
-//             else if (this->get_piece(board, piece_coord) == this->_player_color)
-//                 score -= this->evaluate_move(board, piece_coord, this->_player_color);
-//         }
-//     }
-
-//     return (score);
-// }
-
-
 int64_t Gomoku::evaluate_board(uint64_t *board)
 {
     int64_t     score;
@@ -380,17 +320,32 @@ int64_t Gomoku::evaluate_board(uint64_t *board)
     return (score);
 }
 
+bool Gomoku::is_winning_board(uint64_t* board, t_piece piece)
+{
+    t_coord     piece_coord;
+
+    piece_coord.x = 5;
+    piece_coord.y = 5;
+
+    for (piece_coord.x = 5; piece_coord.x < this->_board_size; piece_coord.x+=5)
+        for (piece_coord.y = 5; piece_coord.y < this->_board_size; piece_coord.y+=5)
+            if (this->evaluate_move(board, piece_coord, piece) >= INT32_MAX)
+                return (true);
+    return (false);
+}
 
 int64_t Gomoku::minimax(t_moveset& moveset, uint64_t* board, uint8_t depth,
                             int64_t alpha, int64_t beta, bool max)
 {
     t_piece     current_color;
+    t_piece     op_color;
     t_moveset   new_moveset;
     int64_t     move_eval;
     uint64_t    *new_board;
 
     current_color = (max) ? this->_ai_color : this->_player_color;
-    if (depth == 0)
+    op_color = (max) ? this->_player_color : this->_ai_color;
+    if (depth == 0 || this->is_winning_board(board, op_color))
         return this->evaluate_board(board);
     if (max)
     {
@@ -462,6 +417,14 @@ void Gomoku::make_move(t_coord piece_coord)
         new_board = this->copy_board(this->_move_history.front());
         this->register_move(piece_coord, piece, new_board, this->_ai_moveset);
         this->_move_history.push_front(new_board);
+    }
+    if (this->is_winning_board(this->_move_history.front(), piece))
+    {
+        if (piece == this->_ai_color)
+            std::cout << "AI wins!" << std::endl;
+        else
+            std::cout << "Player wins!" << std::endl;
+        exit(1);
     }
     this->_turn++;
 }

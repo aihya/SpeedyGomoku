@@ -59,7 +59,6 @@ class Gomoku
 
         uint8_t                                 _board_size;
         uint8_t                                 _depth;
-        t_moveset                               _ai_moveset;
         t_piece                                 _ai_color;
         t_piece                                 _player_color;
         t_difficulty                            _difficulty;
@@ -68,13 +67,13 @@ class Gomoku
 
     public:
         std::list<uint64_t*>                    _move_history;
+        t_moveset                               _ai_moveset;
 
     public:
                     Gomoku(uint8_t board_size, t_piece player_color, t_difficulty difficulty);
                     ~Gomoku();
         void        register_move(t_coord piece_coord, t_piece piece, uint64_t* board, t_moveset& moveset);
         void        print_board();
-        void        print_board(uint64_t *board, t_moveset &moveset);
         void        make_move(t_coord piece_coord);
         int64_t     evaluate_board(uint64_t *board);
         uint64_t    evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
@@ -95,5 +94,5 @@ class Gomoku
                                 int64_t alpha, int64_t beta, bool max);
         uint64_t    *maximize(uint64_t *board, t_piece piece, size_t depth, size_t aplha);
         uint64_t    *minimize(uint64_t *board, t_piece piece, size_t depth, size_t beta);
-
+        bool        is_winning_board(uint64_t* board, t_piece piece);
 };
