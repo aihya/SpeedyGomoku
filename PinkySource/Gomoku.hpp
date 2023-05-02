@@ -91,7 +91,7 @@ class Gomoku
         void        update_board(uint64_t *board, t_coord piece_coord, t_piece piece);
         uint64_t    *copy_board(uint64_t *board);
         uint64_t    evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
-        int64_t     minimax(t_moveset moveset, uint64_t* board, uint8_t depth,
+        int64_t     minimax(t_moveset& moveset, uint64_t* board, uint8_t depth,
                                 int64_t alpha, int64_t beta, bool max);
         uint64_t    *maximize(uint64_t *board, t_piece piece, size_t depth, size_t aplha);
         uint64_t    *minimize(uint64_t *board, t_piece piece, size_t depth, size_t beta);

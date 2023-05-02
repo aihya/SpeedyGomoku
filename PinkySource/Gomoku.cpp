@@ -323,28 +323,66 @@ uint64_t Gomoku::evaluate_move(uint64_t *board, t_coord piece_coord, t_piece pie
 }
 
 
+// int64_t Gomoku::evaluate_board(uint64_t *board)
+// {
+//     int64_t    score;
+//     t_coord     piece_coord;
+    
+//     score = 0;
+//     for (piece_coord.y = 0; piece_coord.y < this->_board_size; piece_coord.y++)
+//     {
+//         if (board[piece_coord.y] == 0)
+//             continue;
+//         piece_coord.x = ffs(board[piece_coord.y]) - 1;
+//         piece_coord.x = (piece_coord.x % 2) ? piece_coord.x >> 1 : ((piece_coord.x - 1) >> 2);
+//         for (; piece_coord.x < this->_board_size; piece_coord.x++)
+//         {
+//             if (this->get_piece(board, piece_coord) == this->_ai_color)
+//                 score += this->evaluate_move(board, piece_coord, this->_ai_color);
+//             else if (this->get_piece(board, piece_coord) == this->_player_color)
+//                 score -= this->evaluate_move(board, piece_coord, this->_player_color);
+//         }
+//     }
+
+//     return (score);
+// }
+
+
 int64_t Gomoku::evaluate_board(uint64_t *board)
 {
-    int64_t    score;
+    int64_t     score;
     t_coord     piece_coord;
-    
+    t_piece     piece;
+    uint64_t    line;
+
     score = 0;
     for (piece_coord.y = 0; piece_coord.y < this->_board_size; piece_coord.y++)
     {
-        for (piece_coord.x = 0; piece_coord.x < this->_board_size; piece_coord.x++)
-        {
-            if (this->get_piece(board, piece_coord) == this->_ai_color)
+        line = board[piece_coord.y];
+        do {
+            if (line == 0)
+                break;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+            piece_coord.x = (ffsll(line) - 1) >> 1;
+            line &= ~((uint64_t)(Gomoku::ERROR) << (piece_coord.x << 1));
+#else
+            piece_coord.x = (ffsll(line) - 1) << 1;
+            line &= ~((uint64_t)(Gomoku::ERROR) >> (piece_coord.x >> 1));
+#endif
+            piece = this->get_piece(board, piece_coord);
+            if (piece == this->_ai_color)
                 score += this->evaluate_move(board, piece_coord, this->_ai_color);
-            else if (this->get_piece(board, piece_coord) == this->_player_color)
+            else if (piece == this->_player_color)
                 score -= this->evaluate_move(board, piece_coord, this->_player_color);
         }
+        while (piece_coord.x < this->_board_size);
     }
 
     return (score);
 }
 
 
-int64_t Gomoku::minimax(t_moveset moveset, uint64_t* board, uint8_t depth,
+int64_t Gomoku::minimax(t_moveset& moveset, uint64_t* board, uint8_t depth,
                             int64_t alpha, int64_t beta, bool max)
 {
     t_piece     current_color;
@@ -370,6 +408,7 @@ int64_t Gomoku::minimax(t_moveset moveset, uint64_t* board, uint8_t depth,
                 if (depth == this->_depth)
                     this->_best_move = move;
             }
+            delete [] new_board;
             alpha = std::max(alpha, move_eval);
             if (beta <= alpha)
                 break;
@@ -387,6 +426,7 @@ int64_t Gomoku::minimax(t_moveset moveset, uint64_t* board, uint8_t depth,
             move_eval = minimax(new_moveset, new_board, depth - 1, alpha, beta, true);
             min_eval = std::min(min_eval, move_eval);
             beta = std::min(beta, move_eval);
+            delete [] new_board;
             if (beta <= alpha)
                 break;
         }
