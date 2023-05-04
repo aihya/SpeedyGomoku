@@ -6,6 +6,7 @@
 #include <list>
 #include <set>
 #include <algorithm>
+#include <string.h>
 /**
  * @brief Game class
  * This game is a simple implementation of the gomoku game using minimax algorithm.
