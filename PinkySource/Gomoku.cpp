@@ -4,41 +4,39 @@ const Gomoku::t_patterns Gomoku::_attack_patterns = {
     {
         Gomoku::BLACK, {
             { 0b0101010101, INT32_MAX },
-            { 0b0001010101, 1200 },
-            { 0b0101010100, 1200 },
-            { 0b0000010101, 400 },
-            { 0b0001010100, 400 },
-            { 0b0101010000, 400 },
-            { 0b0000000101, 200 },
-            { 0b0000010100, 200 },
-            { 0b0001010000, 200 },
-            { 0b0101000000, 200 },
-            { 0b0000000001, 1 },
-            { 0b0000000100, 1 },
-            { 0b0000010000, 1 },
-            { 0b0001000000, 1 },
-            { 0b0010000000, 1 },
-            { 0b0100000000, 1 },
+            { 0b0001010101, 10000 },
+            { 0b0101010100, 10000 },
+            { 0b0000010101, 1000 },
+            { 0b0001010100, 1000 },
+            { 0b0101010000, 1000 },
+            { 0b0000000101, 100 },
+            { 0b0000010100, 100 },
+            { 0b0001010000, 100 },
+            { 0b0101000000, 100 },
+            { 0b0000000001, 10 },
+            { 0b0000000100, 10 },
+            { 0b0000010000, 10 },
+            { 0b0001000000, 10 },
+            { 0b0100000000, 10 },
         }
     },
     {
         Gomoku::WHITE, {
             { 0b1010101010, INT32_MAX },
-            { 0b0010101010, 1200 },
-            { 0b1010101000, 1200 },
-            { 0b0000101010, 400 },
-            { 0b0010101000, 400 },
-            { 0b1010100000, 400 },
-            { 0b0000001010, 200 },
-            { 0b0000101000, 200 },
-            { 0b0010100000, 200 },
-            { 0b1010000000, 200 },
-            { 0b0000000010, 1 },
-            { 0b0000001000, 1 },
-            { 0b0000100000, 1 },
-            { 0b0010000000, 1 },
-            { 0b0100000000, 1 },
-            { 0b1000000000, 1 },
+            { 0b0010101010, 10000 },
+            { 0b1010101000, 10000 },
+            { 0b0000101010, 1000 },
+            { 0b0010101000, 1000 },
+            { 0b1010100000, 1000 },
+            { 0b0000001010, 100 },
+            { 0b0000101000, 100 },
+            { 0b0010100000, 100 },
+            { 0b1010000000, 100 },
+            { 0b0000000010, 10 },
+            { 0b0000001000, 10 },
+            { 0b0000100000, 10 },
+            { 0b0010000000, 10 },
+            { 0b1000000000, 10 },
         },
     }
 };
@@ -226,11 +224,6 @@ void Gomoku::update_ai_moveset(uint64_t *board, t_moveset &possible_moves, t_coo
     }
 }
 
-/**
- * @brief Check the validity of the move.
- * TODO: Check for the presence of double threes
-*/
-
 bool    Gomoku::is_move_valid(t_coord piece_coord)
 {
     if (this->get_piece(this->_move_history.front(), piece_coord) != Gomoku::EMPTY)
@@ -248,35 +241,39 @@ void    Gomoku::register_move(t_coord piece_coord, t_piece piece, uint64_t* boar
 uint64_t Gomoku::evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction)
 {
     uint32_t                            attack_score;
-    uint32_t                            defence_score;
     uint16_t                            current_pattern;
+    t_piece                             current_piece;
     t_coord                             pattern_position;
+    bool                                valid_patter;
     const std::map<uint16_t, uint32_t>  &attack_patterns  = Gomoku::_attack_patterns.at(piece);
-    const std::map<uint16_t, uint32_t>  &defense_patterns = Gomoku::_defense_patterns.at(piece);
 
     attack_score = 0;
-    defence_score = 0;
     for (int i = 0; i < 5; i++)
     {
         current_pattern = 0;
+        valid_patter = true;
         pattern_position = piece_coord;
         for (int j = 0; j < 5; j++)
         {
             current_pattern <<= 2;
-            current_pattern |= this->get_piece(board, pattern_position);
-            if ((current_pattern & 0b11) == Gomoku::ERROR)
+            current_piece = this->get_piece(board, pattern_position);
+            current_pattern |= current_piece;
+            if (current_piece != Gomoku::EMPTY && current_piece != piece)
+            {
+                valid_patter = false;
                 break;
+            }
             pattern_position.y += direction.y;
             pattern_position.x += direction.x;
         }
-        if (attack_patterns.contains(current_pattern))
+        if (valid_patter && attack_patterns.contains(current_pattern))
             attack_score = std::max(attack_patterns.at(current_pattern), attack_score);
         else
             break;
         piece_coord.y -= direction.y;
         piece_coord.x -= direction.x;
     }
-    return (attack_score + defence_score);
+    return (attack_score);
 }
 
 uint64_t Gomoku::evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece)
@@ -324,11 +321,8 @@ bool Gomoku::is_winning_board(uint64_t* board, t_piece piece)
 {
     t_coord     piece_coord;
 
-    piece_coord.x = 5;
-    piece_coord.y = 5;
-
-    for (piece_coord.x = 5; piece_coord.x < this->_board_size; piece_coord.x+=5)
-        for (piece_coord.y = 5; piece_coord.y < this->_board_size; piece_coord.y+=5)
+    for (piece_coord.x = 0; piece_coord.x < this->_board_size; piece_coord.x += 5)
+        for (piece_coord.y = 0; piece_coord.y < this->_board_size; piece_coord.y += 5)
             if (this->evaluate_move(board, piece_coord, piece) >= INT32_MAX)
                 return (true);
     return (false);
@@ -345,7 +339,7 @@ int64_t Gomoku::minimax(t_moveset& moveset, uint64_t* board, uint8_t depth,
 
     current_color = (max) ? this->_ai_color : this->_player_color;
     op_color = (max) ? this->_player_color : this->_ai_color;
-    if (depth == 0 || this->is_winning_board(board, op_color))
+    if (depth == 0 || (depth && this->is_winning_board(board, op_color)))
         return this->evaluate_board(board);
     if (max)
     {
