@@ -244,32 +244,30 @@ uint64_t Gomoku::evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piec
     uint16_t                            current_pattern;
     t_piece                             current_piece;
     t_coord                             pattern_position;
-    bool                                valid_patter;
+    t_piece                             opponent_piece = (piece == Gomoku::BLACK) ? Gomoku::WHITE : Gomoku::BLACK;
+    bool                                valid_pattern;
     const std::map<uint16_t, uint32_t>  &attack_patterns  = Gomoku::_attack_patterns.at(piece);
 
     attack_score = 0;
     for (int i = 0; i < 5; i++)
     {
         current_pattern = 0;
-        valid_patter = true;
+        valid_pattern = true;
         pattern_position = piece_coord;
         for (int j = 0; j < 5; j++)
         {
+            valid_pattern = false;
             current_pattern <<= 2;
             current_piece = this->get_piece(board, pattern_position);
             current_pattern |= current_piece;
-            if (current_piece != Gomoku::EMPTY && current_piece != piece)
-            {
-                valid_patter = false;
+            if (current_piece == Gomoku::ERROR || current_pattern == opponent_piece)
                 break;
-            }
             pattern_position.y += direction.y;
             pattern_position.x += direction.x;
+            valid_pattern = true;
         }
-        if (valid_patter && attack_patterns.contains(current_pattern))
+        if (valid_pattern && attack_patterns.contains(current_pattern))
             attack_score = std::max(attack_patterns.at(current_pattern), attack_score);
-        else
-            break;
         piece_coord.y -= direction.y;
         piece_coord.x -= direction.x;
     }
@@ -322,7 +320,7 @@ bool Gomoku::is_winning_board(uint64_t* board, t_piece piece)
     t_coord     piece_coord;
     uint64_t    line;
 
-    for (piece_coord.x = 0; piece_coord.x < this->_board_size; piece_coord.x++)
+    for (piece_coord.y = 0; piece_coord.y < this->_board_size; piece_coord.y++)
     {
         line = board[piece_coord.y];
         do {
