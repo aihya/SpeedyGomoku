@@ -320,25 +320,49 @@ int64_t Gomoku::evaluate_board(uint64_t *board)
 bool Gomoku::is_winning_board(uint64_t* board, t_piece piece)
 {
     t_coord     piece_coord;
+    uint64_t    line;
 
-    for (piece_coord.x = 0; piece_coord.x < this->_board_size; piece_coord.x += 5)
-        for (piece_coord.y = 0; piece_coord.y < this->_board_size; piece_coord.y += 5)
-            if (this->evaluate_move(board, piece_coord, piece) >= INT32_MAX)
+    for (piece_coord.x = 0; piece_coord.x < this->_board_size; piece_coord.x++)
+    {
+        line = board[piece_coord.y];
+        do {
+            if (line == 0)
+                break;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+            piece_coord.x = (ffsll(line) - 1) >> 1;
+            line &= ~((uint64_t)(Gomoku::ERROR) << (piece_coord.x << 1));
+#else
+            piece_coord.x = (ffsll(line) - 1) << 1;
+            line &= ~((uint64_t)(Gomoku::ERROR) >> (piece_coord.x >> 1));
+#endif
+            if (piece != this->get_piece(board, piece_coord))
+                continue;
+            if (this->evaluate_move(board, piece_coord, piece) == INT32_MAX)
                 return (true);
+        } while (piece_coord.x < this->_board_size);
+    }
     return (false);
+}
+
+void    Gomoku::clear_board_cell(uint64_t* board, t_coord piece_coord)
+{
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    board[piece_coord.y] &= ~((uint64_t)(Gomoku::ERROR) << (piece_coord.x << 1));
+#else
+    board[piece_coord.y] &= ~((uint64_t)(Gomoku::ERROR) >> (piece_coord.x >> 1));
+#endif
 }
 
 int64_t Gomoku::minimax(t_moveset& moveset, uint64_t* board, uint8_t depth,
                             int64_t alpha, int64_t beta, bool max)
 {
-    t_piece     current_color;
     t_piece     op_color;
-    t_moveset   new_moveset;
+    t_piece     current_color;
     int64_t     move_eval;
-    uint64_t    *new_board;
+    t_moveset   new_moveset;
 
-    current_color = (max) ? this->_ai_color : this->_player_color;
     op_color = (max) ? this->_player_color : this->_ai_color;
+    current_color = (max) ? this->_ai_color : this->_player_color;
     if (depth == 0 || (depth && this->is_winning_board(board, op_color)))
         return this->evaluate_board(board);
     if (max)
@@ -346,17 +370,18 @@ int64_t Gomoku::minimax(t_moveset& moveset, uint64_t* board, uint8_t depth,
         int64_t max_eval = INTMAX_MIN;
         for (auto& move: moveset)
         {
-            new_board = this->copy_board(board);
-            new_moveset = t_moveset(moveset);
-            this->register_move(move, current_color, new_board, new_moveset);
-            move_eval = minimax(new_moveset, new_board, depth - 1, alpha, beta, false);
+            new_moveset = moveset;
+            this->update_board(board, move, current_color);
+            new_moveset.erase(move);
+            this->update_ai_moveset(board, new_moveset, move);
+            move_eval = minimax(new_moveset, board, depth - 1, alpha, beta, false);
+            this->clear_board_cell(board, move);
             if (move_eval > max_eval)
             {
                 max_eval = move_eval;
                 if (depth == this->_depth)
                     this->_best_move = move;
             }
-            delete [] new_board;
             alpha = std::max(alpha, move_eval);
             if (beta <= alpha)
                 break;
@@ -368,19 +393,74 @@ int64_t Gomoku::minimax(t_moveset& moveset, uint64_t* board, uint8_t depth,
         int64_t min_eval = INTMAX_MAX;
         for (auto& move: moveset)
         {
-            new_board = this->copy_board(board);
-            new_moveset = t_moveset(moveset);
-            this->register_move(move, current_color, new_board, new_moveset);
-            move_eval = minimax(new_moveset, new_board, depth - 1, alpha, beta, true);
+            new_moveset = moveset;
+            this->update_board(board, move, current_color);
+            new_moveset.erase(move);
+            this->update_ai_moveset(board, new_moveset, move);
+            move_eval = minimax(new_moveset, board, depth - 1, alpha, beta, true);
+            this->clear_board_cell(board, move);
             min_eval = std::min(min_eval, move_eval);
             beta = std::min(beta, move_eval);
-            delete [] new_board;
             if (beta <= alpha)
                 break;
         }
         return min_eval;
     }
 }
+
+// int64_t Gomoku::minimax(t_moveset& moveset, uint64_t* board, uint8_t depth,
+//                             int64_t alpha, int64_t beta, bool max)
+// {
+//     t_piece     current_color;
+//     t_piece     op_color;
+//     t_moveset   new_moveset;
+//     int64_t     move_eval;
+//     uint64_t    *new_board;
+
+//     current_color = (max) ? this->_ai_color : this->_player_color;
+//     op_color = (max) ? this->_player_color : this->_ai_color;
+//     if (depth == 0 || (depth && this->is_winning_board(board, op_color)))
+//         return this->evaluate_board(board);
+//     if (max)
+//     {
+//         int64_t max_eval = INTMAX_MIN;
+//         for (auto& move: moveset)
+//         {
+//             new_board = this->copy_board(board);
+//             new_moveset = t_moveset(moveset);
+//             this->register_move(move, current_color, new_board, new_moveset);
+//             move_eval = minimax(new_moveset, new_board, depth - 1, alpha, beta, false);
+//             if (move_eval > max_eval)
+//             {
+//                 max_eval = move_eval;
+//                 if (depth == this->_depth)
+//                     this->_best_move = move;
+//             }
+//             delete [] new_board;
+//             alpha = std::max(alpha, move_eval);
+//             if (beta <= alpha)
+//                 break;
+//         }
+//         return max_eval;
+//     }
+//     else
+//     {
+//         int64_t min_eval = INTMAX_MAX;
+//         for (auto& move: moveset)
+//         {
+//             new_board = this->copy_board(board);
+//             new_moveset = t_moveset(moveset);
+//             this->register_move(move, current_color, new_board, new_moveset);
+//             move_eval = minimax(new_moveset, new_board, depth - 1, alpha, beta, true);
+//             min_eval = std::min(min_eval, move_eval);
+//             beta = std::min(beta, move_eval);
+//             delete [] new_board;
+//             if (beta <= alpha)
+//                 break;
+//         }
+//         return min_eval;
+//     }
+// }
 
 #include <chrono>
 
