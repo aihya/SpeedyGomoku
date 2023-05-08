@@ -7,6 +7,7 @@
 #include <set>
 #include <algorithm>
 #include <string.h>
+#include <chrono>
 /**
  * @brief Game class
  * This game is a simple implementation of the gomoku game using minimax algorithm.
