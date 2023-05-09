@@ -42,9 +42,22 @@ class Gomoku
             short           x;
             short           y;
         }                   t_coord;
+        typedef struct      s_move_score
+        {
+            t_coord         coord;
+            uint64_t        score;
+        }                   t_move_score;
+
         struct coordComparator {
             inline bool operator()(const t_coord& f_coord, const t_coord& s_coord) const {
                 return  (f_coord.x == s_coord.x) ? f_coord.y < s_coord.y : f_coord.x < s_coord.x;
+            }
+        };
+        struct moveComparator {
+            inline bool operator()(const t_move_score& f_move, const t_move_score& s_move) const {
+                if (f_move.score > s_move.score)
+                    return (f_move.score > s_move.score);
+                return  (f_move.coord.x == s_move.coord.x) ? f_move.coord.y < s_move.coord.y : f_move.coord.x < s_move.coord.x;
             }
         };
 
@@ -52,6 +65,10 @@ class Gomoku
 
         typedef std::map< Gomoku::e_piece, std::map<uint16_t, uint32_t> >       t_patterns;
         typedef std::set<t_coord, coordComparator>                              t_moveset;
+        typedef std::set<t_move_score, moveComparator>                          t_move_score_set;
+
+    private:
+
 
         const static std::array<t_coord, 4>     _directions;
 
@@ -101,4 +118,6 @@ class Gomoku
         uint64_t    *maximize(uint64_t *board, t_piece piece, size_t depth, size_t aplha);
         uint64_t    *minimize(uint64_t *board, t_piece piece, size_t depth, size_t beta);
         bool        is_winning_board(uint64_t* board, t_piece piece);
+        void        get_new_moveset(uint64_t *board, t_moveset &possible_moves, t_moveset &old_moves, t_coord piece_coord);
+        void        print_board(uint64_t *board, t_moveset& moveset);
 };
