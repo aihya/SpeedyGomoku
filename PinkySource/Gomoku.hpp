@@ -96,7 +96,7 @@ class Gomoku
         void        print_board();
         void        make_move(t_coord piece_coord);
         int64_t     evaluate_board(uint64_t *board);
-        uint64_t    evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
+        // uint64_t    evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
         bool        is_move_valid(t_coord piece_coord);
         bool        is_player_turn()
         {
@@ -110,14 +110,16 @@ class Gomoku
         void        update_board(uint64_t *board, t_coord piece_coord, t_piece piece);
         void        clear_board_cell(uint64_t* board, t_coord piece_coord);
         uint64_t    *copy_board(uint64_t *board);
-        uint64_t    evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
+        int32_t     evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
+        int64_t     evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
         // int64_t     minimax(t_moveset moveset, uint64_t* board, uint8_t depth,
         //                         int64_t alpha, int64_t beta, bool max);
         int64_t     minimax(t_moveset& moveset, uint64_t* board, uint8_t depth,
                             int64_t alpha, int64_t beta, bool max);
         uint64_t    *maximize(uint64_t *board, t_piece piece, size_t depth, size_t aplha);
         uint64_t    *minimize(uint64_t *board, t_piece piece, size_t depth, size_t beta);
-        bool        is_winning_board(uint64_t* board, t_piece piece);
+        // bool        is_winning_board(uint64_t* board, t_piece piece);
+        bool        is_winning_move(uint64_t* board, t_piece piece, t_coord move);
         void        get_new_moveset(uint64_t *board, t_moveset &possible_moves, t_moveset &old_moves, t_coord piece_coord);
         void        print_board(uint64_t *board, t_moveset& moveset);
 };
