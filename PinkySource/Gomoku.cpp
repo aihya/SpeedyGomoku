@@ -120,7 +120,7 @@ Gomoku::Gomoku(uint8_t board_size, t_piece player_color, t_difficulty difficulty
         throw std::invalid_argument("Player color must be BLACK or WHITE");
    this->_move_history.push_front(new uint64_t[board_size]());
    this->_ai_color = (this->_player_color == Gomoku::BLACK) ? Gomoku::WHITE : Gomoku::BLACK;
-   this->_depth = 6;
+   this->_depth = 5;
 }
 
 Gomoku::~Gomoku()
@@ -367,8 +367,8 @@ void    Gomoku::make_move()
     this->_move_history.push_front(new_board);
     auto end = std::chrono::steady_clock::now();
     auto diff = end - start;
-    std::cout << "AI move took " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
-    std::cout << "AI move: " << this->_best_move.x << " " << this->_best_move.y << std::endl;
+    std::cout << std::chrono::duration<double, std::milli>(diff).count() << std::endl;
+    std::cout << this->_best_move.x << " " << this->_best_move.y << std::endl;
 }
 
 void Gomoku::make_move(t_coord piece_coord)
@@ -457,7 +457,6 @@ int main(int argc, char **argv)
         else
         {
             game.make_move(new_move);
-            std::cout << game.get_best_move().x << " " << game.get_best_move().y << std::endl;
             game.print_board();
         }
     }
