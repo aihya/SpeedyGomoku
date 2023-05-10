@@ -1,18 +1,20 @@
 import signal
 from pexpect.popen_spawn import PopenSpawn
+from pexpect.exceptions import TIMEOUT
 from init import EXE_PATH
+from state import State
 
-
-class Computer:
+class Computer():
     """
     This class represents the computer player.
     """
 
-    __slots__ = ('_process', '_executable')
+    __slots__ = ('_process', '_executable', '_args', '_expecting')
 
-    def __init__(self):
-        self._executable = EXE_PATH
+    def __init__(self, *args):
         self._process = None
+        self._executable = ' '.join([EXE_PATH, *args])
+        self._expecting = False
 
     @property
     def process(self):
@@ -39,21 +41,70 @@ class Computer:
             self.process = None
 
     def pause(self):
+        """
+        Trigger SIGSTOP signal to stop the process temporarly.
+        """
         if self.process:
             self.process.kill(signal.SIGSTOP)
 
     def resume(self):
+        """
+        Trigger SIGCONT signal to continue the execution of the process.
+        """
         if self.process:
             self.process.kill(signal.SIGCONT)
 
-    def read_buffer(self):
+    def send(self, what: str):
+        self.process.send(what)
+
+    @property
+    def expecting(self) -> bool:
+        return self._expecting
+
+    @expecting.setter
+    def expecting(self, value: bool):
+        self._expecting = value
+
+    def expect(self, what: list):
+        """
+        This simple implementation does not support multiple expects.
+        """
         if self.process:
-            return self.process.before.decode('utf-8').split('\n')
+            try:
+                return self.process.expect(what, timeout=0.00001)
+            except TIMEOUT:
+                pass
+        return
 
     def next_move(self):
+        """
+        Read the buffer from pexpect.popen_spawn.PopenSpawn, process the 
+        content and create a move object.
+        """
         if self.process:
-            buffer = self.read_buffer()
+            buffer = self.process.before.decode('utf-8').split('\n')
             if buffer:
-                coordinates = [int(i) for i in buffer[-1].split()]
-                return coordinates
-            return None
+                move = {
+                    'time': float(buffer[0]),
+                    'coords': [int(c) for c in buffer[1].split()],
+                    'board': [],
+                }
+                for line in buffer[2:-2]:
+                    line = line.split()
+                    move['board'].append([])
+                    for value in line[:-1]:
+                        if value == 'O':
+                            move['board'][-1].append('1')
+                        elif value == 'X':
+                            move['board'][-1].append('2')
+                        else:
+                            move['board'][-1].append('0')
+                return move
+        return None
+
+
+class Human:
+    """
+    Abstraction of human player
+    """
+    pass
