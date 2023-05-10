@@ -3,7 +3,7 @@ from pygame import gfxdraw
 from surface import Surface
 from init import *
 from computer import Computer, Human
-import asyncio
+import fonts
 
 class Board(Surface):
     """ 
@@ -133,6 +133,15 @@ class Board(Surface):
                     y = self.linspace[r] + 1
                     Board.draw_circle(self.board.surface, x, y, 16, pygame.Color(color))
 
+                    counter = self.state.counts.get((c, r))
+                    if counter == None:
+                        continue
+                    count_text = fonts.h4_b.render(f'{counter}', True, (0, 0, 0) if col == '1' else (255, 255, 255))
+                    count_rect = count_text.get_rect()
+                    count_rect.center = (x, y)
+                    self.board.surface.blit(count_text, count_rect)
+                    
+
     def check_hover(self):
         x, y = pygame.mouse.get_pos()
         if x >= self.offset and x <= self.limit + self.offset:
@@ -179,13 +188,12 @@ class Board(Surface):
             # restart the bot process
             if self.p1:
                 self.p1.stop()
-
-            # Need to run in parallel
             self.p1 = Computer('--black')
             self.p1.start()
 
             # if restarting failed, kill everything
             if self.p1 == None:
+                self.p2.stop()
                 self.window.quit = True
                 return
         else:
@@ -195,14 +203,12 @@ class Board(Surface):
             # restart the bot process
             if self.p2:
                 self.p2.stop()
-
-            # Need to run in parallel
             self.p2 = Computer('--white')
             self.p2.start()
 
             # if restarting failed, kill everything
             if self.p2 == None:
-                self.p2.stop()
+                self.p1.stop()
                 self.window.quit = True
                 return
         else:
@@ -226,6 +232,8 @@ class Board(Surface):
 
                 if isinstance(self.turn, Human):
                     if event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.check_hover():
+
+                        # Get the current position of the mouse and map the coordinantes to index the board
                         x, y = pygame.mouse.get_pos()
                         x = math.floor((x-16) / self.step)
                         y = math.floor((y-16) / self.step)
@@ -237,9 +245,12 @@ class Board(Surface):
                             if isinstance(self.turn, Computer):
                                 self.turn.process.send(f'{y} {"ABCDEFGHIJKLMNOPQRS"[x]}\n')
                 else:
-                    exp = self.turn.expect(['Enter move: \n'])
-                    if exp == 0:
-                        move = self.turn.next_move()
+
+                    # Attempt to get the next move.
+                    # The function might return `None` in case PopenSpawn.expect did not match the target string.
+                    move = self.turn.next_move()
+
+                    if move:
                         self.state.update(move['coords'][0], move['coords'][1], self.player_symbol())
                         self.turn = self.p1 if self.turn == self.p2 else self.p2
 

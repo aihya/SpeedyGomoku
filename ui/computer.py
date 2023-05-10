@@ -76,30 +76,47 @@ class Computer():
                 pass
         return
 
+    def extract_move(self, buffer):
+        if len(buffer) == 1:
+            return None
+
+        move = {
+            'time': float(buffer[0]),
+            'coords': [int(c) for c in buffer[1].split()],
+            'board': [],
+        }
+        for line in buffer[2:-2]:
+            line = line.split()
+            move['board'].append([])
+            for value in line[:-1]:
+                if value == 'O':
+                    move['board'][-1].append('1')
+                elif value == 'X':
+                    move['board'][-1].append('2')
+                else:
+                    move['board'][-1].append('0')
+        return move
+
     def next_move(self):
         """
         Read the buffer from pexpect.popen_spawn.PopenSpawn, process the 
         content and create a move object.
         """
+
         if self.process:
+
+            # Attempt an expect operation from subprocess.
+            # Return None if no match found.
+            if self.expect(['Enter move: \n']) != 0:
+                return None
+
+            # Read the content sent from the subprocess
             buffer = self.process.before.decode('utf-8').split('\n')
+
             if buffer:
-                move = {
-                    'time': float(buffer[0]),
-                    'coords': [int(c) for c in buffer[1].split()],
-                    'board': [],
-                }
-                for line in buffer[2:-2]:
-                    line = line.split()
-                    move['board'].append([])
-                    for value in line[:-1]:
-                        if value == 'O':
-                            move['board'][-1].append('1')
-                        elif value == 'X':
-                            move['board'][-1].append('2')
-                        else:
-                            move['board'][-1].append('0')
-                return move
+                # Extract the move informations and store it in a dictionary
+                return self.extract_move(buffer)
+
         return None
 
 
