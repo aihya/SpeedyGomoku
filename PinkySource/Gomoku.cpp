@@ -94,10 +94,7 @@ void Gomoku::print_board(uint64_t *board, t_moveset &moveset)
                     std::cout << "O ";
                     break;
                 case Gomoku::EMPTY:
-                    if (moveset.count((t_coord){x, y}))
-                        std::cout << "\033[1;31m. \033[0m";
-                    else
-                        std::cout << ". ";
+                    std::cout << ". ";
                     break;
                 default:
                     std::cout << "? ";
@@ -404,25 +401,44 @@ void Gomoku::make_move(t_coord piece_coord)
     this->_turn++;
 }
 
-int main()
+Gomoku::t_coord &Gomoku::get_best_move()
+{
+    return _best_move;
+}
+
+int main(int argc, char **argv)
 {
     int             row;
     char            col;
     Gomoku::t_coord new_move;
+    Gomoku::e_piece player_color;
+    Gomoku::e_difficulty difficulty;
 
-    Gomoku game(19, Gomoku::WHITE, Gomoku::EASY);
+    player_color = Gomoku::BLACK;
+    difficulty = Gomoku::EASY;
+    for (int i = 1; i < argc; i++)
+    {
+        if (!strcmp(argv[i], "--white") || !strcmp(argv[i], "-w"))
+            player_color = Gomoku::WHITE;
+        else if (!strcmp(argv[i], "--black") || !strcmp(argv[i], "-b"))
+            player_color = Gomoku::BLACK;
+        else if (!strcmp(argv[i], "--easy"))
+            difficulty = Gomoku::EASY;
+        else if (!strcmp(argv[i], "--medium"))
+            difficulty = Gomoku::MEDIUM;
+        else if (!strcmp(argv[i], "--hard"))
+            difficulty = Gomoku::HARD;
+    }
+
+    Gomoku game(19, player_color, difficulty);
     for(;;)
     {
-        game.print_board();
-        std::cout << "-----------------------" << std::endl;
         if (game.is_player_turn())
         {
             try
             {
                 std::cout << "Enter move: " << std::endl;
-                std::cout << "-row (0 - 18): ";
                 std::cin >> row;
-                std::cout << "-col (A - S): ";
                 std::cin >> col;
             }
             catch(const std::exception& e)
@@ -439,7 +455,11 @@ int main()
                 std::cout << "Invalid move." << std::endl;
         }
         else
+        {
             game.make_move(new_move);
+            std::cout << game.get_best_move().x << " " << game.get_best_move().y << std::endl;
+            game.print_board();
+        }
     }
     std::cout << "Invalid move." << std::endl;
     return (0);

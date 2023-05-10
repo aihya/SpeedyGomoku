@@ -100,6 +100,9 @@ class Gomoku
         t_moveset                               _ai_moveset;
 
     public:
+        t_coord     &get_best_move();
+
+    public:
                     Gomoku(uint8_t board_size, t_piece player_color, t_difficulty difficulty);
                     ~Gomoku();
         void        register_move(t_coord piece_coord, t_piece piece, uint64_t* board, t_moveset& moveset);
