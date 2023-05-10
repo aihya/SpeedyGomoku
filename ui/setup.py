@@ -182,6 +182,22 @@ class Setup(Surface):
                     for box in mode_checkboxs:
                         box.check_clicked()
 
+            self.p2_type.anchor.checked = False
+            if self.p1_type.anchor.value == HUMAN:
+                self.p2_type.anchor = self.p2_type.container[1]
+            else:
+                self.p2_type.anchor = self.p2_type.container[0]
+            self.p2_type.anchor.checked = True
+            self.p2_type.update()
+
+            self.p1_type.anchor.checked = False
+            if self.p2_type.anchor.value == HUMAN:
+                self.p1_type.anchor = self.p1_type.container[1]
+            else:
+                self.p1_type.anchor = self.p1_type.container[0]
+            self.p1_type.anchor.checked = True
+            self.p1_type.update()
+
             self.start.update()
             self.surface.blit(self.start.surface, self.start.rect)
             self.draw_box_1()
@@ -189,3 +205,6 @@ class Setup(Surface):
             self.window.blit(self)
             self.window.update()
             CLOCK.tick(30)
+
+        if self.window.quit:
+            return
