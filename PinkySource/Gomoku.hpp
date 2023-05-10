@@ -37,6 +37,16 @@ class Gomoku
             HARD
         }                   t_difficulty;
 
+        typedef enum        e_scores
+        {
+            WINNING_SCORE = 10000000,
+            FOUR_SCORE    = 100000,
+            CAPTURE_SCORE = 10000,
+            THREE_SCORE   = 1000,
+            TWO_SCORE     = 100,
+            ONE_SCORE     = 10,
+        }                   t_scores;
+
         typedef struct      s_coord
         {
             short           x;
@@ -63,9 +73,9 @@ class Gomoku
 
     private:
 
-        typedef std::map< Gomoku::e_piece, std::map<uint16_t, uint32_t> >       t_patterns;
+        typedef std::map< Gomoku::e_piece, std::map<uint16_t, t_scores> >       t_patterns;
         typedef std::set<t_coord, coordComparator>                              t_moveset;
-        typedef std::set<t_move_score, moveComparator>                          t_move_score_set;
+        typedef std::set<t_move_score, moveComparator>                          t_sorted_moveset;
 
     private:
 
@@ -96,7 +106,6 @@ class Gomoku
         void        print_board();
         void        make_move(t_coord piece_coord);
         int64_t     evaluate_board(uint64_t *board);
-        // uint64_t    evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
         bool        is_move_valid(t_coord piece_coord);
         bool        is_player_turn()
         {
@@ -104,22 +113,19 @@ class Gomoku
         }
 
     private:
-        t_piece     get_piece(uint64_t *board, t_coord piece_coord);
-        void        make_move();
-        void        update_ai_moveset(uint64_t *board, t_moveset &possible_moves, t_coord piece_coord);
-        void        update_board(uint64_t *board, t_coord piece_coord, t_piece piece);
-        void        clear_board_cell(uint64_t* board, t_coord piece_coord);
-        uint64_t    *copy_board(uint64_t *board);
-        int32_t     evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
-        int64_t     evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
-        // int64_t     minimax(t_moveset moveset, uint64_t* board, uint8_t depth,
-        //                         int64_t alpha, int64_t beta, bool max);
-        int64_t     minimax(t_moveset& moveset, uint64_t* board, uint8_t depth,
-                            int64_t alpha, int64_t beta, bool max);
-        uint64_t    *maximize(uint64_t *board, t_piece piece, size_t depth, size_t aplha);
-        uint64_t    *minimize(uint64_t *board, t_piece piece, size_t depth, size_t beta);
-        // bool        is_winning_board(uint64_t* board, t_piece piece);
-        bool        is_winning_move(uint64_t* board, t_piece piece, t_coord move);
-        void        get_new_moveset(uint64_t *board, t_moveset &possible_moves, t_moveset &old_moves, t_coord piece_coord);
-        void        print_board(uint64_t *board, t_moveset& moveset);
+        t_piece             get_piece(uint64_t *board, t_coord piece_coord);
+        void                make_move();
+        void                update_ai_moveset(uint64_t *board, t_moveset &possible_moves, t_coord piece_coord);
+        void                update_board(uint64_t *board, t_coord piece_coord, t_piece piece);
+        void                clear_board_cell(uint64_t* board, t_coord piece_coord);
+        uint64_t            *copy_board(uint64_t *board);
+        uint32_t            evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
+        uint32_t            evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
+        int64_t             minimax(t_moveset& moveset, uint64_t* board, uint8_t depth, int64_t alpha, int64_t beta, bool max);
+        uint64_t            *maximize(uint64_t *board, t_piece piece, size_t depth, size_t aplha);
+        uint64_t            *minimize(uint64_t *board, t_piece piece, size_t depth, size_t beta);
+        bool                is_winning_move(uint64_t* board, t_piece piece, t_coord move);
+        void                get_new_moveset(uint64_t *board, t_moveset &possible_moves, t_moveset &old_moves, t_coord piece_coord);
+        void                print_board(uint64_t *board, t_moveset& moveset);
+        t_sorted_moveset    generate_sorted_moveset(t_moveset& moveset, uint64_t* board, t_piece piece);
 };
