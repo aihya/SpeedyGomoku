@@ -47,26 +47,26 @@ class Final(Surface):
         global QUIT
 
         # Header message
-        header = fonts.h2_b.render('Game Finished!', True, BLACK_COLOR, BOARD_COLOR)
+        header = fonts.h2_b.render('Game Finished!', True, BLACK_COLOR, DEFAULT_BG)
         header_rect = header.get_rect()
         header_rect.center = (int(self.width / 2), int(self.height / 2) - 100)
 
         # Mid-screen message
         if self.winner == 0:
-            middle = fonts.h3_r.render('The game is a Tie', True, BLACK_COLOR, BOARD_COLOR)
+            middle = fonts.h3_r.render('The game is a Tie', True, BLACK_COLOR, DEFAULT_BG)
         else:
-            middle = fonts.h3_r.render(f'Player {self.winner} is Victorious', True, BLACK_COLOR, BOARD_COLOR)
+            middle = fonts.h3_r.render(f'Player {self.winner} is Victorious', True, BLACK_COLOR, DEFAULT_BG)
         middle_rect = middle.get_rect()
         middle_rect.center = (int(self.width / 2), int(self.height / 2))
 
         # Put text on the surface
-        self.surface.fill(BOARD_COLOR)
+        self.surface.fill(DEFAULT_BG)
         self.surface.blit(header, header_rect)
         self.surface.blit(middle, middle_rect)
         while self.repeat:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    QUIT = True
+                    self.window.quit = True
                     self.repeat = False
                     continue
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:

@@ -170,8 +170,7 @@ class CheckBoxs(Surface):
 
         # Set max width of the container
         total_width = 0
-        for checkbox in self._container:
-            total_width = checkbox.width if checkbox.width > total_width else total_width
+        total_width = max([cb.width for cb in self._container])
 
         # Anchor to first element of container list or set to None
         self._anchor = self._container[0]

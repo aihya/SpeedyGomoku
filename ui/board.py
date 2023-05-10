@@ -2,18 +2,18 @@ import math
 from pygame import gfxdraw
 from surface import Surface
 from init import *
-from computer import Computer
+from computer import Computer, Human
+import asyncio
 
 class Board(Surface):
     """ 
     This class represents the board surface (game board + sidebar).
     """
 
-    __slots__ = ('_player', '_board', '_sidebar', '_state', '_window', '_repeat', '_offset', '_limit', '_step', '_linspace', '_setup', '_p1', '_p2')
+    __slots__ = ('_turn', '_board', '_sidebar', '_state', '_window', '_repeat', '_offset', '_limit', '_step', '_linspace', '_setup', '_p1', '_p2')
 
-    def __init__(self, window, player, initial_state, setup):
+    def __init__(self, window, initial_state, setup):
         super().__init__(WIDTH, HEIGHT, (0, 0))
-        self._player   = player
         self._board    = Surface(HEIGHT, HEIGHT, None)
         self._sidebar  = Surface(WIDTH-HEIGHT, HEIGHT, None)
         self._state    = initial_state
@@ -26,6 +26,7 @@ class Board(Surface):
         self._setup    = setup
         self._p1       = None
         self._p2       = None
+        self._turn     = self._p1
 
     @property
     def p1(self):
@@ -48,12 +49,12 @@ class Board(Surface):
         return self._setup
 
     @property
-    def player(self):
-        return self._player
+    def turn(self):
+        return self._turn
 
-    @player.setter
-    def player(self, value):
-        self._player = value
+    @turn.setter
+    def turn(self, value):
+        self._turn = value
 
     @property
     def board(self):
@@ -140,12 +141,13 @@ class Board(Surface):
         return False
 
     def show_hover(self):
-        radius = 20
+        radius = 13
         x, y = pygame.mouse.get_pos()
-        color = "#ffffff" if self.player == 1 else "#000000"
+        # color = "#ffffff" if self.turn == self.p1 else "#000000"
+        color = "#FFFF00"
         nx = self.linspace[math.floor((x-radius) / self.step)]
         ny = self.linspace[math.floor((y-radius) / self.step)]
-        if math.sqrt((x-nx)**2 + (y-ny)**2) <= 25:
+        if math.sqrt((x-nx)**2 + (y-ny)**2) <= radius:
             x, y = nx + 1, ny + 1
         Board.draw_circle(self.board.surface, x, y, radius, pygame.Color(color))
         return x, y
@@ -167,21 +169,48 @@ class Board(Surface):
         self.window.blit(self)
         self.window.update()
 
-    def loop(self):
-        global QUIT
+    def player_symbol(self):
+        if self.turn == self.p1:
+            return '1'
+        return '2'
 
+    def setup_players(self):
         if self.setup.p1_type.anchor.value == COMPUTER:
+            # restart the bot process
             if self.p1:
                 self.p1.stop()
-            self.p1 = Computer()
+
+            # Need to run in parallel
+            self.p1 = Computer('--black')
             self.p1.start()
-            print('Created p1:', self.p1.process)
+
+            # if restarting failed, kill everything
+            if self.p1 == None:
+                self.window.quit = True
+                return
+        else:
+            self.p1 = Human()
+
         if self.setup.p2_type.anchor.value == COMPUTER:
+            # restart the bot process
             if self.p2:
                 self.p2.stop()
-            self.p2 = Computer()
+
+            # Need to run in parallel
+            self.p2 = Computer('--white')
             self.p2.start()
-            print('Created p2')
+
+            # if restarting failed, kill everything
+            if self.p2 == None:
+                self.p2.stop()
+                self.window.quit = True
+                return
+        else:
+            self.p2 = Human()
+
+    def loop(self):
+        self.setup_players()
+        self.turn = self.p1
 
         print('p1', self.setup.p1_type.anchor.value)
         print('p2', self.setup.p2_type.anchor.value)
@@ -189,21 +218,36 @@ class Board(Surface):
         self.update()
         while self.repeat:
             for event in pygame.event.get():
+
                 if event.type == pygame.QUIT:
-                    QUIT = True
+                    self.window.quit = True
                     self.repeat = False
                     break
-                if event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.check_hover():
-                    x, y = pygame.mouse.get_pos()
-                    x = math.floor((x-16) / self.step)
-                    y = math.floor((y-16) / self.step)
-                    if self.state.state[y][x] == '0':
-                        self.state.update(x, y, str(self.player))
-                        self.player = 1 if self.player == 2 else 2
-            if not QUIT:
-                self.update()
-            CLOCK.tick(30)
 
-        # # Reset the players: Need to check if the player is comuter to close it's process
+                if isinstance(self.turn, Human):
+                    if event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.check_hover():
+                        x, y = pygame.mouse.get_pos()
+                        x = math.floor((x-16) / self.step)
+                        y = math.floor((y-16) / self.step)
+
+                        # Update the value of the board position to 1 or 2 according to the current turn
+                        if self.state.state[y][x] == '0':
+                            self.state.update(x, y, self.player_symbol())
+                            self.turn = self.p1 if self.turn == self.p2 else self.p2
+                            if isinstance(self.turn, Computer):
+                                self.turn.process.send(f'{y} {"ABCDEFGHIJKLMNOPQRS"[x]}\n')
+                else:
+                    exp = self.turn.expect(['Enter move: \n'])
+                    if exp == 0:
+                        move = self.turn.next_move()
+                        self.state.update(move['coords'][0], move['coords'][1], self.player_symbol())
+                        self.turn = self.p1 if self.turn == self.p2 else self.p2
+
+            if self.window.quit == False:
+                self.update()
+
+            CLOCK.tick(60)
+
+        # # Reset the turns: Need to check if the turn is computer to close it's process
         # self.p1 = None
         # self.p2 = None
