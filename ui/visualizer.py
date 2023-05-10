@@ -63,9 +63,9 @@ class Game:
         self._state           = State()
         self._window          = Window()
         self._setup_surface   = Setup(self._window)
-        self._board_surface   = Board(self._window, 1, self._state, self._setup_surface)
+        self._board_surface   = Board(self._window, self._state, self._setup_surface)
         self._final_surface   = Final(self._window)
-        self._current_surface = FINAL_SURFACE
+        self._current_surface = SETUP_SURFACE
 
     @property
     def window(self):
