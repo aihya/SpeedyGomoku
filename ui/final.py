@@ -16,7 +16,7 @@ class Final(Surface):
         super().__init__(WIDTH, HEIGHT, (0, 0))
         self._repeat = True
         self._window = window
-        self._winner = 2
+        self._winner = 0
         self._button = Button(int(self.width / 2), int(self.height / 2) + 200, "#000000", "#F5BB55", "REMATCH", fonts.h3_t)
 
     @property
@@ -52,7 +52,7 @@ class Final(Surface):
         header_rect.center = (int(self.width / 2), int(self.height / 2) - 100)
 
         # Mid-screen message
-        if self.winner == 0:
+        if self.winner == 3:
             middle = fonts.h3_r.render('The game is a Tie', True, BLACK_COLOR, DEFAULT_BG)
         else:
             middle = fonts.h3_r.render(f'Player {self.winner} is Victorious', True, BLACK_COLOR, DEFAULT_BG)
