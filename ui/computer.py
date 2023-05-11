@@ -104,18 +104,21 @@ class Computer():
         """
 
         if self.process:
-
             # Attempt an expect operation from subprocess.
             # Return None if no match found.
-            if self.expect(['Enter move: \n']) != 0:
+            index = self.expect(['Enter move: \n', 'AI wins!\n', 'Player wins!\n', 'Tie\n'])
+
+            if index == None or index < -1:
                 return None
+            if index == 0:
+                # Read the content sent from the subprocess
+                buffer = self.process.before.decode('utf-8').split('\n')
 
-            # Read the content sent from the subprocess
-            buffer = self.process.before.decode('utf-8').split('\n')
+                if buffer:
+                    # Extract the move informations and store it in a dictionary
+                    return self.extract_move(buffer)
 
-            if buffer:
-                # Extract the move informations and store it in a dictionary
-                return self.extract_move(buffer)
+            return index
 
         return None
 
