@@ -57,7 +57,7 @@ class Game:
     This class represents the game logic.
     """
 
-    __slots__ = ('_state', '_window', '_setup_surface', '_board_surface', '_final_surface', '_current_surface', '_computer')
+    __slots__ = ('_state', '_window', '_setup_surface', '_board_surface', '_final_surface', '_current_surface', '_winner')
 
     def __init__(self):
         self._state           = State()
@@ -66,6 +66,7 @@ class Game:
         self._board_surface   = Board(self._window, self._state, self._setup_surface)
         self._final_surface   = Final(self._window)
         self._current_surface = SETUP_SURFACE
+        self._winner          = 0
 
     @property
     def window(self):
@@ -94,14 +95,23 @@ class Game:
     @property
     def state(self):
         return self._state
+    
+    @property
+    def winner(self):
+        return self._winner
+    
+    @winner.setter
+    def winner(self, value):
+        self._winner = value
 
     def run(self):
         while self.window.quit == False:
             if self.current_surface == SETUP_SURFACE:
                 self.current_surface = self.setup_surface.loop()
             elif self.current_surface == BOARD_SURFACE:
-                self.current_surface = self.board_surface.loop()
+                self.current_surface, self.winner = self.board_surface.loop()
             elif self.current_surface == FINAL_SURFACE:
+                self.final_surface.winner = self.winner
                 self.current_surface = self.final_surface.loop()
         return None
 
