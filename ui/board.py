@@ -136,7 +136,10 @@ class Board(Surface):
                     counter = self.state.counts.get((c, r))
                     if counter == None:
                         continue
-                    count_text = fonts.h4_b.render(f'{counter}', True, (0, 0, 0) if col == '1' else (255, 255, 255))
+                    if counter == self.state.counter:
+                        count_text = fonts.h4_b.render(f'{counter}', True, (255, 0, 0))
+                    else:
+                        count_text = fonts.h4_b.render(f'{counter}', True, (0, 0, 0) if col == '1' else (255, 255, 255))
                     count_rect = count_text.get_rect()
                     count_rect.center = (x, y)
                     self.board.surface.blit(count_text, count_rect)
@@ -150,7 +153,7 @@ class Board(Surface):
         return False
 
     def show_hover(self):
-        radius = 13
+        radius = 16
         x, y = pygame.mouse.get_pos()
         # color = "#ffffff" if self.turn == self.p1 else "#000000"
         color = "#FFFF00"
@@ -159,6 +162,15 @@ class Board(Surface):
         if math.sqrt((x-nx)**2 + (y-ny)**2) <= radius:
             x, y = nx + 1, ny + 1
         Board.draw_circle(self.board.surface, x, y, radius, pygame.Color(color))
+
+        # Show the current count value on the hover piece.
+        if isinstance(self.turn, Human):
+            count_text = fonts.h4_b.render(f'{self.state.counter + 1}', True, (0, 0, 0))
+            count_rect = count_text.get_rect()
+            count_rect.center = (x, y)
+            self.board.surface.blit(count_text, count_rect)
+
+        # Return coordinates of the mouse
         return x, y
 
     def update_board(self):
@@ -186,7 +198,7 @@ class Board(Surface):
     def setup_players(self):
         if self.setup.p1_type.anchor.value == COMPUTER:
             # restart the bot process
-            if self.p1:
+            if isinstance(self.p1, Computer):
                 self.p1.stop()
             self.p1 = Computer('--black')
             self.p1.start()
@@ -201,26 +213,25 @@ class Board(Surface):
 
         if self.setup.p2_type.anchor.value == COMPUTER:
             # restart the bot process
-            if self.p2:
+            if isinstance(self.p2, Computer):
                 self.p2.stop()
             self.p2 = Computer('--white')
             self.p2.start()
 
             # if restarting failed, kill everything
             if self.p2 == None:
-                self.p1.stop()
                 self.window.quit = True
                 return
         else:
             self.p2 = Human()
 
-    def loop(self):
+    def reset(self):
+        self.state.reset()
         self.setup_players()
         self.turn = self.p1
 
-        print('p1', self.setup.p1_type.anchor.value)
-        print('p2', self.setup.p2_type.anchor.value)
-        
+    def loop(self):
+        self.reset()
         self.update()
         while self.repeat:
             for event in pygame.event.get():
@@ -244,21 +255,21 @@ class Board(Surface):
                             self.turn = self.p1 if self.turn == self.p2 else self.p2
                             if isinstance(self.turn, Computer):
                                 self.turn.process.send(f'{y} {"ABCDEFGHIJKLMNOPQRS"[x]}\n')
-                else:
 
-                    # Attempt to get the next move.
-                    # The function might return `None` in case PopenSpawn.expect did not match the target string.
-                    move = self.turn.next_move()
+            # The previous for-loop will prevent the computer to make a move unless there was a registered event.
+            if isinstance(self.turn, Computer):
+                # Attempt to get the next move.
+                # The function might return `None` in case PopenSpawn.expect did not match the target string.
+                move = self.turn.next_move()
 
-                    if move:
-                        self.state.update(move['coords'][0], move['coords'][1], self.player_symbol())
-                        self.turn = self.p1 if self.turn == self.p2 else self.p2
+                if isinstance(move, int):
+                    return FINAL_SURFACE, move
+
+                if move:
+                    self.state.update(move['coords'][0], move['coords'][1], self.player_symbol())
+                    self.turn = self.p1 if self.turn == self.p2 else self.p2
 
             if self.window.quit == False:
                 self.update()
 
             CLOCK.tick(60)
-
-        # # Reset the turns: Need to check if the turn is computer to close it's process
-        # self.p1 = None
-        # self.p2 = None
