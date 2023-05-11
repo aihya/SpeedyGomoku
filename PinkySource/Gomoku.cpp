@@ -85,10 +85,7 @@ void Gomoku::print_board(uint64_t *board, t_moveset &moveset)
             switch (piece)
             {
                 case Gomoku::BLACK:
-                    if (current_move.x == this->_best_move.x && current_move.y == this->_best_move.y)
-                        std::cout << "\033[1;32mX \033[0m";
-                    else
-                        std::cout << "X ";
+                    std::cout << "X ";
                     break;
                 case Gomoku::WHITE:
                     std::cout << "O ";
@@ -431,6 +428,12 @@ int main(int argc, char **argv)
     }
 
     Gomoku game(19, player_color, difficulty);
+
+    // if (player_color == Gomoku::WHITE)
+    // {
+    //     game.print_board();
+    // }
+
     for(;;)
     {
         if (game.is_player_turn())
