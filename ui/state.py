@@ -32,8 +32,17 @@ class State:
     @property
     def counts(self):
         return self._counts
+    
+    @counts.setter
+    def counts(self, value):
+        self._counts = value
 
     def update(self, x, y, player):
         self.counter = self.counter + 1
         self.counts[(x, y)] = self.counter
         self.state[y][x] = player
+
+    def reset(self):
+        self.counter = 0
+        self.counts = {}
+        self.state = [['0' for j in range(19)] for i in range(19)]
