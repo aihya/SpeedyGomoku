@@ -19,6 +19,8 @@
  * to ints for now because of readability, we may change it later for performance.
  */
 
+#define GET_OPPONENT(piece) ((piece == Gomoku::BLACK) ? Gomoku::WHITE : Gomoku::BLACK)
+
 class Gomoku
 {
     public:
@@ -39,24 +41,67 @@ class Gomoku
 
         typedef enum        e_scores
         {
+            ILLEGAL_SCORE = -1000000,
             WINNING_SCORE = 10000000,
             FOUR_SCORE    = 100000,
-            CAPTURE_SCORE = 10000,
+            CAPTURE_SCORE = 5000,
             THREE_SCORE   = 1000,
             TWO_SCORE     = 100,
             ONE_SCORE     = 10,
+            ZERO_SCORE    = 0
         }                   t_scores;
+
+        typedef enum        e_pattern_size
+        {   
+            SIX  = 6,
+            FIVE = 5,
+            FOUR = 4
+        }                   t_pattern_size;
+
+        typedef enum        e_pattern_mask
+        {
+            SIX_MASK  = 0b111111111111,
+            FIVE_MASK = 0b1111111111,
+            FOUR_MASK = 0b11111111,
+        }                   t_pattern_mask;
+        typedef enum        e_update_type
+        {
+            ADD,
+            REMOVE
+        }                   t_update_type;
 
         typedef struct      s_coord
         {
             short           x;
             short           y;
         }                   t_coord;
-        typedef struct      s_move_score
+
+        typedef struct      t_move_update
         {
             t_coord         coord;
-            uint64_t        score;
-        }                   t_move_score;
+            t_piece         piece;
+            t_update_type   type;
+        }                   t_move_update;
+
+        typedef std::vector<t_move_update> t_update_list;
+        typedef struct      s_scored_move
+        {
+            t_coord         coord;
+            int64_t         score;
+        }                   t_scored_move;
+
+        typedef struct      s_scored_update
+        {
+            uint8_t         cupture_count;
+            t_scored_move   move;
+            t_update_list   updates;
+        }                   t_scored_update;
+
+        typedef struct      s_prunner
+        {
+            int64_t alpha;
+            int64_t beta;
+        }                   t_prunner;
 
         struct coordComparator {
             inline bool operator()(const t_coord& f_coord, const t_coord& s_coord) const {
@@ -64,10 +109,10 @@ class Gomoku
             }
         };
         struct moveComparator {
-            inline bool operator()(const t_move_score& f_move, const t_move_score& s_move) const {
-                if (f_move.score > s_move.score)
-                    return (f_move.score > s_move.score);
-                return  (f_move.coord.x == s_move.coord.x) ? f_move.coord.y < s_move.coord.y : f_move.coord.x < s_move.coord.x;
+            inline bool operator()(const t_scored_update& f_update, const t_scored_update& s_update) const {
+                if (f_update.move.score > s_update.move.score)
+                    return (f_update.move.score > s_update.move.score);
+                return  (f_update.move.coord.x == s_update.move.coord.x) ? f_update.move.coord.y < s_update.move.coord.y : f_update.move.coord.x < s_update.move.coord.x;
             }
         };
 
@@ -75,7 +120,7 @@ class Gomoku
 
         typedef std::map< Gomoku::e_piece, std::map<uint16_t, t_scores> >       t_patterns;
         typedef std::set<t_coord, coordComparator>                              t_moveset;
-        typedef std::set<t_move_score, moveComparator>                          t_sorted_moveset;
+        typedef std::set<t_scored_update, moveComparator>                       t_sorted_updates;
 
     private:
 
@@ -92,7 +137,7 @@ class Gomoku
         t_piece                                 _ai_color;
         t_piece                                 _player_color;
         t_difficulty                            _difficulty;
-        t_coord                                 _best_move;
+        t_coord                                 _last_move;
         size_t                                  _turn;
 
     public:
@@ -105,27 +150,50 @@ class Gomoku
         void        register_move(t_coord piece_coord, t_piece piece, uint64_t* board, t_moveset& moveset);
         void        print_board();
         void        make_move(t_coord piece_coord);
-        int64_t     evaluate_board(uint64_t *board);
-        bool        is_move_valid(t_coord piece_coord);
+        bool        is_move_valid(t_coord piece_coord, t_piece piece);
         bool        is_player_turn()
         {
             return (this->_player_color == ((this->_turn % 2 == 0) ? Gomoku::WHITE : Gomoku::BLACK));
         }
-
+        t_piece        get_current_piece()
+        {
+            return (((this->_turn % 2 == 0) ? Gomoku::WHITE : Gomoku::BLACK));
+        };
     private:
-        t_piece             get_piece(uint64_t *board, t_coord piece_coord);
-        void                make_move();
-        void                update_ai_moveset(uint64_t *board, t_moveset &possible_moves, t_coord piece_coord);
-        void                update_board(uint64_t *board, t_coord piece_coord, t_piece piece);
-        void                clear_board_cell(uint64_t* board, t_coord piece_coord);
-        uint64_t            *copy_board(uint64_t *board);
-        uint32_t            evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
-        uint32_t            evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
-        int64_t             minimax(t_moveset& moveset, uint64_t* board, uint8_t depth, int64_t alpha, int64_t beta, bool max);
-        uint64_t            *maximize(uint64_t *board, t_piece piece, size_t depth, size_t aplha);
-        uint64_t            *minimize(uint64_t *board, t_piece piece, size_t depth, size_t beta);
-        bool                is_winning_move(uint64_t* board, t_piece piece, t_coord move);
-        void                get_new_moveset(uint64_t *board, t_moveset &possible_moves, t_moveset &old_moves, t_coord piece_coord);
-        void                print_board(uint64_t *board, t_moveset& moveset);
-        t_sorted_moveset    generate_sorted_moveset(t_moveset& moveset, uint64_t* board, t_piece piece);
+        int64_t                 evaluate_board(uint64_t *board);
+        t_piece                 get_piece(uint64_t *board, t_coord piece_coord);
+        t_coord                 get_bot_move();
+        void                    update_ai_moveset(uint64_t *board, t_moveset &possible_moves, t_coord piece_coord);
+        // void                    update_board(uint64_t *board, t_coord piece_coord, t_piece piece);
+        void                    clear_board_cell(uint64_t* board, t_coord piece_coord);
+        uint64_t                *copy_board(uint64_t *board);
+        // int32_t                 evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
+        int32_t                 evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
+        int32_t                 evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
+        t_scored_move            minimax(t_moveset& moveset, uint64_t* board, uint8_t depth, int64_t alpha, int64_t beta, bool max);
+        t_scored_move            minimizer(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_piece piece);
+        t_scored_move            maximizer(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_piece piece);
+        bool                    is_winning_move(uint64_t* board, t_piece piece, t_coord move);
+        void                    get_new_moveset(uint64_t *board, t_moveset &possible_moves, t_moveset &old_moves, t_coord piece_coord);
+        void                    print_board(uint64_t *board, t_moveset& moveset);
+        t_sorted_updates        generate_sorted_updates(t_moveset& moveset, uint64_t* board, t_piece piece);
+        void                    generate_update_list(uint64_t* board, t_coord move, t_piece piece, t_update_list& update_list);
+        void                    extract_captured_stoned(uint64_t *board, t_coord move, t_piece piece, t_update_list& update_list);
+        void                    get_new_moveset(uint64_t *board, t_moveset &possible_moves, t_moveset &old_moveset, t_update_list& update_list);
+        void                    update_node_state(uint64_t *board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
+        void                    revert_node_state(uint64_t *board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
+        void                    extract_captured_stoned(uint64_t *board, t_update_list& update_list, t_coord move, t_coord dir, t_piece piece);
+        uint16_t                extract_pattern(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction, uint8_t pattern_size);
+        t_scores                check_pattern_chunck(uint16_t pattern, t_pattern_mask mask, t_piece piece, const t_patterns &pattern_map);
+        bool                    is_pattern_illegal(uint16_t pattern, t_piece piece);
+
+
+        void                    add_board_piece(uint64_t *board, t_coord piece_coord, t_piece piece);
+        void                    remove_board_piece(uint64_t* board, t_coord piece_coord);
+        void                    update_board(uint64_t *board, const t_update_list &update_list);
+        void                    revert_board_update(uint64_t *board, const t_update_list &update_list);
+
+        t_scored_update         generate_move_update(uint64_t* board, t_piece piece, t_coord move);
+        void                    update_game_state(uint64_t *board, t_moveset &moveset, const t_update_list& update_list);
+        int32_t                evaluate_special_pattern(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
 };
