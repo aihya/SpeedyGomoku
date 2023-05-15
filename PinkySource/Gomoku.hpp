@@ -19,10 +19,12 @@
  * to ints for now because of readability, we may change it later for performance.
  */
 
-#define GET_OPPONENT(piece) ((piece == Gomoku::BLACK) ? Gomoku::WHITE : Gomoku::BLACK)
 
 class Gomoku
 {
+
+#define GET_OPPONENT(piece) ((piece == Gomoku::BLACK) ? Gomoku::WHITE : Gomoku::BLACK)
+
     public:
         typedef enum        e_piece
         {
@@ -44,19 +46,12 @@ class Gomoku
             ILLEGAL_SCORE = -1000000,
             WINNING_SCORE = 10000000,
             FOUR_SCORE    = 100000,
-            CAPTURE_SCORE = 5000,
+            CAPTURE_SCORE = 50000,
             THREE_SCORE   = 1000,
             TWO_SCORE     = 100,
             ONE_SCORE     = 10,
             ZERO_SCORE    = 0
         }                   t_scores;
-
-        typedef enum        e_pattern_size
-        {   
-            SIX  = 6,
-            FIVE = 5,
-            FOUR = 4
-        }                   t_pattern_size;
 
         typedef enum        e_pattern_mask
         {
@@ -64,6 +59,7 @@ class Gomoku
             FIVE_MASK = 0b1111111111,
             FOUR_MASK = 0b11111111,
         }                   t_pattern_mask;
+
         typedef enum        e_update_type
         {
             ADD,
@@ -211,36 +207,23 @@ class Gomoku
         t_piece                 get_piece(uint64_t *board, t_coord piece_coord);
         t_coord                 get_bot_move();
         void                    update_ai_moveset(uint64_t *board, t_moveset &possible_moves, t_coord piece_coord);
-        // void                    update_board(uint64_t *board, t_coord piece_coord, t_piece piece);
-        void                    clear_board_cell(uint64_t* board, t_coord piece_coord);
         uint64_t                *copy_board(uint64_t *board);
-        // int32_t                 evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
         int32_t                 evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
         int32_t                 evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
-        t_scored_move            minimax(t_moveset& moveset, uint64_t* board, uint8_t depth, int64_t alpha, int64_t beta, bool max);
+        int32_t                 evaluate_special_pattern(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
         t_scored_move            minimizer(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_piece piece);
         t_scored_move            maximizer(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_piece piece);
         bool                    is_winning_move(uint64_t* board, t_piece piece, t_coord move);
-        void                    get_new_moveset(uint64_t *board, t_moveset &possible_moves, t_moveset &old_moves, t_coord piece_coord);
         void                    print_board(uint64_t *board, t_moveset& moveset);
         t_sorted_updates        generate_sorted_updates(t_moveset& moveset, uint64_t* board, t_piece piece);
         void                    generate_update_list(uint64_t* board, t_coord move, t_piece piece, t_update_list& update_list);
-        void                    extract_captured_stoned(uint64_t *board, t_coord move, t_piece piece, t_update_list& update_list);
-        void                    get_new_moveset(uint64_t *board, t_moveset &possible_moves, t_moveset &old_moveset, t_update_list& update_list);
         void                    update_node_state(uint64_t *board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
         void                    revert_node_state(uint64_t *board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
         void                    extract_captured_stoned(uint64_t *board, t_update_list& update_list, t_coord move, t_coord dir, t_piece piece);
-        uint16_t                extract_pattern(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction, uint8_t pattern_size);
-        t_scores                check_pattern_chunck(uint16_t pattern, t_pattern_mask mask, t_piece piece, const t_patterns &pattern_map);
-        bool                    is_pattern_illegal(uint16_t pattern, t_piece piece);
-
 
         void                    add_board_piece(uint64_t *board, t_coord piece_coord, t_piece piece);
         void                    remove_board_piece(uint64_t* board, t_coord piece_coord);
         void                    update_board(uint64_t *board, const t_update_list &update_list);
         void                    revert_board_update(uint64_t *board, const t_update_list &update_list);
-
-        t_scored_update         generate_move_update(uint64_t* board, t_piece piece, t_coord move);
         void                    update_game_state(uint64_t *board, t_moveset &moveset, const t_update_list& update_list);
-        int32_t                evaluate_special_pattern(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
 };
