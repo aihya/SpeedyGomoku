@@ -241,13 +241,11 @@ int32_t Gomoku::evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece
             current_pattern |= current_piece;
             if (current_piece != Gomoku::EMPTY && current_piece != piece)
                 break;
-            pattern_position.y += direction.y;
-            pattern_position.x += direction.x;
+            pattern_position += direction;
         }
         if (attack_patterns.contains(current_pattern))
             attack_score = std::max(int32_t(attack_patterns.at(current_pattern)), attack_score);
-        piece_coord.y -= direction.y;
-        piece_coord.x -= direction.x;
+        piece_coord -= direction;
     }
     return (attack_score);
 }
@@ -295,20 +293,25 @@ bool Gomoku::is_winning_move(uint64_t* board, t_piece piece, t_coord move)
 
 void Gomoku::extract_captured_stoned(uint64_t *board, t_update_list& update_list, t_coord move, t_coord dir, t_piece piece)
 {
-    t_coord        first_stone;
-    t_coord        second_stone;
+    t_coord        current_pos;
+    t_coord        move_dir;
+    uint16_t       current_pattern;
 
     for (auto& factor: {-1, 1})
     {
-        first_stone.x = move.x + factor * dir.x;
-        first_stone.y = move.y + factor * dir.y;
-        second_stone.x = first_stone.x + factor * dir.x;
-        second_stone.y = first_stone.y + factor * dir.y;
-        if (this->get_piece(board, first_stone) == GET_OPPONENT(piece) &&
-                this->get_piece(board, second_stone) == GET_OPPONENT(piece))
+        current_pattern = 0;
+        current_pos = move;
+        move_dir = dir * factor;
+        for (int i = 0; i < 4; i++)
         {
-            update_list.push_back(t_move_update{first_stone, this->get_piece(board, first_stone), Gomoku::REMOVE});
-            update_list.push_back(t_move_update{second_stone, this->get_piece(board, second_stone), Gomoku::REMOVE});
+            current_pattern <<= 2;
+            current_pattern |= this->get_piece(board, current_pos);
+            current_pos += move_dir;
+        }
+        if (Gomoku::_capture_patterns.at(piece).contains(current_pattern))
+        {
+            update_list.push_back(t_move_update{move + move_dir, GET_OPPONENT(piece), Gomoku::REMOVE});
+            update_list.push_back(t_move_update{move + move_dir * 2, GET_OPPONENT(piece), Gomoku::REMOVE});
         }
     }
 }
@@ -332,15 +335,13 @@ int32_t Gomoku::evaluate_special_pattern(uint64_t *board, t_coord piece_coord, t
         {
             current_pattern <<= 2;
             current_pattern |= this->get_piece(board, pattern_position);
-            pattern_position.y += direction.y;
-            pattern_position.x += direction.x;
+            pattern_position += direction;
         }
         if (illegal_patterns.contains(current_pattern & FIVE_MASK) || illegal_patterns.contains(current_pattern & SIX_MASK))
             return (Gomoku::ILLEGAL_SCORE);
         if (capture_patterns.contains(current_pattern & FOUR_MASK))
             pattern_score = Gomoku::CAPTURE_SCORE;
-        piece_coord.y -= direction.y;
-        piece_coord.x -= direction.x;
+        piece_coord -= direction;
     }
     return (pattern_score);
 }
@@ -406,8 +407,7 @@ void Gomoku::update_game_state(uint64_t *board, t_moveset &moveset, const t_upda
             {
                 for (auto &factor: {1, -1})
                 {
-                    new_move.x = updates.coord.x + (direction.x * factor);
-                    new_move.y = updates.coord.y + (direction.y * factor);
+                    new_move = updates.coord + (direction * factor);
                     if (this->get_piece(board, new_move) == Gomoku::EMPTY)
                         moveset.insert(new_move);
                 }
@@ -431,8 +431,7 @@ void Gomoku::update_node_state(uint64_t *board, t_moveset &added_moves, t_movese
             {
                 for (auto &factor: {1, -1})
                 {
-                    new_move.x = updates.coord.x + (direction.x * factor);
-                    new_move.y = updates.coord.y + (direction.y * factor);
+                    new_move = updates.coord + (direction * factor);
                     if (this->get_piece(board, new_move) == Gomoku::EMPTY && moveset.count(new_move) == 0)
                         added_moves.insert(new_move);
                 }

@@ -70,11 +70,58 @@ class Gomoku
             REMOVE
         }                   t_update_type;
 
-        typedef struct      s_coord
+        struct      s_coord
         {
-            short           x;
-            short           y;
-        }                   t_coord;
+            int x;
+            int y;
+
+            s_coord() : x(0), y(0) {}
+            s_coord(int x, int y) : x(x), y(y) {}
+            s_coord(const s_coord& coord) : x(coord.x), y(coord.y) {}
+            s_coord& operator=(const s_coord& rhs)
+            {
+                this->x = rhs.x;
+                this->y = rhs.y;
+                return (*this);
+            }
+            bool operator==(const s_coord& rhs) const
+            {
+                return (this->x == rhs.x && this->y == rhs.y);
+            }
+            
+            s_coord operator+(const s_coord& rhs) const
+            {
+                return (s_coord{this->x + rhs.x, this->y + rhs.y});
+            }
+
+            s_coord operator-(const s_coord& rhs) const
+            {
+                return (s_coord{this->x - rhs.x, this->y - rhs.y});
+            }
+
+            s_coord operator*(const s_coord& rhs) const
+            {
+                return (s_coord{this->x * rhs.x, this->y * rhs.y});
+            }
+
+            s_coord operator*(const int& rhs) const
+            {
+                return (s_coord{this->x * rhs, this->y * rhs});
+            }
+
+            void operator+= (const s_coord& rhs)
+            {
+                this->x += rhs.x;
+                this->y += rhs.y;
+            }
+            void operator-= (const s_coord& rhs)
+            {
+                this->x -= rhs.x;
+                this->y -= rhs.y;
+            }
+        };
+
+        typedef struct      s_coord t_coord;
 
         typedef struct      t_move_update
         {
