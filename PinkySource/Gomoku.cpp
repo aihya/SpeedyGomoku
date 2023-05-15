@@ -182,7 +182,7 @@ Gomoku::Gomoku(uint8_t board_size, t_piece player_color, t_difficulty difficulty
         throw std::invalid_argument("Player color must be BLACK or WHITE");
    this->_move_history.push_front(new uint64_t[board_size]());
    this->_ai_color = (this->_player_color == Gomoku::BLACK) ? Gomoku::WHITE : Gomoku::BLACK;
-   this->_depth = 6;
+   this->_depth = 5;
 }
 
 Gomoku::~Gomoku()
@@ -299,16 +299,10 @@ void Gomoku::extract_captured_stoned(uint64_t *board, t_update_list& update_list
 
     for (auto& factor: {-1, 1})
     {
-        current_pattern = 0;
-        current_pos = move;
         move_dir = dir * factor;
-        for (int i = 0; i < 4; i++)
-        {
-            current_pattern <<= 2;
-            current_pattern |= this->get_piece(board, current_pos);
-            current_pos += move_dir;
-        }
-        if (Gomoku::_capture_patterns.at(piece).contains(current_pattern))
+        if (this->get_piece(board, move + move_dir) == GET_OPPONENT(piece) &&
+            this->get_piece(board, move + (move_dir * 2)) == GET_OPPONENT(piece) &&
+            this->get_piece(board, move + (move_dir * 3)) == piece)
         {
             update_list.push_back(t_move_update{move + move_dir, GET_OPPONENT(piece), Gomoku::REMOVE});
             update_list.push_back(t_move_update{move + move_dir * 2, GET_OPPONENT(piece), Gomoku::REMOVE});
@@ -353,19 +347,19 @@ void Gomoku::generate_update_list(uint64_t* board, t_coord move, t_piece piece, 
     uint16_t        current_pattern;
 
     this->add_board_piece(board, move, piece);
-    update_list.push_back(t_move_update{move, piece, Gomoku::ADD});
     for (auto& dir: this->_directions)
     {
         pattern_eval = this->evaluate_special_pattern(board, move, piece, dir);
         if (pattern_eval == Gomoku::ILLEGAL_SCORE)
-        {
-            update_list.clear();
             break;
-        }
         if (pattern_eval == Gomoku::CAPTURE_SCORE)
             this->extract_captured_stoned(board, update_list, move, dir, piece);
     }
     this->remove_board_piece(board, move);
+    if (pattern_eval == Gomoku::ILLEGAL_SCORE)
+        update_list.clear();
+    else
+        update_list.push_back(t_move_update{move, piece, Gomoku::ADD});
 }
 
 Gomoku::t_sorted_updates Gomoku::generate_sorted_updates(t_moveset& moveset, uint64_t* board, t_piece piece)
@@ -382,8 +376,13 @@ Gomoku::t_sorted_updates Gomoku::generate_sorted_updates(t_moveset& moveset, uin
             continue;
         this->update_board(board, scored_move.updates);
         for (auto& update: scored_move.updates)
+        {
             if (update.type == Gomoku::REMOVE)
+            {
                 scored_move.move.score += Gomoku::CAPTURE_SCORE;
+                scored_move.cupture_count++;
+            }
+        }
         scored_move.move.score += this->evaluate_move(board, move, piece);
         this->revert_board_update(board, scored_move.updates);
         sorted_updates.insert(scored_move);
