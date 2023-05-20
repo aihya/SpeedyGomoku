@@ -7,6 +7,7 @@ CLOCK = pygame.time.Clock()
 SETUP_SURFACE = 1
 BOARD_SURFACE = 2
 FINAL_SURFACE = 3
+STATS_SURFACE = 4
 
 # Constants
 HEIGHT      = 800

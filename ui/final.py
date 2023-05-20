@@ -1,7 +1,7 @@
 import fonts
 from surface import Surface
 from init import *
-from visual_components import Button
+from components import Button
 
 
 class Final(Surface):
@@ -13,7 +13,7 @@ class Final(Surface):
     __slots__ = ('_repeat', '_window', '_winner', '_button')
 
     def __init__(self, window):
-        super().__init__(WIDTH, HEIGHT, (0, 0))
+        super().__init__(WIDTH, HEIGHT, (0, 0), True)
         self._repeat = True
         self._window = window
         self._winner = 0
@@ -60,7 +60,7 @@ class Final(Surface):
         middle_rect.center = (int(self.width / 2), int(self.height / 2))
 
         # Put text on the surface
-        self.surface.fill(DEFAULT_BG)
+        self.surface.fill((255, 255, 255, 0))
         self.surface.blit(header, header_rect)
         self.surface.blit(middle, middle_rect)
         while self.repeat:

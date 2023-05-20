@@ -46,3 +46,7 @@ class State:
         self.counter = 0
         self.counts = {}
         self.state = [['0' for j in range(19)] for i in range(19)]
+
+    def print(self):
+        for row in self.state:
+            print(''.join(row))
