@@ -2,9 +2,8 @@ import signal
 from pexpect.popen_spawn import PopenSpawn
 from pexpect.exceptions import TIMEOUT
 from init import EXE_PATH
-from state import State
 
-class Computer():
+class Computer:
     """
     This class represents the computer player.
     """

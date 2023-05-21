@@ -1,7 +1,12 @@
 import pygame
+from surface import Surface
 
 # Clock tick: 30 ticks
 CLOCK = pygame.time.Clock()
+
+# Quit
+def quit():
+    return Surface.QUIT
 
 # Current surface
 SETUP_SURFACE = 1

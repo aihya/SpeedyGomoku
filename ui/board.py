@@ -13,17 +13,17 @@ class Setup(Surface):
     This class represents the setup surface
     """
 
-    __slots__ = ('_window', '_repeat', '_start', '_p1', '_p1_surf', '_p1_type', '_p1_mode', '_p2', '_p2_surf', '_p2_type', '_p2_mode')
+    __slots__ = ('_repeat', '_start', '_p1', '_p1_surf', '_p1_type', '_p1_mode', '_p2', '_p2_surf', '_p2_type', '_p2_mode', '_p1', '_p2')
 
-    def __init__(self, window, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(WIDTH-HEIGHT, HEIGHT, *args, **kwargs)
-        self._window = window
         self._repeat = True
 
         self._start = Button("#000000", "#66F587", "START", fonts.h3_t, relative_to=self)
         self._start.position = (self.width / 2 - self._start.width / 2, self.height * 0.7)
+        
         # Player 1 setup surface
-        self._p1_surf = Surface(300, 400, (20, 120), self)
+        self._p1_surf = Surface(300, 400, (50, 120), self)
         self._p1_type = CheckBoxs(
             {HUMAN: 'Human', COMPUTER: 'Computer'},
             position=(0, 50),
@@ -31,7 +31,7 @@ class Setup(Surface):
         )
         self._p1_mode = CheckBoxs( 
             {EASY: 'Easy', MEDIUM: 'Medium', HARD: 'Hard'},
-            position=(0, self._p1_type.height + 70),
+            position=(0, self._p1_type.height + 130),
             relative_to=self._p1_surf
         )
 
@@ -44,16 +44,12 @@ class Setup(Surface):
         )
         self._p2_mode = CheckBoxs(
             {EASY: 'Easy', MEDIUM: 'Medium', HARD: 'Hard'},
-            position=(0, self._p2_type.height + 70),
+            position=(0, self._p2_type.height + 130),
             relative_to=self._p2_surf
         )
 
-        # self._p1 = None
-        # self._p2 = None
-        
-    @property
-    def window(self):
-        return self._window
+        self._p1 = None
+        self._p2 = None
 
     @property
     def start(self):
@@ -83,21 +79,21 @@ class Setup(Surface):
     def p2_mode(self):
         return self._p2_mode
 
-    # @property
-    # def p1(self):
-    #     return self._p1
+    @property
+    def p1(self):
+        return self._p1
 
-    # @property
-    # def p2(self):
-    #     return self._p2
+    @property
+    def p2(self):
+        return self._p2
 
-    # @p1.setter
-    # def p1(self, value):
-    #     self._p1 = value
+    @p1.setter
+    def p1(self, value):
+        self._p1 = value
 
-    # @p2.setter
-    # def p2(self, value):
-    # #     self._p2 = value
+    @p2.setter
+    def p2(self, value):
+        self._p2 = value
 
     @property
     def repeat(self):
@@ -108,9 +104,9 @@ class Setup(Surface):
         self._repeat = value
 
     def draw_box_1(self):
-        header = fonts.h3_t.render('Player 1', True, BLACK_COLOR, DEFAULT_BG)
+        header = fonts.h3_r.render('Black', True, BLACK_COLOR, DEFAULT_BG)
         header_rect = header.get_rect()
-        header_rect.topleft = (0, 0)
+        header_rect.topleft = (70, 0)
 
         self.p1_surf.surface.fill(DEFAULT_BG)
         self.p1_surf.surface.blit(header, header_rect)
@@ -120,17 +116,22 @@ class Setup(Surface):
         self.p1_surf.surface.blit(self.p1_type.surface, self.p1_type.rect)
 
         # Blit mode surface
-        if self.p1_type.anchor.value == 2:
-            self.p1_mode.update()
-            self.p1_surf.surface.blit(self.p1_mode.surface, self.p1_mode.rect)
+        # if self.p1_type.anchor.value == 2:
+        mode = fonts.h3_r.render('Level', True, BLACK_COLOR, DEFAULT_BG)
+        mode_rect = header.get_rect()
+        mode_rect.topleft = (70, 170)
+
+        self.p1_mode.update()
+        self.p1_surf.surface.blit(mode, mode_rect)
+        self.p1_surf.surface.blit(self.p1_mode.surface, self.p1_mode.rect)
 
         # Blit first player surface on the window
         self.surface.blit(self.p1_surf.surface, self.p1_surf.rect)
 
     def draw_box_2(self):
-        header = fonts.h3_t.render('Player 2', True, BLACK_COLOR, DEFAULT_BG)
+        header = fonts.h3_r.render('White', True, BLACK_COLOR, DEFAULT_BG)
         header_rect = header.get_rect()
-        header_rect.topleft = (0, 0)
+        header_rect.topleft = (70, 0)
 
         self.p2_surf.surface.fill(DEFAULT_BG)
         self.p2_surf.surface.blit(header, header_rect)
@@ -140,197 +141,123 @@ class Setup(Surface):
         self.p2_surf.surface.blit(self.p2_type.surface, self.p2_type.rect)
 
         # Blit mode surface
-        if self.p2_type.anchor.value == 2:
-            self.p2_mode.update()
-            self.p2_surf.surface.blit(self.p2_mode.surface, self.p2_mode.rect)
+        mode = fonts.h3_r.render('Level', True, BLACK_COLOR, DEFAULT_BG)
+        mode_rect = header.get_rect()
+        mode_rect.topleft = (70, 170)
+
+        # if self.p2_type.anchor.value == COMPUTER:
+        self.p2_mode.update()
+        self.p2_surf.surface.blit(mode, mode_rect)
+        self.p2_surf.surface.blit(self.p2_mode.surface, self.p2_mode.rect)
 
         # Blit first player surface on the window
         self.surface.blit(self.p2_surf.surface, self.p2_surf.rect)
 
-    # def setup_players(self):
-    #     if self.p1_type.anchor.value == COMPUTER:
-    #         # restart the bot process
-    #         if isinstance(self.p1, Computer):
-    #             self.p1.stop()
-    #         self.p1 = Computer('--black')
-    #         self.p1.start()
+    def setup_players(self):
+        # if self.p1_type.anchor.value == 
 
-    #         # if restarting failed, kill everything
-    #         if self.p1 == None:
-    #             self.p2.stop()
-    #             self.window.quit = True
-    #             return
-    #     else:
-    #         self.p1 = Human()
+        if self.p1_type.anchor.value == COMPUTER:
+            # restart the bot process
+            if isinstance(self.p1, Computer):
+                self.p1.stop()
+            self.p1 = Computer('--black')
+            self.p1.start()
 
-    #     if self.p2_type.anchor.value == COMPUTER:
-    #         # restart the bot process
-    #         if isinstance(self.p2, Computer):
-    #             self.p2.stop()
-    #         self.p2 = Computer('--white')
-    #         self.p2.start()
+            # if restarting failed, kill everything
+            if self.p1 == None:
+                self.p2.stop()
+                # self.window.quit = True
+                return
+        else:
+            self.p1 = Human()
 
-    #         # if restarting failed, kill everything
-    #         if self.p2 == None:
-    #             self.window.quit = True
-    #             return
-    #     else:
-    #         self.p2 = Human()
+        if self.p2_type.anchor.value == COMPUTER:
+            # restart the bot process
+            if isinstance(self.p2, Computer):
+                self.p2.stop()
+            self.p2 = Computer('--white')
+            self.p2.start()
+
+            # if restarting failed, kill everything
+            if self.p2 == None:
+                self.window.quit = True
+                return
+        else:
+            self.p2 = Human()
 
     def update(self, events):
         self.surface.fill(DEFAULT_BG)
 
         # subtitle
-        middle = fonts.h3_t.render('Game Setup', True, BLACK_COLOR, DEFAULT_BG)
+        middle = fonts.h3_b.render('Game Setup', True, BLACK_COLOR, DEFAULT_BG)
         middle_rect = middle.get_rect()
-        middle_rect.topleft = (270, 35)
+        middle_rect.center = (int(self.width / 2), 60)
 
         self.surface.blit(middle, middle_rect)
 
         type_checkboxs = [*self.p1_type.container, *self.p2_type.container]
         mode_checkboxs = [*self.p1_mode.container, *self.p2_mode.container]
 
-        # while self.repeat:
         for event in events:
             if event.type == pygame.QUIT:
                 exit(0)
 
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 if self.start.clicked():
+                    self.start.pressed = False
                     return BOARD_SURFACE
+
                 for box in type_checkboxs:
                     box.check_clicked()
+                    box.update()
                 for box in mode_checkboxs:
                     box.check_clicked()
+                    box.update()
 
-        self.p2_type.anchor.checked = False
-        if self.p1_type.anchor.value == HUMAN:
-            self.p2_type.anchor = self.p2_type.container[1]
+        if self.p1_type.anchor.value == 2:
+            self.p1_mode.active = True
         else:
-            self.p2_type.anchor = self.p2_type.container[0]
-        self.p2_type.anchor.checked = True
-        self.p2_type.update()
-
-        self.p1_type.anchor.checked = False
-        if self.p2_type.anchor.value == HUMAN:
-            self.p1_type.anchor = self.p1_type.container[1]
+            self.p1_mode.active = False
+        
+        if self.p2_type.anchor.value == 2:
+            self.p2_mode.active = True
         else:
-            self.p1_type.anchor = self.p1_type.container[0]
-        self.p1_type.anchor.checked = True
-        self.p1_type.update()
+            self.p2_mode.active = False
 
-        self.start.update()
         self.draw_box_1()
         self.draw_box_2()
+        self.start.update()
         self.surface.blit(self.start.surface, self.start.rect)
 
         return SETUP_SURFACE
 
-class Controller:
 
-    __slots__ = ('_window', '_phase', '_state', '_board', '_setup', '_events', '_sidebar', '_repeat', '_p1', '_p2')
+class Stats(Surface):
 
-    def __init__(self, window):
-        self._window = window
-        self._events = None
-        self._repeat = True
-        self._p1     = None
-        self._p2     = None
-        self._state  = State()
-        self._setup  = Setup(window, relative_to=window, position=(HEIGHT, 0))
-        self._board  = Board(window, self._state, self._setup, self._p1, self._p2)
-        self._phase  = SETUP_SURFACE
+    __slots__ = ()
 
-    @property
-    def phase(self):
-        return self._phase
-    
-    @phase.setter
-    def phase(self, value):
-        self._phase = value
+    def __init__(self, *args, **kwargs):
+        pass
 
-    @property
-    def state(self):
-        return self._state
 
-    @property
-    def board(self):
-        return self._board
+class Game:
+     
+    __slots__ = ()
 
-    @property
-    def events(self):
-        return self._events
-
-    @events.setter
-    def events(self, value):
-        self._events = value
-
-    @property
-    def repeat(self):
-        return self._repeat
-
-    @repeat.setter
-    def repeat(self, value):
-        self._repeat = value
-
-    @property
-    def setup(self):
-        return self._setup
-
-    @property
-    def p1(self):
-        return self._p1
-    
-    @p1.setter
-    def p1(self, value):
-        self._p1 = value
-
-    @property
-    def p2(self):
-        return self._p2
-    
-    @p2.setter
-    def p2(self, value):
-        self._p2 = value
-
-    @property
-    def window(self):
-        return self._window
-
-    def loop(self):
-        while self.repeat:
-            # Register events
-            self.events = pygame.event.get()
-
-            # Exit in pygame.QUIT event
-            for event in self.events:
-                if event.type == pygame.QUIT:
-                    exit(0)
-
-            if self.phase == SETUP_SURFACE:
-                self.board.draw_board()
-                self.setup.update(self.events)
-            else:
-                self.board.update(self.events)
-
-            self.window.blit(self.setup)
-            self.window.blit(self.board)
-            self.window.update()
-
-            # CLOCK.tick(60)
+    def __init__(self, *args, **kwargs):
+        pass
 
 class Board(Surface):
     """ 
     This class represents the board surface.
     """
 
-    __slots__ = ('_turn', '_setup', '_state', '_window', '_repeat', '_offset', '_limit', '_step', '_linspace', '_p1', '_p2')
+    __slots__ = ('_turn', '_setup', '_state', '_repeat', '_offset', '_limit', '_step', '_linspace', '_p1', '_p2')
 
-    def __init__(self, window, initial_state, setup, p1, p2):
-        super().__init__(HEIGHT, HEIGHT, relative_to=window)
+    def __init__(self, initial_state, setup, p1, p2, *args, **kwargs):
+        super().__init__(HEIGHT, HEIGHT, *args, **kwargs)
         self._setup    = setup
         self._state    = initial_state
-        self._window   = window
         self._offset   = 40
         self._limit    = self.height - (self.offset * 2) - 18
         self._step     = int(self.limit / 18)
@@ -390,10 +317,6 @@ class Board(Surface):
     @property
     def linspace(self):
         return self._linspace
-
-    @property
-    def window(self):
-        return self._window
 
     @staticmethod
     def draw_circle(surface, x, y, radius, color):

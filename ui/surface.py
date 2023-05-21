@@ -4,6 +4,9 @@ class Surface:
     """
     This class is an abstraction over pygame.Surface
     """
+
+    QUIT = False
+
     __slots__ = ('_is_window', '_position', '_width', '_height', '_surface', '_rect', '_relative_to', '_abs_rect')
 
     def __init__(self, width, height, position=(0, 0), relative_to=None, alpha=False, is_window=False):

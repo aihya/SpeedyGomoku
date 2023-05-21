@@ -139,7 +139,7 @@ class CheckBox(Surface):
 
     HEIGHT = 40
 
-    __slots__ = ('_label', '_box', '_value', '_filler', '_checked', '_label_rect', '_hovered')
+    __slots__ = ('_label', '_box', '_value', '_filler', '_checked', '_label_rect', '_hovered', '_active')
     
     def __init__(self, label, value, *args, **kwargs):
         self._label = h3_t.render(label, True, BLACK, DEFAULT_BG)
@@ -148,6 +148,7 @@ class CheckBox(Surface):
         self._value = value
         self._checked = False
         self._hovered = False
+        self._active = True
 
         super().__init__(
             self._label.get_width() + 70, 
@@ -156,10 +157,17 @@ class CheckBox(Surface):
             alpha=True,
             **kwargs
         )
-        self.surface.fill((0, 0, 0, 0))
+
         self._box = Surface(self.HEIGHT, self.HEIGHT, (0, 0), self)
         self._filler = Surface(self.HEIGHT-10, self.HEIGHT-10, (5, 5), self)
-        self._filler.surface.fill(BOARD_COLOR)
+
+    @property
+    def active(self):
+        return self._active
+    
+    @active.setter
+    def active(self, value: bool):
+        self._active = value
 
     @property
     def label(self):
@@ -204,27 +212,31 @@ class CheckBox(Surface):
         self._checked = value
 
     def check_clicked(self):
-        if self.abs_rect.collidepoint(pygame.mouse.get_pos()):
+        if self.active and self.abs_rect.collidepoint(pygame.mouse.get_pos()):
             self.checked = True
 
     def update(self):
-        # self.surface.fill(BOARD_COLOR)
         self.surface.blit(self.box.surface, self.box.rect)
-        self.check_hover()
+        if self.active:
+            self.check_hover()
         if self.checked or self.hovered:
+            if self.active:
+                self.filler.surface.fill(BOARD_COLOR)
+            else:
+                self.filler.surface.fill((120, 120, 120))
             self.surface.blit(self.filler.surface, self.filler.rect)
         self.surface.blit(self.label, self._label_rect)
 
 
 class CheckBoxs(Surface):
 
+    __slots__ = ('_container', '_anchor', '_active')
+
     def __init__(self, pairs: dict, *args, **kwargs):
 
         _len    = len(pairs)
         _height = CheckBox.HEIGHT * _len + (10 * (_len-1) if _len > 1 else 0)
         _width  = kwargs['relative_to'].width
-
-        print(_len, _width, _height)
 
         super().__init__(width=_width, height=_height, alpha=True, **kwargs)
         self.surface.fill((0, 0, 0, 0))
@@ -246,6 +258,18 @@ class CheckBoxs(Surface):
             self._anchor = self._container[0]
             self._anchor.checked = True
 
+        self._active = True
+
+    @property
+    def active(self):
+        return self._active
+    
+    @active.setter
+    def active(self, value: bool):
+        self._active = value
+        for box in self.container:
+            box.active = value
+
     @property
     def container(self):
         return self._container
@@ -259,10 +283,9 @@ class CheckBoxs(Surface):
         self._anchor = value
 
     def update(self):
-        # Set the new checkbox
         for box in self.container:
             box.update()
-            if box.checked and box is not self.anchor:
+            if box.active and box.checked and box is not self.anchor:
                 self.anchor.checked = False
                 self.anchor = box
                 box.checked = True
