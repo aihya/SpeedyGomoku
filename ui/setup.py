@@ -116,11 +116,11 @@ class Setup(Surface):
         self._repeat = value
 
     def draw_box_1(self):
-        header = fonts.h3_t.render('Player 1', True, BLACK_COLOR, BOARD_COLOR)
+        header = fonts.h3_t.render('Player 1', True, BLACK_COLOR, DEFAULT_BG)
         header_rect = header.get_rect()
         header_rect.center = (100, 60)
 
-        self.p1_surf.surface.fill(BOARD_COLOR)
+        self.p1_surf.surface.fill(DEFAULT_BG)
         self.p1_surf.surface.blit(header, header_rect)
 
         # Update type checkboxs
@@ -136,11 +136,11 @@ class Setup(Surface):
         self.surface.blit(self.p1_surf.surface, self.p1_surf.rect)
 
     def draw_box_2(self):
-        header = fonts.h3_t.render('Player 2', True, BLACK_COLOR, BOARD_COLOR)
+        header = fonts.h3_t.render('Player 2', True, BLACK_COLOR, DEFAULT_BG)
         header_rect = header.get_rect()
         header_rect.center = (100, 60)
 
-        self.p2_surf.surface.fill(BOARD_COLOR)
+        self.p2_surf.surface.fill(DEFAULT_BG)
         self.p2_surf.surface.blit(header, header_rect)
 
         # Update type checkboxs
@@ -156,14 +156,12 @@ class Setup(Surface):
         self.surface.blit(self.p2_surf.surface, self.p2_surf.rect)
 
     def loop(self):
-        global QUIT
-
         # subtitle
-        middle = fonts.h2_t.render('Game Setup', True, BLACK_COLOR, BOARD_COLOR)
+        middle = fonts.h2_t.render('Game Setup', True, BLACK_COLOR, DEFAULT_BG)
         middle_rect = middle.get_rect()
         middle_rect.center = (self.width / 2, 70)
 
-        self.surface.fill(BOARD_COLOR)
+        self.surface.fill(DEFAULT_BG)
         self.surface.blit(middle, middle_rect)
 
         type_checkboxs = [*self.p1_type.container, *self.p2_type.container]
@@ -172,9 +170,10 @@ class Setup(Surface):
         while self.repeat:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    QUIT = True
+                    self.window.quit = True
                     self.repeat = False
-                    continue
+                    break
+
                 if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     if self.start.clicked():
                         return BOARD_SURFACE
@@ -183,6 +182,22 @@ class Setup(Surface):
                     for box in mode_checkboxs:
                         box.check_clicked()
 
+            self.p2_type.anchor.checked = False
+            if self.p1_type.anchor.value == HUMAN:
+                self.p2_type.anchor = self.p2_type.container[1]
+            else:
+                self.p2_type.anchor = self.p2_type.container[0]
+            self.p2_type.anchor.checked = True
+            self.p2_type.update()
+
+            self.p1_type.anchor.checked = False
+            if self.p2_type.anchor.value == HUMAN:
+                self.p1_type.anchor = self.p1_type.container[1]
+            else:
+                self.p1_type.anchor = self.p1_type.container[0]
+            self.p1_type.anchor.checked = True
+            self.p1_type.update()
+
             self.start.update()
             self.surface.blit(self.start.surface, self.start.rect)
             self.draw_box_1()
@@ -190,3 +205,6 @@ class Setup(Surface):
             self.window.blit(self)
             self.window.update()
             CLOCK.tick(30)
+
+        if self.window.quit:
+            return

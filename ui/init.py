@@ -8,13 +8,13 @@ SETUP_SURFACE = 1
 BOARD_SURFACE = 2
 FINAL_SURFACE = 3
 
-# Quit variable
-QUIT        = False
-
 # Constants
 HEIGHT      = 800
 WIDTH       = 1400
-BOARD_COLOR = pygame.Color("#EAE6E3")
+WHITE       = pygame.Color("#ffffff")
+BLACK       = pygame.Color("#000000")
+BOARD_COLOR = pygame.Color("#F2A71B")
+DEFAULT_BG  = pygame.Color("#EAE6E3")
 WHITE_COLOR = pygame.Color("#ffffff")
 BLACK_COLOR = pygame.Color("#000000")
 
@@ -28,4 +28,4 @@ MEDIUM      = 2
 HARD        = 3
 
 # Path to the executable
-EXE_PATH = '../src/a.out'
+EXE_PATH = '../PinkySource/a.out'
