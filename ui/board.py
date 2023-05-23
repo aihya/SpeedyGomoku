@@ -153,47 +153,13 @@ class Setup(Surface):
         # Blit first player surface on the window
         self.surface.blit(self.p2_surf.surface, self.p2_surf.rect)
 
-    def setup_players(self):
-        # if self.p1_type.anchor.value == 
-
-        if self.p1_type.anchor.value == COMPUTER:
-            # restart the bot process
-            if isinstance(self.p1, Computer):
-                self.p1.stop()
-            self.p1 = Computer('--black')
-            self.p1.start()
-
-            # if restarting failed, kill everything
-            if self.p1 == None:
-                self.p2.stop()
-                # self.window.quit = True
-                return
-        else:
-            self.p1 = Human()
-
-        if self.p2_type.anchor.value == COMPUTER:
-            # restart the bot process
-            if isinstance(self.p2, Computer):
-                self.p2.stop()
-            self.p2 = Computer('--white')
-            self.p2.start()
-
-            # if restarting failed, kill everything
-            if self.p2 == None:
-                self.window.quit = True
-                return
-        else:
-            self.p2 = Human()
-
     def update(self, events):
         self.surface.fill(DEFAULT_BG)
 
-        # subtitle
+        # Title
         middle = fonts.h3_b.render('Game Setup', True, BLACK_COLOR, DEFAULT_BG)
         middle_rect = middle.get_rect()
         middle_rect.center = (int(self.width / 2), 60)
-
-        self.surface.blit(middle, middle_rect)
 
         type_checkboxs = [*self.p1_type.container, *self.p2_type.container]
         mode_checkboxs = [*self.p1_mode.container, *self.p2_mode.container]
@@ -228,9 +194,12 @@ class Setup(Surface):
         self.draw_box_2()
         self.start.update()
         self.surface.blit(self.start.surface, self.start.rect)
+        self.surface.blit(middle, middle_rect)
 
+        if self.start.pressed:
+            self.start.pressed = False
+            return BOARD_SURFACE
         return SETUP_SURFACE
-
 
 class Stats(Surface):
 
@@ -242,10 +211,76 @@ class Stats(Surface):
 
 class Game:
      
-    __slots__ = ()
+    __slots__ = ('_board', '_stats', '_state', '_setup', '_computer', '_p1', '_p2')
 
-    def __init__(self, *args, **kwargs):
-        pass
+    def __init__(self, setup, *args, **kwargs):
+        self._setup = setup
+        self._state = State()
+        self._stats = Stats(relative_to=self, position=(HEIGHT, 0))
+        self._board = None
+        self._computer = None
+        self._p1 = None
+        self._p2 = None
+
+    @property
+    def setup(self):
+        return self._setup
+
+    @property
+    def stats(self):
+        return self._stats
+
+    @property
+    def board(self):
+        return self._board
+    
+    @property
+    def computer(self):
+        return self._computer
+    
+    @computer.setter
+    def computer(self, obj: Computer):
+        self._computer = obj
+
+    @property
+    def p1(self):
+        return self._p1
+
+    @property
+    def p2(self):
+        return self._p2
+    
+    @p1.setter
+    def p1(self, value):
+        self._p1 = value
+
+    @p2.setter
+    def p2(self, value):
+        self._p2 = value
+
+    def setup_game(self):
+        p1_type = TYPES[self.setup.p1_type.anchor.value - 1]
+        p1_diff = MODES[self.setup.p1_mode.anchor.value - 1]
+        p2_type = TYPES[self.setup.p2_type.anchor.value - 1]
+        p2_diff = MODES[self.setup.p2_mode.anchor.value - 1]
+
+        args = [
+            f'--p1_type={p1_type}', f'--p1_diff={p1_diff}',
+            f'--p2_type={p2_type}', f'--p2_diff={p2_diff}'
+        ]
+
+        self.computer = Computer(*args)
+        self.p1 = self.setup.p1_type.anchor.value
+        self.p2 = self.setup.p1_type.anchor.value
+
+    def loop(self):
+        self.setup_game()
+
+        while True:
+            self.stats.update()
+            self.board.update()
+            CLOCK.tick(60)
+
 
 class Board(Surface):
     """ 
@@ -434,9 +469,9 @@ class Board(Surface):
                         self.state.update(x, y, self.player_symbol())
                         self.turn = self.p1 if self.turn == self.p2 else self.p2
                         if isinstance(self.turn, Computer):
-                            self.turn.process.send(f'{y} {"ABCDEFGHIJKLMNOPQRS"[x]}\n')
+                            self.turn.process.send(f'{x} {y}\n')
 
-                    print(f'({y}, {"ABCDEFGHIJKLMNOPQRS"[x]})')
+                    print(f'({x}, {y})')
 
         # The previous for-loop will prevent the computer to make a move unless there was a registered event.
         if isinstance(self.turn, Computer):
@@ -450,18 +485,19 @@ class Board(Surface):
             if move:
                 self.state.update(move['coords'][0], move['coords'][1], self.player_symbol())
                 self.turn = self.p1 if self.turn == self.p2 else self.p2
-                print(f"({move['coords'][1]}, {'ABCDEFGHIJKLMNOPQRS'[move['coords'][0]]})")
+                print(f"({move['coords'][0]}, {[move['coords'][1]]})")
 
         if isinstance(self.turn, Human) and self.check_hover():
             self.show_hover()
+
         self.surface.blit(self.surface, (0, 0))
 
     # def update_sidebar(self):
     #     self.sidebar.update()
     #     self.surface.blit(self.sidebar.surface, (self.board.width, 0))
 
-    def update(self, event):
-        self.update_board(event)
+    def update(self):
+        self.update_board(pygame.event.get())
         # self.update_sidebar()
         # self.window.blit(self)
         # self.window.update()

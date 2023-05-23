@@ -112,7 +112,7 @@ class Controller:
 
     def loop(self):
         while not quit():
-            # Register events
+
             self.events = pygame.event.get()
 
             # Exit in pygame.QUIT event
@@ -122,9 +122,10 @@ class Controller:
 
             if self.phase == SETUP_SURFACE:
                 self.board.draw_board()
-                self.setup.update(self.events)
+                self.phase = self.setup.update(self.events)
             else:
-                self.board.update(self.events)
+                # self.game.loop()
+                self.board.update()
 
             self.window.blit(self.setup)
             self.window.blit(self.board)

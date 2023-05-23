@@ -27,11 +27,13 @@ BLACK_COLOR = pygame.Color("#000000")
 # Player type
 HUMAN       = 1
 COMPUTER    = 2
+TYPES       = ['human', 'ai']
 
 # Computer difficulty
 EASY        = 1
 MEDIUM      = 2
 HARD        = 3
+MODES       = ['easy', 'medium', 'hard']
 
 # Path to the executable
 EXE_PATH = '../PinkySource/a.out'
