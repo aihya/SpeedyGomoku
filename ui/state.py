@@ -3,12 +3,13 @@ class State:
     This class represents a board state read from the game logic.
     """
 
-    __slots__ = ('_state', '_counts', '_counter')
+    __slots__ = ('_state', '_counts', '_counter', '_move')
 
-    def __init__(self):
-        self._counter = 0
-        self._counts = {}
-        self._state = [['0' for j in range(19)] for i in range(19)]
+    def __init__(self, state=None, time=0, move=None):
+        self._state = state if state else [['0' for j in range(19)] for i in range(19)]
+        self._time  = time
+        self._count = {}
+        self._move  = move
 
     def __getitem__(self, index):
         return self.state[index]
@@ -22,30 +23,34 @@ class State:
         self._state = new_state
 
     @property
-    def counter(self):
-        return self._counter
+    def count(self):
+        return self._count
     
-    @counter.setter
-    def counter(self, value):
-        self._counter = value
+    @count.setter
+    def count(self, value):
+        self._count = value
 
     @property
-    def counts(self):
-        return self._counts
+    def time(self):
+        return self._time
     
-    @counts.setter
-    def counts(self, value):
-        self._counts = value
+    # Very unlikely to be used.
+    @time.setter
+    def time(self, new_time):
+        self._time = new_time
 
-    def update(self, x, y, player):
-        self.counter = self.counter + 1
-        self.counts[(x, y)] = self.counter
+    @property
+    def move(self):
+        return self._move
+    
+    # Very unlikely to be used.
+    @move.setter
+    def move(self, new_move: tuple):
+        self._move = new_move
+        
+    def update(self, x, y, player, count):
+        self.count[(x, y)] = count
         self.state[y][x] = player
-
-    def reset(self):
-        self.counter = 0
-        self.counts = {}
-        self.state = [['0' for j in range(19)] for i in range(19)]
 
     def print(self):
         for row in self.state:
@@ -53,23 +58,30 @@ class State:
 
 class States:
 
-    __slots__ = ('_states',)
+    __slots__ = ('_states', '_counter')
 
-    def __init__(self, info: dict):
-        """
-        info:
-        {
-            time:   0.00ms,
-            state:  [...],
-            
-        }
-        """
-        self._states = [State()]
+    def __init__(self):
+        self._states = []
+        self._counter = 0
 
     @property
     def states(self):
         return self._states
     
     @property
+    def counter(self):
+        return self._counter
+    
+    @counter.setter
+    def counter(self, obj: int):
+        self._counter = obj
+
+    @property
     def current(self):
-        return self.states[-1]
+        if self.states:
+            return self.states[-1]
+        return None
+
+    def add(self, state):
+        self.counter = self.counter + 1
+        self.states.append(state)

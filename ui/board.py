@@ -272,6 +272,9 @@ class Game:
         self._p2 = value
 
     def setup_game(self):
+        """
+        Players and board setup for a new game
+        """
         p1_type = TYPES[self.setup.p1_type.anchor.value - 1]
         p1_diff = MODES[self.setup.p1_mode.anchor.value - 1]
         p2_type = TYPES[self.setup.p2_type.anchor.value - 1]
@@ -421,7 +424,7 @@ class Board(Surface):
         
 
     def draw_state(self):
-        for r, row in enumerate(self.states.current):
+        for r, row in enumerate(self.states.current.state):
             for c, col in enumerate(row):
                 if col in ['1', '2']:
                     color = "#ffffff" if col == '1' else "#000000"
@@ -429,13 +432,13 @@ class Board(Surface):
                     y = self.linspace[r] + 1
                     Board.draw_circle(self.surface, x, y, 16, pygame.Color(color))
 
-                    counter = self.states.states[-1].counts.get((c, r))
+                    counter = self.states.current.counts.get((c, r))
                     if counter == None:
                         continue
-                    if counter == self.states.current.counter:
+                    if counter == self.states.counter:
                         count_text = fonts.h5_b.render(f'{counter}', True, (255, 0, 0))
 
-                    if counter == self.states.current.counter:
+                    if counter == self.states.counter:
                         x = self.linspace[c] + 1
                         y = self.linspace[r] + 1
                         Board.draw_circle(self.surface, x+12, y-12, 5, (255, 255, 0))
@@ -485,8 +488,7 @@ class Board(Surface):
                 - add new state object to the states
                 - switch turn to other player
             else:
-                - display error on the current state and wait for new coords
-        
+                - display error on the current state and send new coords
         """
 
         # Human turn
@@ -502,6 +504,7 @@ class Board(Surface):
                         # coordinantes to index the board
                         pos = event.pos
                 if pos:
+                    # 16 is the diameter of the pieces
                     x = math.floor((pos[0]-16) / self.step)
                     y = math.floor((pos[1]-16) / self.step)
 
@@ -524,9 +527,10 @@ class Board(Surface):
                         print('Tie!')
                         exit(0)
                     else:
-                        new_state = State(resp)
+                        self.states.add(State(resp['board'], resp['time'], resp['move']))
 
-
+            if self.turn.player == COMPUTER:
+                pass
 
 
                     # # Update the value of the board position to 1 or 2 according

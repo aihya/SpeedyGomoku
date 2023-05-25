@@ -92,7 +92,7 @@ class Computer:
 
         move = {
             'time': float(buffer[0]),
-            'coords': [int(c) for c in buffer[1].split()],
+            'move': tuple(int(c) for c in buffer[1].split()),
             'board': [],
         }
 
@@ -101,12 +101,11 @@ class Computer:
             line = line.split()
             move['board'].append([])
             for c, value in enumerate(line[:-1]):
+                # TODO: Need to count for invalid moves
                 if value == 'O':
                     move['board'][-1].append('1')
                 elif value == 'X':
                     move['board'][-1].append('2')
-                elif value == 'I':
-                    self.invalid_move = (r, c)
                 else:
                     move['board'][-1].append('0')
         return move

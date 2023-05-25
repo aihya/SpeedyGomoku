@@ -1,4 +1,3 @@
-import asyncio
 import pygame
 from surface    import Surface
 from fonts      import *
@@ -48,10 +47,10 @@ class Controller:
         self._repeat = True
         self._p1     = None
         self._p2     = None
-        self._state  = State()
+        # self._state  = State()
         # self._stats  = Stats(relative_to=self.window, position=(HEIGHT, 0))
         self._setup  = Setup(relative_to=self.window, position=(HEIGHT, 0))
-        self._board  = Board(self._state, self._setup, self._p1, self._p2, None)
+        self._board  = Board(None, self._setup, self._p1, self._p2, None)
         self._phase  = SETUP_SURFACE
 
     @property
@@ -120,6 +119,7 @@ class Controller:
                 if event.type == pygame.QUIT:
                     exit(0)
 
+            # TODO: To reconsider
             if self.phase == SETUP_SURFACE:
                 self.board.draw_board()
                 self.phase = self.setup.update(self.events)
