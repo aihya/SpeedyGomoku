@@ -587,6 +587,7 @@ Gomoku::t_coord Gomoku::human_move(t_player& player, t_player &opponent)
     {
         try
         {
+            std::cout << "Enter coords:" << std::endl;
             std::cin >> coord.x >> coord.y;
             if (this->is_move_valid(coord, player.piece))
                 break;
@@ -615,12 +616,11 @@ void Gomoku::make_move(t_player& player, t_player& opponent)
     this->update_game_state(new_board, this->_ai_moveset, update);
     this->_move_history.push_front(new_board);
     this->_last_move = piece_coord;
+    std::cout << piece_coord.x << " " << piece_coord.y << std::endl;
     this->print_board();
     if (this->is_winning_move(this->_move_history.front(), player.piece, piece_coord))
     {
-        std::cout << "-----------------------" << std::endl;
         std::cout << "Player " << player.piece << " wins!" << std::endl;
-        std::cout << "-----------------------" << std::endl;
         exit(1);
     }
     this->_turn++;

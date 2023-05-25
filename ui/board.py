@@ -2,9 +2,9 @@ import math
 from pygame import gfxdraw
 from surface import Surface
 from init import *
-from computer import Computer, Human
+from computer import Computer, Player
 from components import Button, CheckBoxs
-from state      import State
+from state      import States, State
 import fonts
 import fonts
 
@@ -211,16 +211,21 @@ class Stats(Surface):
 
 class Game:
      
-    __slots__ = ('_board', '_stats', '_state', '_setup', '_computer', '_p1', '_p2')
+    __slots__ = ('_window', '_board', '_stats', '_states', '_setup', '_computer', '_p1', '_p2')
 
-    def __init__(self, setup, *args, **kwargs):
+    def __init__(self, window, setup, *args, **kwargs):
+        self._window = window
         self._setup = setup
-        self._state = State()
+        self._states = States()
         self._stats = Stats(relative_to=self, position=(HEIGHT, 0))
         self._board = None
         self._computer = None
         self._p1 = None
         self._p2 = None
+
+    @property
+    def window(self):
+        return self._window
 
     @property
     def setup(self):
@@ -229,10 +234,18 @@ class Game:
     @property
     def stats(self):
         return self._stats
+    
+    @property
+    def states(self):
+        return self._states
 
     @property
     def board(self):
         return self._board
+
+    @board.setter
+    def board(self, obj):
+        self._board = obj
     
     @property
     def computer(self):
@@ -269,16 +282,27 @@ class Game:
             f'--p2_type={p2_type}', f'--p2_diff={p2_diff}'
         ]
 
+        self.p1 = Player(self.setup.p1_type.anchor.value, 1)
+        self.p2 = Player(self.setup.p2_type.anchor.value, 2)
+
         self.computer = Computer(*args)
-        self.p1 = self.setup.p1_type.anchor.value
-        self.p2 = self.setup.p1_type.anchor.value
+        self.board = Board(self.states, self.setup, self.p1, self.p2, self.computer)
 
     def loop(self):
         self.setup_game()
+        self.computer.start()
 
         while True:
-            self.stats.update()
-            self.board.update()
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.QUIT:
+                    exit(0)
+
+            if events:
+                # self.stats.update()
+                self.board.update(events)
+                self.window.blit(self.board)
+                self.window.update()
             CLOCK.tick(60)
 
 
@@ -287,12 +311,12 @@ class Board(Surface):
     This class represents the board surface.
     """
 
-    __slots__ = ('_turn', '_setup', '_state', '_repeat', '_offset', '_limit', '_step', '_linspace', '_p1', '_p2')
+    __slots__ = ('_turn', '_setup', '_states', '_computer', '_repeat', '_offset', '_limit', '_step', '_linspace', '_p1', '_p2')
 
-    def __init__(self, initial_state, setup, p1, p2, *args, **kwargs):
+    def __init__(self, states, setup, p1, p2, computer, *args, **kwargs):
         super().__init__(HEIGHT, HEIGHT, *args, **kwargs)
         self._setup    = setup
-        self._state    = initial_state
+        self._states   = states
         self._offset   = 40
         self._limit    = self.height - (self.offset * 2) - 18
         self._step     = int(self.limit / 18)
@@ -300,6 +324,7 @@ class Board(Surface):
         self._p1       = p1
         self._p2       = p2
         self._turn     = self._p1
+        self._computer = computer
 
     @property
     def p1(self):
@@ -312,6 +337,10 @@ class Board(Surface):
     @property
     def turn(self):
         return self._turn
+    
+    @property
+    def computer(self):
+        return self._computer
 
     @turn.setter
     def turn(self, value):
@@ -322,12 +351,8 @@ class Board(Surface):
         return self._setup
 
     @property
-    def state(self):
-        return self._state
-
-    @state.setter
-    def state(self, value):
-        self._state = value
+    def states(self):
+        return self._states
 
     @property
     def repeat(self):
@@ -396,7 +421,7 @@ class Board(Surface):
         
 
     def draw_state(self):
-        for r, row in enumerate(self.state.state):
+        for r, row in enumerate(self.states.current):
             for c, col in enumerate(row):
                 if col in ['1', '2']:
                     color = "#ffffff" if col == '1' else "#000000"
@@ -404,13 +429,13 @@ class Board(Surface):
                     y = self.linspace[r] + 1
                     Board.draw_circle(self.surface, x, y, 16, pygame.Color(color))
 
-                    counter = self.state.counts.get((c, r))
+                    counter = self.states.states[-1].counts.get((c, r))
                     if counter == None:
                         continue
-                    if counter == self.state.counter:
+                    if counter == self.states.current.counter:
                         count_text = fonts.h5_b.render(f'{counter}', True, (255, 0, 0))
 
-                    if counter == self.state.counter:
+                    if counter == self.states.current.counter:
                         x = self.linspace[c] + 1
                         y = self.linspace[r] + 1
                         Board.draw_circle(self.surface, x+12, y-12, 5, (255, 255, 0))
@@ -438,9 +463,9 @@ class Board(Surface):
         Board.draw_circle(self.surface, x, y, radius, pygame.Color(color))
 
         # Show the current count value on the hover piece.
-        if isinstance(self.turn, Human):
+        if self.turn.player == HUMAN:
             color = "#000000" if self.turn == self.p1 else "#ffffff"
-            count_text = fonts.h5_b.render(f'{self.state.counter + 1}', True, color)
+            count_text = fonts.h5_b.render(f'{self.states.current.counter + 1}', True, color)
             count_rect = count_text.get_rect()
             count_rect.center = (x, y)
             self.surface.blit(count_text, count_rect)
@@ -448,47 +473,88 @@ class Board(Surface):
         # Return coordinates of the mouse
         return x, y
 
-    def update_board(self, event):
+    def update_board(self, events):
         self.draw_board()
         self.draw_state()
-        for event in pygame.event.get():
 
-            if event.type == pygame.QUIT:
-                exit(0)
+        """
+        if human turn:
+            - send move's coords to the process.
+            - receive responce.
+            if the move is valid:
+                - add new state object to the states
+                - switch turn to other player
+            else:
+                - display error on the current state and wait for new coords
+        
+        """
 
-            if isinstance(self.turn, Human):
-                if event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.check_hover():
+        # Human turn
+        if self.turn.player == HUMAN:
+            if self.check_hover():
+                self.show_hover()
 
-                    # Get the current position of the mouse and map the coordinantes to index the board
-                    x, y = pygame.mouse.get_pos()
-                    x = math.floor((x-16) / self.step)
-                    y = math.floor((y-16) / self.step)
+            pos = None
+            if not self.computer.expecting:
+                for event in events:
+                    if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                        # Get the current position of the mouse and map the
+                        # coordinantes to index the board
+                        pos = event.pos
+                if pos:
+                    x = math.floor((pos[0]-16) / self.step)
+                    y = math.floor((pos[1]-16) / self.step)
 
-                    # Update the value of the board position to 1 or 2 according to the current turn
-                    if self.state.state[y][x] == '0':
-                        self.state.update(x, y, self.player_symbol())
-                        self.turn = self.p1 if self.turn == self.p2 else self.p2
-                        if isinstance(self.turn, Computer):
-                            self.turn.process.send(f'{x} {y}\n')
+                    # Send coords to the process and want for responce
+                    self.computer.process.send(f'{x} {y}\n')
+            else:
+                # Process the received output
+                resp = self.computer.next_move()
+                if resp:
+                    if resp == 1:
+                        print('illegal move')
+                        return
+                    elif resp == 2:
+                        print('Player 1 wins!')
+                        exit(0)
+                    elif resp == 3:
+                        print('Player 2 wins!')
+                        exit(0)
+                    elif resp == 4:
+                        print('Tie!')
+                        exit(0)
+                    else:
+                        new_state = State(resp)
 
-                    print(f'({x}, {y})')
 
-        # The previous for-loop will prevent the computer to make a move unless there was a registered event.
-        if isinstance(self.turn, Computer):
-            # Attempt to get the next move.
-            # The function might return `None` in case PopenSpawn.expect did not match the target string.
-            move = self.turn.next_move()
 
-            if isinstance(move, int):
-                return FINAL_SURFACE, move
 
-            if move:
-                self.state.update(move['coords'][0], move['coords'][1], self.player_symbol())
-                self.turn = self.p1 if self.turn == self.p2 else self.p2
-                print(f"({move['coords'][0]}, {[move['coords'][1]]})")
+                    # # Update the value of the board position to 1 or 2 according
+                    # # to the current turn
+                    # if self.states.current.state[y][x] == '0':
+                    #     # Create a new State populated with the new board
+                    #     new_state = State()
+                    #     self.states.update(x, y, self.player_symbol())
+                    #     self.turn = self.p1 if self.turn == self.p2 else self.p2
+                    #     if self.turn.player == COMPUTER:
+                    #         self.computer.process.send(f'{x} {y}\n')
 
-        if isinstance(self.turn, Human) and self.check_hover():
-            self.show_hover()
+                    # print(f'({x}, {y})')
+
+        # Computer turn
+        # else:
+        #     # Attempt to get the next move.
+        #     # The function might return `None` in case PopenSpawn.expect did not
+        #     # match the target string.
+        #     move = self.computer.next_move()
+
+        #     if isinstance(move, int):
+        #         return FINAL_SURFACE, move
+
+        #     if move:
+        #         self.state.update(move['coords'][0], move['coords'][1], self.player_symbol())
+        #         self.turn = self.p1 if self.turn == self.p2 else self.p2
+        #         print(f"({move['coords'][0]}, {[move['coords'][1]]})")
 
         self.surface.blit(self.surface, (0, 0))
 
@@ -496,8 +562,8 @@ class Board(Surface):
     #     self.sidebar.update()
     #     self.surface.blit(self.sidebar.surface, (self.board.width, 0))
 
-    def update(self):
-        self.update_board(pygame.event.get())
+    def update(self, events):
+        self.update_board(events)
         # self.update_sidebar()
         # self.window.blit(self)
         # self.window.update()

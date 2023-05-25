@@ -4,7 +4,7 @@ from surface    import Surface
 from fonts      import *
 from init       import *
 # from setup      import Setup
-from board      import Setup, Board
+from board      import Setup, Board, Game
 from final      import Final
 from state      import State
 
@@ -51,7 +51,7 @@ class Controller:
         self._state  = State()
         # self._stats  = Stats(relative_to=self.window, position=(HEIGHT, 0))
         self._setup  = Setup(relative_to=self.window, position=(HEIGHT, 0))
-        self._board  = Board(self._state, self._setup, self._p1, self._p2)
+        self._board  = Board(self._state, self._setup, self._p1, self._p2, None)
         self._phase  = SETUP_SURFACE
 
     @property
@@ -124,8 +124,8 @@ class Controller:
                 self.board.draw_board()
                 self.phase = self.setup.update(self.events)
             else:
-                # self.game.loop()
-                self.board.update()
+                game = Game(self.window, self.setup)
+                game.loop()
 
             self.window.blit(self.setup)
             self.window.blit(self.board)

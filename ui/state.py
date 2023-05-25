@@ -50,3 +50,26 @@ class State:
     def print(self):
         for row in self.state:
             print(''.join(row))
+
+class States:
+
+    __slots__ = ('_states',)
+
+    def __init__(self, info: dict):
+        """
+        info:
+        {
+            time:   0.00ms,
+            state:  [...],
+            
+        }
+        """
+        self._states = [State()]
+
+    @property
+    def states(self):
+        return self._states
+    
+    @property
+    def current(self):
+        return self.states[-1]
