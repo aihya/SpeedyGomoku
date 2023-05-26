@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <string.h>
 #include <chrono>
+#include <array>
 /**
  * @brief Game class
  * This game is a simple implementation of the gomoku game using minimax algorithm.
@@ -58,7 +59,7 @@ class Gomoku
         typedef enum        e_scores
         {
             ILLEGAL_SCORE = -1000000,
-            WINNING_SCORE = 10000000,
+            WINNING_SCORE = 50000000,
             FOUR_SCORE    = 100000,
             CAPTURE_SCORE = 50000,
             THREE_SCORE   = 1000,
@@ -138,8 +139,6 @@ class Gomoku
         };
 
         typedef struct      s_coord t_coord;
-
-        struct s_player;
 
         typedef struct                  s_player
         {
@@ -253,4 +252,5 @@ class Gomoku
         t_coord                 ai_move(t_player& player, t_player& opponent);
         t_coord                 human_move(t_player& player, t_player& opponent);
         t_player                get_player(t_player_type player_type, t_piece player_color, t_difficulty difficulty);
+
 };
