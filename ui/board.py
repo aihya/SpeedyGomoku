@@ -301,11 +301,11 @@ class Game:
                 if event.type == pygame.QUIT:
                     exit(0)
 
-            if events:
+            # if events:
                 # self.stats.update()
-                self.board.update(events)
-                self.window.blit(self.board)
-                self.window.update()
+            self.board.update(events)
+            self.window.blit(self.board)
+            self.window.update()
             CLOCK.tick(60)
 
 
@@ -433,7 +433,6 @@ class Board(Surface):
                     Board.draw_circle(self.surface, x, y, 16, pygame.Color(color))
 
                     counter = self.states.current.count.get((c, r))
-                    print(counter, self.states.current.count)
                     if counter == None:
                         continue
                     if counter == self.states.counter:
@@ -527,7 +526,7 @@ class Board(Surface):
                         print('Tie!')
                         exit(0)
                     else:
-                        print(f'Human[{self.turn.turn}]', resp['time'], resp['move'])
+                        # print(f'Human[{self.turn.turn}]', resp['time'], resp['move'])
                         self.states.add(State(resp['board'], resp['time'], resp['move']))
                         self.turn = self.p1 if self.turn == self.p2 else self.p2
 
@@ -547,7 +546,7 @@ class Board(Surface):
                     print('Tie!')
                     exit(0)
                 else:
-                    print(f'Computer[{self.turn.turn}]', resp['time'], resp['move'])
+                    # print(f'Computer[{self.turn.turn}]', resp['time'], resp['move'])
                     self.states.add(State(resp['board'], resp['time'], resp['move']))
                     self.turn = self.p1 if self.turn == self.p2 else self.p2
 
