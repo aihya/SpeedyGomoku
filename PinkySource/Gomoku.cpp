@@ -152,15 +152,15 @@ void Gomoku::print_board(uint64_t *board, t_moveset &moveset)
             {
                 
                 case Gomoku::BLACK:
-                    if (current_move.x == this->_last_move.x && current_move.y == this->_last_move.y)
-                        std::cout << "\033[1;32mX \033[0m";
-                    else
+                    // if (current_move.x == this->_last_move.x && current_move.y == this->_last_move.y)
+                    //     std::cout << "\033[1;32mX \033[0m";
+                    // else
                         std::cout << "X ";
                     break;
                 case Gomoku::WHITE:
-                    if (current_move.x == this->_last_move.x && current_move.y == this->_last_move.y)
-                        std::cout << "\033[1;32mO \033[0m";
-                    else
+                    // if (current_move.x == this->_last_move.x && current_move.y == this->_last_move.y)
+                    //     std::cout << "\033[1;32mO \033[0m";
+                    // else
                         std::cout << "O ";
                     break;
                 case Gomoku::EMPTY:
@@ -171,13 +171,13 @@ void Gomoku::print_board(uint64_t *board, t_moveset &moveset)
                     break;
             }
         }
-        if (y < 10) std::cout << "0";
-        std::cout << y << " ";
+        // if (y < 10) std::cout << "0";
+        // std::cout << y << " ";
         std::cout << std::endl;
     }
-    for (short y = 0; y < this->_board_size; y++)
-        std::cout << (char)('A' + y) << " ";
-    std::cout << std::endl;
+    // for (short y = 0; y < this->_board_size; y++)
+    //     std::cout << (char)('A' + y) << " ";
+    // std::cout << std::endl;
 }
 
 // Gomoku::Gomoku(uint8_t board_size, t_piece player_color, t_difficulty difficulty):
@@ -557,7 +557,7 @@ Gomoku::t_coord    Gomoku::get_bot_move()
     best_move = this->maximizer(this->_ai_moveset, new_board, this->_depth, t_prunner{INTMAX_MIN, INTMAX_MAX}, _capture_count, this->_first_player.piece);
     auto end = std::chrono::steady_clock::now();
     auto diff = end - start;
-    std::cout << "AI move took " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
+    std::cout << std::chrono::duration<double, std::milli>(diff).count() << std::endl;
     return best_move.coord;
 }
 
@@ -574,7 +574,7 @@ Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent)
         _capture_count, player.piece);
     auto end = std::chrono::steady_clock::now();
     auto diff = end - start;
-    std::cout << "AI move took " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
+    std::cout << std::chrono::duration<double, std::milli>(diff).count() << std::endl;
     return best_move.coord;
 }
 
@@ -587,7 +587,7 @@ Gomoku::t_coord Gomoku::human_move(t_player& player, t_player &opponent)
     {
         try
         {
-            std::cout << "Enter coords:" << std::endl;
+            // std::cout << "Enter coords: ";
             std::cin >> coord.x >> coord.y;
             if (this->is_move_valid(coord, player.piece))
                 break;
@@ -631,7 +631,9 @@ void Gomoku::start_game()
     for (;;)
     {
         this->make_move(this->_first_player, this->_second_player);
+        std::cout << "-------------------------------------" << std::endl;
         this->make_move(this->_second_player, this->_first_player);
+        std::cout << "-------------------------------------" << std::endl;
     }
 }
 

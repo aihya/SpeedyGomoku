@@ -3,12 +3,12 @@ class State:
     This class represents a board state read from the game logic.
     """
 
-    __slots__ = ('_state', '_counts', '_counter', '_move')
+    __slots__ = ('_state', '_count', '_move', '_time')
 
     def __init__(self, state=None, time=0, move=None):
         self._state = state if state else [['0' for j in range(19)] for i in range(19)]
-        self._time  = time
         self._count = {}
+        self._time  = time
         self._move  = move
 
     def __getitem__(self, index):
@@ -61,7 +61,7 @@ class States:
     __slots__ = ('_states', '_counter')
 
     def __init__(self):
-        self._states = []
+        self._states = [State()]
         self._counter = 0
 
     @property
@@ -84,4 +84,6 @@ class States:
 
     def add(self, state):
         self.counter = self.counter + 1
+        state.count = self.current.count.copy()
+        state.count[state.move] = self.counter
         self.states.append(state)

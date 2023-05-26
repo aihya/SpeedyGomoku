@@ -64,11 +64,12 @@ class Computer:
             self.process.kill(signal.SIGCONT)
 
     def send(self, what: str):
+        print('Sending:', what)
         self.process.send(what)
         self.expecting = True
 
     @property
-    def expecting(self) -> bool:
+    def expecting(self):
         return self._expecting
 
     @expecting.setter
@@ -91,23 +92,22 @@ class Computer:
             return None
 
         move = {
-            'time': float(buffer[0]),
-            'move': tuple(int(c) for c in buffer[1].split()),
+            'time': 0,
+            'move': [],
             'board': [],
         }
+        start, end = 2, -1
+        if len(buffer) - 1 == 20: # Human output
+            move['time'] = 0
+            move['move'] = tuple(int(c) for c in buffer[0].split())
+            start, end = 1, -1
+        else:
+            move['time'] = float(buffer[0])
+            move['move'] = tuple(int(c) for c in buffer[1].split())
 
-        self.invalid_move = None
-        for r, line in enumerate(buffer[2:-2]):
-            line = line.split()
-            move['board'].append([])
-            for c, value in enumerate(line[:-1]):
-                # TODO: Need to count for invalid moves
-                if value == 'O':
-                    move['board'][-1].append('1')
-                elif value == 'X':
-                    move['board'][-1].append('2')
-                else:
-                    move['board'][-1].append('0')
+        for line in buffer[start:end]:
+            move['board'].append(['.XO'.find(c) for c in line if c in '.XO'])
+
         return move
 
     def next_move(self):
@@ -119,7 +119,8 @@ class Computer:
         if self.process:
             # Attempt an expect operation from subprocess.
             # Return None if no match found.
-            index = self.expect(['Enter coords:\n', 'Illegal move\n', 'Player 1 wins!\n', 'Player 2 wins!\n', 'Tie\n'])
+            # index = self.expect(['Enter move:\n', 'Illegal move\n', 'Player 1 wins!\n', 'Player 2 wins!\n', 'Tie\n'])
+            index = self.expect([f'{"-" * 37}\n', 'Illegal move\n', 'Player 1 wins!\n', 'Player 2 wins!\n', 'Tie\n']) # <-- Seperator
 
             if index == None or index < -1:
                 return None
@@ -128,7 +129,7 @@ class Computer:
             if index == 0:
                 # Read the content sent from the subprocess
                 buffer = self.process.before.decode('utf-8').split('\n')
-
+                # return buffer
                 if buffer:
                     # Extract the move informations and store it in a dictionary
                     return self.extract_move(buffer)
