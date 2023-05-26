@@ -179,6 +179,10 @@ class Setup(Surface):
                 for box in mode_checkboxs:
                     box.check_clicked()
                     box.update()
+            elif event.type == pygame.KEYDOWN:
+                self.start.pressed = False # Just in case it's not reseted
+                return BOARD_SURFACE
+                
 
         if self.p1_type.anchor.value == 2:
             self.p1_mode.active = True
@@ -246,7 +250,7 @@ class Game:
     @board.setter
     def board(self, obj):
         self._board = obj
-    
+
     @property
     def computer(self):
         return self._computer
@@ -314,7 +318,7 @@ class Board(Surface):
     This class represents the board surface.
     """
 
-    __slots__ = ('_turn', '_setup', '_states', '_computer', '_repeat', '_offset', '_limit', '_step', '_linspace', '_p1', '_p2')
+    __slots__ = ('_turn', '_setup', '_states', '_computer', '_repeat', '_offset', '_limit', '_step', '_linspace', '_p1', '_p2', '_finished')
 
     def __init__(self, states, setup, p1, p2, computer, *args, **kwargs):
         super().__init__(HEIGHT, HEIGHT, *args, **kwargs)
@@ -328,6 +332,7 @@ class Board(Surface):
         self._p2       = p2
         self._turn     = self._p1
         self._computer = computer
+        self._finished = False
 
     @property
     def p1(self):
@@ -380,6 +385,14 @@ class Board(Surface):
     @property
     def linspace(self):
         return self._linspace
+    
+    @property
+    def finished(self):
+        return self._finished
+    
+    @finished.setter
+    def finished(self, value):
+        self._finished = value
 
     @staticmethod
     def draw_circle(surface, x, y, radius, color):
@@ -436,12 +449,10 @@ class Board(Surface):
                     if counter == None:
                         continue
                     if counter == self.states.counter:
-                        count_text = fonts.h5_b.render(f'{counter}', True, (255, 0, 0))
-
-                    if counter == self.states.counter:
                         x = self.linspace[c] + 1
                         y = self.linspace[r] + 1
                         Board.draw_circle(self.surface, x+12, y-12, 5, (255, 255, 0))
+                        count_text = fonts.h5_b.render(f'{counter}', True, (255, 0, 0))
 
                     count_text = fonts.h5_b.render(f'{counter}', True, (0, 0, 0) if col == 1 else (255, 255, 255))
                     count_rect = count_text.get_rect()
@@ -462,7 +473,7 @@ class Board(Surface):
         x = self.linspace[math.floor((x-radius) / self.step)]+1
         y = self.linspace[math.floor((y-radius) / self.step)]+1
         # if math.sqrt((x-nx)**2 + (y-ny)**2) <= 10:
-            # x, y = nx + 1, ny + 1
+        #     x, y = nx + 1, ny + 1
         Board.draw_circle(self.surface, x, y, radius, pygame.Color(color))
 
         # Show the current count value on the hover piece.
@@ -477,18 +488,30 @@ class Board(Surface):
         return x, y
 
     def update_board(self, events):
-        """
-        if human turn:
-            - send move's coords to the process.
-            - receive responce.
-            if the move is valid:
-                - add new state object to the states
-                - switch turn to other player
-            else:
-                - display error on the current state and send new coords
-        """
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    if self.states.index > 0:
+                        self.states.index -= 1
+                    elif self.states.index == -1:
+                        self.states.index = self.states.counter - 1
+                elif event.key == pygame.K_RIGHT:
+                    if self.states.index == -1:
+                        continue
+                    elif self.states.index < self.states.counter:
+                        self.states.index += 1
+                        if self.states.index == self.states.counter:
+                            self.states.index = -1
+                elif event.key == pygame.K_UP:
+                    self.states.index = -1
+                elif event.key == pygame.K_DOWN:
+                    self.states.index = 0
+
         self.draw_board()
         self.draw_state()
+
+        if self.finished:
+            return
 
         # Human turn
         if self.turn.player == HUMAN:
@@ -502,7 +525,8 @@ class Board(Surface):
                         # Get the current position of the mouse and map the
                         # coordinantes to index the board
                         pos = event.pos
-                if pos and self.check_hover():
+
+                if pos and self.check_hover() and self.states.index == -1:
                     # 16 is the diameter of the pieces
                     x = math.floor((pos[0]-16) / self.step)
                     y = math.floor((pos[1]-16) / self.step)
@@ -518,19 +542,19 @@ class Board(Surface):
                         return
                     elif resp == 2:
                         print('Player 1 wins!')
-                        exit(0)
+                        return
                     elif resp == 3:
                         print('Player 2 wins!')
-                        exit(0)
+                        return
                     elif resp == 4:
                         print('Tie!')
-                        exit(0)
+                        return
                     else:
                         # print(f'Human[{self.turn.turn}]', resp['time'], resp['move'])
                         self.states.add(State(resp['board'], resp['time'], resp['move']))
                         self.turn = self.p1 if self.turn == self.p2 else self.p2
 
-        if self.turn.player == COMPUTER:
+        elif self.turn.player == COMPUTER:
             resp = self.computer.next_move()
             if resp:
                 if resp == 1:
@@ -538,20 +562,17 @@ class Board(Surface):
                     return
                 elif resp == 2:
                     print('Player 1 wins!')
-                    exit(0)
+                    return
                 elif resp == 3:
                     print('Player 2 wins!')
-                    exit(0)
+                    return
                 elif resp == 4:
                     print('Tie!')
-                    exit(0)
+                    return
                 else:
                     # print(f'Computer[{self.turn.turn}]', resp['time'], resp['move'])
                     self.states.add(State(resp['board'], resp['time'], resp['move']))
                     self.turn = self.p1 if self.turn == self.p2 else self.p2
-
-        self.draw_state()
-        # self.surface.blit(self.surface, (0, 0))
 
     # def update_sidebar(self):
     #     self.sidebar.update()

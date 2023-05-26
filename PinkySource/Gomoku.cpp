@@ -604,14 +604,12 @@ void Gomoku::make_move(t_player& player, t_player& opponent)
     if (this->is_winning_move(this->_move_history.front(), player.piece, piece_coord))
     {
         std::cout << "Player " << player.piece << " wins!" << std::endl;
-        exit(1);
     }
     this->_turn++;
 }
 
 void Gomoku::start_game()
 {
-    this->print_board();
     for (;;)
     {
         this->make_move(this->_first_player, this->_second_player);

@@ -1,8 +1,7 @@
 import signal
 from pexpect.popen_spawn import PopenSpawn
-from pexpect.exceptions import TIMEOUT
+from pexpect.exceptions import TIMEOUT, EOF
 from init import EXE_PATH
-from state import State, States
 
 class Computer:
     """
@@ -120,9 +119,9 @@ class Computer:
             # Attempt an expect operation from subprocess.
             # Return None if no match found.
             # index = self.expect(['Enter move:\n', 'Illegal move\n', 'Player 1 wins!\n', 'Player 2 wins!\n', 'Tie\n'])
-            index = self.expect([f'{"-" * 37}\n', 'Illegal move\n', 'Player 1 wins!\n', 'Player 2 wins!\n', 'Tie\n']) # <-- Seperator
+            index = self.expect([f'{"-" * 37}\n', 'Illegal move\n', 'Player 1 wins!\n', 'Player 2 wins!\n', 'Tie\n', EOF]) # <-- Seperator
 
-            if index == None or index < -1:
+            if index == None or index < 0 or index == 5:
                 return None
             if index >= 0 or index < 5:
                 self.expecting = False

@@ -58,11 +58,12 @@ class State:
 
 class States:
 
-    __slots__ = ('_states', '_counter')
+    __slots__ = ('_states', '_counter', '_index')
 
     def __init__(self):
         self._states = [State()]
         self._counter = 0
+        self._index = -1
 
     @property
     def states(self):
@@ -79,11 +80,27 @@ class States:
     @property
     def current(self):
         if self.states:
-            return self.states[-1]
+            return self.states[self.index]
         return None
+
+    @property
+    def index(self):
+        return self._index
+    
+    @index.setter
+    def index(self, value):
+        self._index = value
+
+    @property
+    def last(self):
+        return self.states[-1]
+
+    @property
+    def first(self):
+        return self.states[0]
 
     def add(self, state):
         self.counter = self.counter + 1
-        state.count = self.current.count.copy()
+        state.count = self.last.count.copy()
         state.count[state.move] = self.counter
         self.states.append(state)
