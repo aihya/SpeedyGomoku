@@ -152,35 +152,32 @@ void Gomoku::print_board(uint64_t *board, t_moveset &moveset)
             {
                 
                 case Gomoku::BLACK:
-                    if (current_move.x == this->_last_move.x && current_move.y == this->_last_move.y)
-                        std::cout << "\033[1;32mX \033[0m";
-                    else
+                    // if (current_move.x == this->_last_move.x && current_move.y == this->_last_move.y)
+                    //     std::cout << "\033[1;32mX \033[0m";
+                    // else
                         std::cout << "X ";
                     break;
                 case Gomoku::WHITE:
-                    if (current_move.x == this->_last_move.x && current_move.y == this->_last_move.y)
-                        std::cout << "\033[1;32mO \033[0m";
-                    else
+                    // if (current_move.x == this->_last_move.x && current_move.y == this->_last_move.y)
+                    //     std::cout << "\033[1;32mO \033[0m";
+                    // else
                         std::cout << "O ";
                     break;
                 case Gomoku::EMPTY:
-                    if (moveset.count((t_coord){x, y}))
-                        std::cout << "\033[1;31m. \033[0m";
-                    else
-                        std::cout << ". ";
+                    std::cout << ". ";
                     break;
                 default:
                     std::cout << "? ";
                     break;
             }
         }
-        if (y < 10) std::cout << "0";
-        std::cout << y << " ";
+        // if (y < 10) std::cout << "0";
+        // std::cout << y << " ";
         std::cout << std::endl;
     }
-    for (short y = 0; y < this->_board_size; y++)
-        std::cout << (char)('A' + y) << " ";
-    std::cout << std::endl;
+    // for (short y = 0; y < this->_board_size; y++)
+    //     std::cout << (char)('A' + y) << " ";
+    // std::cout << std::endl;
 }
 
 Gomoku::t_player Gomoku::get_player(t_player_type player_type,
@@ -560,7 +557,7 @@ Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent)
         _capture_count, player.piece);
     auto end = std::chrono::steady_clock::now();
     auto diff = end - start;
-    std::cout << "AI move took " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
+    std::cout << std::chrono::duration<double, std::milli>(diff).count() << std::endl;
     return best_move.coord;
 }
 
@@ -573,6 +570,7 @@ Gomoku::t_coord Gomoku::human_move(t_player& player, t_player &opponent)
     {
         try
         {
+            // std::cout << "Enter coords: ";
             std::cin >> coord.x >> coord.y;
             if (this->is_move_valid(coord, player.piece))
                 break;
@@ -596,40 +594,79 @@ void Gomoku::make_move(t_player& player, t_player& opponent)
     t_coord         piece_coord;
 
     piece_coord = (this->*player.move)(player, opponent);
-    if (piece_coord == t_coord{-1, -1})
-        std::cout << "Player " << player.piece << " forfeits" << std::endl;
-    else
+    new_board = this->copy_board(this->_move_history.front());
+    this->generate_update_list(new_board, piece_coord, player.piece, update);
+    this->update_game_state(new_board, this->_ai_moveset, update);
+    this->_move_history.push_front(new_board);
+    this->_last_move = piece_coord;
+    std::cout << piece_coord.x << " " << piece_coord.y << std::endl;
+    this->print_board();
+    if (this->is_winning_move(this->_move_history.front(), player.piece, piece_coord))
     {
-        new_board = this->copy_board(this->_move_history.front());
-        this->generate_update_list(new_board, piece_coord, player.piece, update);
-        this->update_game_state(new_board, this->_ai_moveset, update);
-        this->_move_history.push_front(new_board);
-        this->_last_move = piece_coord;
-        this->_turn++;
-        this->print_board();
-        if (this->is_winning_move(this->_move_history.front(), player.piece, piece_coord))
-        {
-            std::cout << "-----------------------" << std::endl;
-            std::cout << "Player " << player.piece << " wins!" << std::endl;
-            std::cout << "-----------------------" << std::endl;
-            std::cout << "Game took " << this->_turn << " turns" << std::endl;
-            exit(1);
-        }
+        std::cout << "Player " << player.piece << " wins!" << std::endl;
     }
+    this->_turn++;
 }
 
 void Gomoku::start_game()
 {
-    this->print_board();
     for (;;)
     {
         this->make_move(this->_first_player, this->_second_player);
+        std::cout << "-------------------------------------" << std::endl;
         this->make_move(this->_second_player, this->_first_player);
+        std::cout << "-------------------------------------" << std::endl;
     }
 }
-int main()
+
+int main(int argc, char **argv)
 {
-    Gomoku game(19, Gomoku::EASY, Gomoku::EASY, Gomoku::AI, Gomoku::AI);
+    Gomoku::t_coord new_move;
+    Gomoku::t_player_type p1_type;
+    Gomoku::t_player_type p2_type;
+    Gomoku::t_difficulty p1_diff;
+    Gomoku::t_difficulty p2_diff;
+
+    p1_type = Gomoku::HUMAN;
+    p2_type = Gomoku::HUMAN;
+    p1_diff = Gomoku::EASY;
+    p2_diff = Gomoku::EASY;
+
+    for (int i = 1; i < argc; i++)
+    {
+        // Check player type
+        if (!strcmp(argv[i], "--p1_type=human"))
+            p1_type = Gomoku::HUMAN;
+        else if (!strcmp(argv[i], "--p1_type=ai"))
+            p1_type = Gomoku::AI;
+        else if (!strcmp(argv[i], "--p2_type=human"))
+            p2_type = Gomoku::HUMAN;
+        else if (!strcmp(argv[i], "--p2_type=ai"))
+            p2_type = Gomoku::AI;
+
+        // Check difficulty
+        else if (p1_type == Gomoku::AI)
+        {
+            if (!strcmp(argv[i], "--p1_diff=easy"))
+                p1_diff = Gomoku::EASY;
+            else if (!strcmp(argv[i], "--p1_diff=medium"))
+                p1_diff = Gomoku::MEDIUM;
+            else if (!strcmp(argv[i], "--p1_diff=hard"))
+                p1_diff = Gomoku::HARD;
+        }
+        else if (p2_type == Gomoku::AI)
+        {
+            if (!strcmp(argv[i], "--p2_diff=easy"))
+                p2_diff = Gomoku::EASY;
+            else if (!strcmp(argv[i], "--p2_diff=medium"))
+                p2_diff = Gomoku::MEDIUM;
+            else if (!strcmp(argv[i], "--p2_diff=hard"))
+                p2_diff = Gomoku::HARD;
+        }
+    }
+
+    Gomoku game(19, p1_diff, p2_diff, p1_type, p2_type);
     game.start_game();
+
     return (0);
 }
