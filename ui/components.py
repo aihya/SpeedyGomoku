@@ -3,11 +3,16 @@ from surface import Surface
 from fonts import *
 from init import *
 
+# type of button content
+TEXT  = 1
+IMAGE = 2
+
 class Button(Surface):
     """
     Class representing an interactive button object
     """
-    def __init__(self, fg: str, bg: str, text: str, font, disabled=False, interactive=True, *args, **kwargs):
+
+    def __init__(self, fg: str, bg: str, content, font, disabled=False, interactive=True, *args, **kwargs):
 
         # Load font
         self._font = font
@@ -20,16 +25,19 @@ class Button(Surface):
         self._bg_hov.r = self.bg.r - 30 if self.bg.r >= 30 else self.bg.r
         self._bg_hov.b = self.bg.b - 30 if self.bg.b >= 30 else self.bg.b
         self._bg_hov.g = self.bg.g - 30 if self.bg.g >= 30 else self.bg.g
+        
+        if isinstance(content, str):
+            self._content = self.font.render(content, True, self.fg)
+        else:
+            self._content = content
 
-        self._orig_text = text
-        self._text = self.font.render(text, True, pygame.Color(self.fg), pygame.Color(self.bg))
+        super().__init__(
+            self.content.get_width() + 60, 
+            self.content.get_height() + 30, 
+            *args, **kwargs)
 
-        self.surf_width = self.text.get_width()
-        self.surf_height = self.text.get_height()
-
-        super().__init__(self.surf_width + 60, self.surf_height + 30, *args, **kwargs)
-        self._text_rect = self.text.get_rect()
-        self._text_rect.center = (int(self.width / 2), int(self.height / 2))
+        self._content_rect = self._content.get_rect()
+        self._content_rect.center = (int(self.width / 2), int(self.height / 2))
 
         self._hover = False
         self._pressed = False
@@ -61,20 +69,16 @@ class Button(Surface):
         return self._font
 
     @property
-    def orig_text(self):
-        return self._orig_text
+    def content(self):
+        return self._content
+
+    @content.setter
+    def content(self, value):
+        self._content = value
 
     @property
-    def text(self):
-        return self._text
-
-    @text.setter
-    def text(self, value):
-        self._text = value
-
-    @property
-    def text_rect(self):
-        return self._text_rect
+    def content_rect(self):
+        return self._content_rect
 
     @property
     def disabled(self):
@@ -86,7 +90,6 @@ class Button(Surface):
 
     def disable(self):
         self.bg = self._bg_hov
-        self.text = self.font.render(self.orig_text, True, pygame.Color(self.fg), pygame.Color(self.bg))
 
     @property
     def hover(self):
@@ -111,10 +114,8 @@ class Button(Surface):
     def set_hover(self):
         if self.abs_rect.collidepoint(pygame.mouse.get_pos()):
             self.bg = pygame.Color(self.bg_str) if self.pressed else self._bg_hov
-            self.text = self.font.render(self.orig_text, True, pygame.Color(self.fg), pygame.Color(self.bg))
-            return 
-        self.bg = pygame.Color(self.bg_str)
-        self.text = self.font.render(self.orig_text, True, pygame.Color(self.fg), pygame.Color(self.bg))
+        else:
+            self.bg = pygame.Color(self.bg_str)
 
     def clicked(self):
         if self.disabled:
@@ -132,7 +133,7 @@ class Button(Surface):
         else:
             self.disable()
         self.surface.fill(self.bg)
-        self.surface.blit(self.text, self.text_rect)
+        self.surface.blit(self.content, self.content_rect)
 
 
 class CheckBox(Surface):
@@ -142,7 +143,7 @@ class CheckBox(Surface):
     __slots__ = ('_label', '_box', '_value', '_filler', '_checked', '_label_rect', '_hovered', '_active')
     
     def __init__(self, label, value, *args, **kwargs):
-        self._label = h3_t.render(label, True, BLACK, DEFAULT_BG)
+        self._label = h3_r.render(label, True, BLACK)
         self._label_rect = self.label.get_rect()
         self._label_rect.left = 70
         self._value = value
@@ -154,7 +155,6 @@ class CheckBox(Surface):
             self._label.get_width() + 70, 
             self.HEIGHT,
             *args,
-            alpha=True,
             **kwargs
         )
 
@@ -238,8 +238,7 @@ class CheckBoxs(Surface):
         _height = CheckBox.HEIGHT * _len + (10 * (_len-1) if _len > 1 else 0)
         _width  = kwargs['relative_to'].width
 
-        super().__init__(width=_width, height=_height, alpha=True, **kwargs)
-        self.surface.fill((0, 0, 0, 0))
+        super().__init__(width=_width, height=_height, **kwargs)
 
         # List containing all checkboxs
         self._container = []
@@ -248,7 +247,7 @@ class CheckBoxs(Surface):
         offset = 0
         for index, key in enumerate(pairs.keys()):
             cb_position = (0, offset)
-            self._container.append(CheckBox(pairs[key], key, position=cb_position, relative_to=self))
+            self._container.append(CheckBox(pairs[key], key, position=cb_position, relative_to=self, alpha=True))
             offset += self._container[-1].height
             if index < _len - 1:
                 offset += 10

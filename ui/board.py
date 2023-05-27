@@ -16,36 +16,40 @@ class Setup(Surface):
     __slots__ = ('_repeat', '_start', '_p1', '_p1_surf', '_p1_type', '_p1_mode', '_p2', '_p2_surf', '_p2_type', '_p2_mode', '_p1', '_p2')
 
     def __init__(self, *args, **kwargs):
-        super().__init__(WIDTH-HEIGHT, HEIGHT, *args, **kwargs)
+        super().__init__(WIDTH-HEIGHT, HEIGHT, alpha=True, *args, **kwargs)
         self._repeat = True
 
         self._start = Button("#000000", "#66F587", "START", fonts.h3_t, relative_to=self)
-        self._start.position = (self.width / 2 - self._start.width / 2, self.height * 0.7)
+        self._start.position = (self.width / 2 - self._start.width / 2, self.height - 100)
         
         # Player 1 setup surface
-        self._p1_surf = Surface(300, 400, (50, 120), self)
+        self._p1_surf = Surface(300, 400, (50, 120), self, True)
         self._p1_type = CheckBoxs(
             {HUMAN: 'Human', COMPUTER: 'Computer'},
             position=(0, 50),
-            relative_to=self._p1_surf
+            relative_to=self._p1_surf,
+            alpha=True
         )
         self._p1_mode = CheckBoxs( 
             {EASY: 'Easy', MEDIUM: 'Medium', HARD: 'Hard'},
             position=(0, self._p1_type.height + 130),
-            relative_to=self._p1_surf
+            relative_to=self._p1_surf,
+            alpha=True
         )
 
         # Player 2 setup surface
-        self._p2_surf = Surface(300, 400, (320, 120), self)
+        self._p2_surf = Surface(300, 400, (320, 120), self, True)
         self._p2_type = CheckBoxs(
             {HUMAN: 'Human', COMPUTER: 'Computer'},
             position=(0, 50),
-            relative_to=self._p2_surf
+            relative_to=self._p2_surf,
+            alpha=True
         )
         self._p2_mode = CheckBoxs(
             {EASY: 'Easy', MEDIUM: 'Medium', HARD: 'Hard'},
             position=(0, self._p2_type.height + 130),
-            relative_to=self._p2_surf
+            relative_to=self._p2_surf,
+            alpha=True
         )
 
         self._p1 = None
@@ -104,60 +108,56 @@ class Setup(Surface):
         self._repeat = value
 
     def draw_box_1(self):
-        header = fonts.h3_r.render('Black', True, BLACK_COLOR, DEFAULT_BG)
+        header = fonts.h3_r.render('Black', True, BLACK_COLOR)
         header_rect = header.get_rect()
         header_rect.topleft = (70, 0)
 
-        self.p1_surf.surface.fill(DEFAULT_BG)
-        self.p1_surf.surface.blit(header, header_rect)
+        self.p1_surf.surface.blit(header, header_rect, special_flags=pygame.BLEND_RGBA_MAX)
 
         # Update type checkboxs
         self.p1_type.update()
         self.p1_surf.surface.blit(self.p1_type.surface, self.p1_type.rect)
 
         # Blit mode surface
-        # if self.p1_type.anchor.value == 2:
-        mode = fonts.h3_r.render('Level', True, BLACK_COLOR, DEFAULT_BG)
+        mode = fonts.h3_r.render('Level', True, BLACK_COLOR)
         mode_rect = header.get_rect()
         mode_rect.topleft = (70, 170)
 
         self.p1_mode.update()
-        self.p1_surf.surface.blit(mode, mode_rect)
+        self.p1_surf.surface.blit(mode, mode_rect, special_flags=pygame.BLEND_RGBA_MAX)
         self.p1_surf.surface.blit(self.p1_mode.surface, self.p1_mode.rect)
 
         # Blit first player surface on the window
         self.surface.blit(self.p1_surf.surface, self.p1_surf.rect)
 
     def draw_box_2(self):
-        header = fonts.h3_r.render('White', True, BLACK_COLOR, DEFAULT_BG)
+        header = fonts.h3_r.render('White', True, BLACK_COLOR)
         header_rect = header.get_rect()
         header_rect.topleft = (70, 0)
 
-        self.p2_surf.surface.fill(DEFAULT_BG)
-        self.p2_surf.surface.blit(header, header_rect)
+        self.p2_surf.surface.blit(header, header_rect, special_flags=pygame.BLEND_RGBA_MAX)
 
         # Update type checkboxs
         self.p2_type.update()
         self.p2_surf.surface.blit(self.p2_type.surface, self.p2_type.rect)
 
         # Blit mode surface
-        mode = fonts.h3_r.render('Level', True, BLACK_COLOR, DEFAULT_BG)
+        mode = fonts.h3_r.render('Level', True, BLACK_COLOR)
         mode_rect = header.get_rect()
         mode_rect.topleft = (70, 170)
 
-        # if self.p2_type.anchor.value == COMPUTER:
         self.p2_mode.update()
-        self.p2_surf.surface.blit(mode, mode_rect)
+        self.p2_surf.surface.blit(mode, mode_rect, special_flags=pygame.BLEND_RGBA_MAX)
         self.p2_surf.surface.blit(self.p2_mode.surface, self.p2_mode.rect)
 
         # Blit first player surface on the window
         self.surface.blit(self.p2_surf.surface, self.p2_surf.rect)
 
     def update(self, events):
-        self.surface.fill(DEFAULT_BG)
+        self.surface.fill(WHITE)
 
         # Title
-        middle = fonts.h3_b.render('Game Setup', True, BLACK_COLOR, DEFAULT_BG)
+        middle = fonts.h3_b.render('Game Setup', True, BLACK_COLOR)
         middle_rect = middle.get_rect()
         middle_rect.center = (int(self.width / 2), 60)
 
@@ -179,7 +179,7 @@ class Setup(Surface):
                 for box in mode_checkboxs:
                     box.check_clicked()
                     box.update()
-            elif event.type == pygame.KEYDOWN:
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 self.start.pressed = False # Just in case it's not reseted
                 return BOARD_SURFACE
                 
@@ -207,111 +207,90 @@ class Setup(Surface):
 
 class Stats(Surface):
 
-    __slots__ = ()
+    __slots__ = ('_left', '_right', '_rff', '_lff', '_states')
 
-    def __init__(self, *args, **kwargs):
-        pass
+    def __init__(self, states, *args, **kwargs):
+        super().__init__(WIDTH-HEIGHT, HEIGHT, *args, **kwargs)
+        
+        # Load images for left and right buttons
+        r_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/right.png'), (50, 50))
+        l_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/right.png'), (50, 50))
+        l_img = pygame.transform.rotate(l_img, 180)
+        rff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png'), (50, 50))
+        lff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png'), (50, 50))
+        lff_img = pygame.transform.rotate(lff_img, 180)
 
+        self._left  = Button('#ffffff', '#ffffff', l_img, None, relative_to=self)
+        self._right = Button('#ffffff', '#ffffff', r_img, None, relative_to=self)
+        self._lff   = Button('#ffffff', '#ffffff', lff_img, None, relative_to=self)
+        self._rff   = Button('#ffffff', '#ffffff', rff_img, None, relative_to=self)
+        self._left.position  = (self.width / 2 - self.left.width, self.height - 100)
+        self._right.position = (self.width / 2, self.height - 100)
+        self._lff.position   = (self.width / 2 - self.left.width * 2, self.height - 100)
+        self._rff.position   = (self.width / 2 + self.right.width, self.height - 100)
 
-class Game:
-     
-    __slots__ = ('_window', '_board', '_stats', '_states', '_setup', '_computer', '_p1', '_p2')
+        self._states = states
 
-    def __init__(self, window, setup, *args, **kwargs):
-        self._window = window
-        self._setup = setup
-        self._states = States()
-        self._stats = Stats(relative_to=self, position=(HEIGHT, 0))
-        self._board = None
-        self._computer = None
-        self._p1 = None
-        self._p2 = None
-
-    @property
-    def window(self):
-        return self._window
-
-    @property
-    def setup(self):
-        return self._setup
-
-    @property
-    def stats(self):
-        return self._stats
-    
     @property
     def states(self):
         return self._states
 
-    @property
-    def board(self):
-        return self._board
-
-    @board.setter
-    def board(self, obj):
-        self._board = obj
+    def check_hover(self):
+        if self.abs_rect.collidepoint(pygame.mouse.get_pos()):
+            return True
+        return False
 
     @property
-    def computer(self):
-        return self._computer
+    def left(self):
+        return self._left
     
-    @computer.setter
-    def computer(self, obj: Computer):
-        self._computer = obj
+    @property
+    def right(self):
+        return self._right
 
     @property
-    def p1(self):
-        return self._p1
-
-    @property
-    def p2(self):
-        return self._p2
+    def lff(self):
+        return self._lff
     
-    @p1.setter
-    def p1(self, value):
-        self._p1 = value
+    @property
+    def rff(self):
+        return self._rff
 
-    @p2.setter
-    def p2(self, value):
-        self._p2 = value
+    def update(self, events):
+        self.surface.fill(WHITE)
+        self.left.update()
+        self.right.update()
+        self.lff.update()
+        self.rff.update()
 
-    def setup_game(self):
-        """
-        Players and board setup for a new game
-        """
-        p1_type = TYPES[self.setup.p1_type.anchor.value - 1]
-        p1_diff = MODES[self.setup.p1_mode.anchor.value - 1]
-        p2_type = TYPES[self.setup.p2_type.anchor.value - 1]
-        p2_diff = MODES[self.setup.p2_mode.anchor.value - 1]
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                if self.left.clicked():
+                    if self.states.index > 0:
+                        self.states.index -= 1
+                    elif self.states.index == -1:
+                        self.states.index = self.states.counter - 1
+                    self.left.pressed = False
+                elif self.right.clicked():
+                    if self.states.index == -1:
+                        self.right.pressed = False
+                        pass
+                    elif self.states.index < self.states.counter:
+                        self.states.index += 1
+                        if self.states.index == self.states.counter:
+                            self.states.index = -1
+                elif self.rff.clicked():
+                    self.states.index = -1
+                    self.rff.pressed = False
+                elif self.lff.clicked():
+                    self.states.index = 0
+                    self.lff.pressed = False
 
-        args = [
-            f'--p1_type={p1_type}', f'--p1_diff={p1_diff}',
-            f'--p2_type={p2_type}', f'--p2_diff={p2_diff}'
-        ]
 
-        self.p1 = Player(self.setup.p1_type.anchor.value, 1)
-        self.p2 = Player(self.setup.p2_type.anchor.value, 2)
-
-        self.computer = Computer(*args)
-        self.board = Board(self.states, self.setup, self.p1, self.p2, self.computer)
-
-    def loop(self):
-        self.setup_game()
-        self.computer.start()
-
-        while True:
-            events = pygame.event.get()
-            for event in events:
-                if event.type == pygame.QUIT:
-                    exit(0)
-
-            # if events:
-                # self.stats.update()
-            self.board.update(events)
-            self.window.blit(self.board)
-            self.window.update()
-            CLOCK.tick(60)
-
+        self.surface.blit(self.left.surface, self.left.rect)
+        self.surface.blit(self.right.surface, self.right.rect)
+        self.surface.blit(self.lff.surface, self.lff.rect)
+        self.surface.blit(self.rff.surface, self.rff.rect)
 
 class Board(Surface):
     """ 
@@ -487,7 +466,9 @@ class Board(Surface):
         # Return coordinates of the mouse
         return x, y
 
-    def update_board(self, events):
+    def update(self, events):
+
+        # Ajust the index of the current state.
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
@@ -510,6 +491,7 @@ class Board(Surface):
         self.draw_board()
         self.draw_state()
 
+        # Not used yet
         if self.finished:
             return
 
@@ -574,16 +556,6 @@ class Board(Surface):
                     self.states.add(State(resp['board'], resp['time'], resp['move']))
                     self.turn = self.p1 if self.turn == self.p2 else self.p2
 
-    # def update_sidebar(self):
-    #     self.sidebar.update()
-    #     self.surface.blit(self.sidebar.surface, (self.board.width, 0))
-
-    def update(self, events):
-        self.update_board(events)
-        # self.update_sidebar()
-        # self.window.blit(self)
-        # self.window.update()
-
     def player_symbol(self):
         if self.turn == self.p1:
             return '1'
@@ -593,3 +565,107 @@ class Board(Surface):
         self.state.reset()
         self.setup_players()
         self.turn = self.p1
+
+class Game:
+     
+    __slots__ = ('_window', '_board', '_stats', '_states', '_setup', '_computer', '_p1', '_p2')
+
+    def __init__(self, window, setup, *args, **kwargs):
+        self._window = window
+        self._states = States()
+        self._setup = setup
+        self._stats = None
+        self._board = None
+        self._computer = None
+        self._p1 = None
+        self._p2 = None
+
+    @property
+    def window(self):
+        return self._window
+
+    @property
+    def setup(self):
+        return self._setup
+
+    @property
+    def stats(self):
+        return self._stats
+    
+    @stats.setter
+    def stats(self, obj: Stats):
+        self._stats = obj
+    
+    @property
+    def states(self):
+        return self._states
+
+    @property
+    def board(self):
+        return self._board
+
+    @board.setter
+    def board(self, obj: Board):
+        self._board = obj
+
+    @property
+    def computer(self):
+        return self._computer
+    
+    @computer.setter
+    def computer(self, obj: Computer):
+        self._computer = obj
+
+    @property
+    def p1(self):
+        return self._p1
+
+    @property
+    def p2(self):
+        return self._p2
+    
+    @p1.setter
+    def p1(self, obj: Player):
+        self._p1 = obj
+
+    @p2.setter
+    def p2(self, obj: Player):
+        self._p2 = obj
+
+    def setup_game(self):
+        """
+        Players and board setup for a new game
+        """
+        p1_type = TYPES[self.setup.p1_type.anchor.value - 1]
+        p1_diff = MODES[self.setup.p1_mode.anchor.value - 1]
+        p2_type = TYPES[self.setup.p2_type.anchor.value - 1]
+        p2_diff = MODES[self.setup.p2_mode.anchor.value - 1]
+
+        args = [
+            f'--p1_type={p1_type}', f'--p1_diff={p1_diff}',
+            f'--p2_type={p2_type}', f'--p2_diff={p2_diff}'
+        ]
+
+        self.p1 = Player(self.setup.p1_type.anchor.value, 1)
+        self.p2 = Player(self.setup.p2_type.anchor.value, 2)
+
+        self.computer = Computer(*args)
+        self.board = Board(self.states, self.setup, self.p1, self.p2, self.computer)
+        self.stats = Stats(self.states, relative_to=self.window, position=(HEIGHT, 0))
+
+    def loop(self):
+        self.setup_game()
+        self.computer.start()
+
+        while True:
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.QUIT:
+                    exit(0)
+
+            self.stats.update(events)
+            self.board.update(events)
+            self.window.blit(self.board)
+            self.window.blit(self.stats)
+            self.window.update()
+            CLOCK.tick(60)
