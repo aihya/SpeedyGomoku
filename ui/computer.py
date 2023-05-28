@@ -115,27 +115,35 @@ class Computer:
         content and create a move object.
         """
 
-        if self.process:
-            # Attempt an expect operation from subprocess.
-            # Return None if no match found.
-            # index = self.expect(['Enter move:\n', 'Illegal move\n', 'Player 1 wins!\n', 'Player 2 wins!\n', 'Tie\n'])
-            index = self.expect([f'{"-" * 37}\n', 'Illegal move\n', 'Player 1 wins!\n', 'Player 2 wins!\n', 'Tie\n', EOF]) # <-- Seperator
+        if not self.process:
+            return None
 
-            if index == None or index < 0 or index == 5:
-                return None
-            if index >= 0 or index < 5:
-                self.expecting = False
-            if index == 0:
-                # Read the content sent from the subprocess
-                buffer = self.process.before.decode('utf-8').split('\n')
-                # return buffer
-                if buffer:
-                    # Extract the move informations and store it in a dictionary
-                    return self.extract_move(buffer)
+        # Attempt an expect operation from subprocess.
+        # Return None if no match found.
+        index = self.expect([
+            f'{"-" * 37}\n',
+            'Player 1 wins!\n',
+            'Player 2 wins!\n',
+            'Tie\n',
+            'Illegal move\n',
+            EOF,
+        ])
 
-            return index
+        if index is None:
+            return None
 
-        return None
+        if index == 5:
+            self.expecting = False
+
+        elif index in (0, 1, 2):
+            # Read the content sent from the subprocess
+            buffer = self.process.before.decode('utf-8').split('\n')
+
+            if buffer:
+                # Extract the move informations and store it in a dictionary
+                return self.extract_move(buffer)
+
+        return index
 
 
 class Player:

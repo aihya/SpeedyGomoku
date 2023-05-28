@@ -272,13 +272,11 @@ class Stats(Surface):
                         self.states.index = self.states.counter - 1
                     self.left.pressed = False
                 elif self.right.clicked():
-                    if self.states.index == -1:
-                        self.right.pressed = False
-                        pass
-                    elif self.states.index < self.states.counter:
+                    if self.states.index < self.states.counter and self.states.index != -1:
                         self.states.index += 1
                         if self.states.index == self.states.counter:
                             self.states.index = -1
+                    self.right.pressed = False
                 elif self.rff.clicked():
                     self.states.index = -1
                     self.rff.pressed = False
