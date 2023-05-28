@@ -1,9 +1,10 @@
+import asyncio
 import pygame
 from surface    import Surface
 from fonts      import *
 from init       import *
-# from setup      import Setup
-from board      import Setup, Board, Game
+from setup      import Setup
+from board      import Board
 from final      import Final
 from state      import State
 
@@ -11,16 +12,26 @@ from state      import State
 pygame.init()
 
 
-class Window(Surface):
+class Window:
     """
     This class represents the display surface.
     """
 
-    __slots__ = ('_quit',)
+    __slots__ = ('_width', '_height', '_surface', '_quit')
 
     def __init__(self):
-        super().__init__(WIDTH, HEIGHT, is_window=True)
-        self._quit = False
+        self._width   = WIDTH
+        self._height  = HEIGHT
+        self._surface = pygame.display.set_mode((self._width, self._height))
+        self._quit    = False
+
+    @property
+    def width(self):
+        return self._width
+
+    @property
+    def height(self):
+        return self._height
 
     @property
     def quit(self):
@@ -30,113 +41,74 @@ class Window(Surface):
     def quit(self, value):
         self._quit = value
 
-    def blit(self, surface):
-        self.surface.blit(surface.surface, surface.abs_rect)
+    @property
+    def surface(self):
+        return self._surface
+
+    def blit(self, surface: Surface):
+        self._surface.blit(surface.surface, (0, 0))
 
     def update(self):
         pygame.display.flip()
 
 
-class Controller:
+class Game:
+    """
+    This class represents the game logic.
+    """
 
-    __slots__ = ('_window', '_phase', '_state', '_board', '_setup', '_stats', '_events', '_sidebar', '_repeat', '_p1', '_p2')
+    __slots__ = ('_state', '_window', '_setup_surface', '_board_surface', '_final_surface', '_current_surface', '_computer')
 
     def __init__(self):
-        self._window = Window()
-        self._events = None
-        self._repeat = True
-        self._p1     = None
-        self._p2     = None
-        # self._state  = State()
-        # self._stats  = Stats(relative_to=self.window, position=(HEIGHT, 0))
-        self._setup  = Setup(relative_to=self.window, position=(HEIGHT, 0))
-        self._board  = Board(None, self._setup, self._p1, self._p2, None)
-        self._phase  = SETUP_SURFACE
-
-    @property
-    def phase(self):
-        return self._phase
-    
-    @phase.setter
-    def phase(self, value):
-        self._phase = value
-
-    @property
-    def state(self):
-        return self._state
-
-    @property
-    def board(self):
-        return self._board
-
-    @property
-    def events(self):
-        return self._events
-
-    @events.setter
-    def events(self, value):
-        self._events = value
-
-    @property
-    def repeat(self):
-        return self._repeat
-
-    @repeat.setter
-    def repeat(self, value):
-        self._repeat = value
-
-    @property
-    def setup(self):
-        return self._setup
-
-    @property
-    def p1(self):
-        return self._p1
-    
-    @p1.setter
-    def p1(self, value):
-        self._p1 = value
-
-    @property
-    def p2(self):
-        return self._p2
-    
-    @p2.setter
-    def p2(self, value):
-        self._p2 = value
+        self._state           = State()
+        self._window          = Window()
+        self._setup_surface   = Setup(self._window)
+        self._board_surface   = Board(self._window, self._state, self._setup_surface)
+        self._final_surface   = Final(self._window)
+        self._current_surface = SETUP_SURFACE
 
     @property
     def window(self):
         return self._window
 
-    def loop(self):
-        while not quit():
+    @property
+    def setup_surface(self):
+        return self._setup_surface
 
-            self.events = pygame.event.get()
+    @property
+    def board_surface(self):
+        return self._board_surface
 
-            # Exit in pygame.QUIT event
-            for event in self.events:
-                if event.type == pygame.QUIT:
-                    exit(0)
+    @property
+    def final_surface(self):
+        return self._final_surface
 
-            # TODO: To reconsider
-            if self.phase == SETUP_SURFACE:
-                self.board.draw_board()
-                self.phase = self.setup.update(self.events)
-            else:
-                game = Game(self.window, self.setup)
-                game.loop()
+    @property
+    def current_surface(self):
+        return self._current_surface
 
-            self.window.blit(self.setup)
-            self.window.blit(self.board)
-            self.window.update()
+    @current_surface.setter
+    def current_surface(self, value):
+        self._current_surface = value
 
-            CLOCK.tick(60)
+    @property
+    def state(self):
+        return self._state
+
+    def run(self):
+        while self.window.quit == False:
+            if self.current_surface == SETUP_SURFACE:
+                self.current_surface = self.setup_surface.loop()
+            elif self.current_surface == BOARD_SURFACE:
+                self.current_surface = self.board_surface.loop()
+            elif self.current_surface == FINAL_SURFACE:
+                self.current_surface = self.final_surface.loop()
+        return None
 
 
 if __name__ == "__main__":
-    game = Controller()
-    game.loop()
+    game = Game()
+    game.run()
 
 # [ ] Link the setup with the board
 # [ ] Kill the bot(computer) process at the end
