@@ -58,14 +58,18 @@ class Gomoku
 
         typedef enum        e_scores
         {
-            ILLEGAL_SCORE = -1000000,
-            WINNING_SCORE = 50000000,
-            FOUR_SCORE    = 100000,
-            CAPTURE_SCORE = 50000,
-            THREE_SCORE   = 1000,
-            TWO_SCORE     = 100,
-            ONE_SCORE     = 10,
-            ZERO_SCORE    = 0
+            ILLEGAL_SCORE          = -10000000,
+            WINNING_SCORE          = 10000000,
+            WIN_BLOCK_SCORE        = 1000000,
+            FREE_FOUR_SCORE        = 500000,
+            FREE_BLOCK_SCORE       = 50000,
+            FOUR_SCORE             = 20000,
+            FREE_SCORE             = 10000,
+            CAPTURE_SCORE          = 5000,
+            THREE_SCORE            = 1000,
+            TWO_SCORE              = 100,
+            ONE_SCORE              = 10,
+            ZERO_SCORE             = 0
         }                   t_scores;
 
         typedef enum        e_pattern_mask
@@ -253,4 +257,7 @@ class Gomoku
         t_coord                 human_move(t_player& player, t_player& opponent);
         t_player                get_player(t_player_type player_type, t_piece player_color, t_difficulty difficulty);
 
+
+        int64_t                 evaluate_board(t_moveset &moveset, uint64_t *board,  t_piece player_color, t_capture_count capture_count);
+        void                    print_patterns(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
 };
