@@ -56,16 +56,17 @@ class Gomoku
             HARD
         }                   t_difficulty;
 
+
         typedef enum        e_scores
         {
             ILLEGAL_SCORE          = -10000000,
-            WINNING_SCORE          = 10000000,
-            WIN_BLOCK_SCORE        = 1000000,
-            FREE_FOUR_SCORE        = 500000,
-            FREE_BLOCK_SCORE       = 50000,
-            FOUR_SCORE             = 20000,
+            WINNING_SCORE          = 100000000,
+            WIN_BLOCK_SCORE        = 10000000,
+            FREE_FOUR_SCORE        = 1000000,
+            FOUR_SCORE             = 200000,
+            CAPTURE_SCORE          = 100000,
+            FREE_BLOCK_SCORE       = 20000,
             FREE_SCORE             = 10000,
-            CAPTURE_SCORE          = 5000,
             THREE_SCORE            = 1000,
             TWO_SCORE              = 100,
             ONE_SCORE              = 10,

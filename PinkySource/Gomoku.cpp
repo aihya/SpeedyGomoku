@@ -126,6 +126,11 @@ const Gomoku::t_patterns Gomoku::_defense_patterns = {
             { 0b011010100110, Gomoku::WIN_BLOCK_SCORE},
             { 0b111010100110, Gomoku::WIN_BLOCK_SCORE},
             { 0b001010100110, Gomoku::WIN_BLOCK_SCORE},
+            { 0b110110101010, Gomoku::WIN_BLOCK_SCORE},
+            { 0b100110101000, Gomoku::WIN_BLOCK_SCORE},
+            { 0b100110101011, Gomoku::WIN_BLOCK_SCORE},
+            { 0b100110101010, Gomoku::WIN_BLOCK_SCORE},
+            { 0b100110101001, Gomoku::WIN_BLOCK_SCORE},
             { 0b111001101010, Gomoku::WIN_BLOCK_SCORE},
             { 0b101001101000, Gomoku::WIN_BLOCK_SCORE},
             { 0b101001101011, Gomoku::WIN_BLOCK_SCORE},
@@ -171,6 +176,11 @@ const Gomoku::t_patterns Gomoku::_defense_patterns = {
             { 0b100101011001, Gomoku::WIN_BLOCK_SCORE},
             { 0b110101011001, Gomoku::WIN_BLOCK_SCORE},
             { 0b000101011001, Gomoku::WIN_BLOCK_SCORE},
+            { 0b111001010101, Gomoku::WIN_BLOCK_SCORE},
+            { 0b011001010100, Gomoku::WIN_BLOCK_SCORE},
+            { 0b011001010111, Gomoku::WIN_BLOCK_SCORE},
+            { 0b011001010101, Gomoku::WIN_BLOCK_SCORE},
+            { 0b011001010110, Gomoku::WIN_BLOCK_SCORE},
             { 0b110110010101, Gomoku::WIN_BLOCK_SCORE},
             { 0b010110010100, Gomoku::WIN_BLOCK_SCORE},
             { 0b010110010111, Gomoku::WIN_BLOCK_SCORE},
@@ -610,7 +620,7 @@ int64_t Gomoku::evaluate_board(t_moveset &moveset, uint64_t *board,  t_piece pla
 
 bool Gomoku::is_winning_move(uint64_t* board, t_piece piece, t_coord move)
 {
-    // std::cout << "evaluating move " << move << std::endl;
+    // std::cout << evaluate_move(board, move, piece) << std::endl;
     // if (this->evaluate_move(board, move, piece) >= Gomoku::WINNING_SCORE)
     // {
     //     this->remove_board_piece(board, move);
@@ -830,7 +840,7 @@ Gomoku::t_scored_move Gomoku::maximizer(t_moveset& moveset,
         count.maximizer_count += update.cupture_count;
         added_moveset.clear();
         this->update_node_state(board, added_moveset, moveset, update.updates);
-        if (update.move.score >= Gomoku::WIN_BLOCK_SCORE || count.maximizer_count >= MAX_CAPTURE)
+        if (update.move.score >= Gomoku::WINNING_SCORE|| count.maximizer_count >= MAX_CAPTURE)
         {
             best_eval = t_scored_move{update.move.coord, INTMAX_MAX - 1};
             this->revert_node_state(board, added_moveset, moveset, update.updates);
@@ -843,7 +853,7 @@ Gomoku::t_scored_move Gomoku::maximizer(t_moveset& moveset,
         prunner.alpha = std::max(prunner.alpha, best_eval.score);
         if (prunner.beta <= prunner.alpha)
             break;
-        if (++move_couter > 17)
+        if (++move_couter > 20)
             break;
     }
     return (best_eval);    
@@ -879,7 +889,7 @@ Gomoku::t_scored_move Gomoku::minimizer
         prunner.beta = std::min(prunner.beta, best_eval.score);
         if (prunner.beta <= prunner.alpha)
             break;
-        if (++move_couter > 17)
+        if (++move_couter > 20)
             break;
     }
     return (best_eval);
