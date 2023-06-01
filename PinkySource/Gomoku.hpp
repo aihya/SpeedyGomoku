@@ -61,7 +61,7 @@ class Gomoku
         {
             ILLEGAL_SCORE          = -10000000,
             WINNING_SCORE          = 100000000,
-            WIN_BLOCK_SCORE        = 10000000,
+            WIN_BLOCK_SCORE        = 20000000,
             FREE_FOUR_SCORE        = 1000000,
             FOUR_SCORE             = 200000,
             CAPTURE_SCORE          = 100000,
@@ -219,6 +219,7 @@ class Gomoku
         t_capture_count                         _capture_count;
         t_coord                                 _last_move;
         size_t                                  _turn;
+        double                                  _average_time;
 
     public:
         std::list<uint64_t*>                    _move_history;
