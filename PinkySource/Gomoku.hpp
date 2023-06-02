@@ -56,21 +56,16 @@ class Gomoku
             HARD
         }                   t_difficulty;
 
-
         typedef enum        e_scores
         {
-            ILLEGAL_SCORE          = -10000000,
-            WINNING_SCORE          = 100000000,
-            WIN_BLOCK_SCORE        = 20000000,
-            FREE_FOUR_SCORE        = 1000000,
-            FOUR_SCORE             = 200000,
-            CAPTURE_SCORE          = 100000,
-            FREE_BLOCK_SCORE       = 20000,
-            FREE_SCORE             = 10000,
-            THREE_SCORE            = 1000,
-            TWO_SCORE              = 100,
-            ONE_SCORE              = 10,
-            ZERO_SCORE             = 0
+            ILLEGAL_SCORE = -1000000,
+            WINNING_SCORE = 50000000,
+            FOUR_SCORE    = 100000,
+            CAPTURE_SCORE = 50000,
+            THREE_SCORE   = 1000,
+            TWO_SCORE     = 100,
+            ONE_SCORE     = 10,
+            ZERO_SCORE    = 0
         }                   t_scores;
 
         typedef enum        e_pattern_mask
@@ -219,7 +214,6 @@ class Gomoku
         t_capture_count                         _capture_count;
         t_coord                                 _last_move;
         size_t                                  _turn;
-        double                                  _average_time;
 
     public:
         std::list<uint64_t*>                    _move_history;
@@ -259,7 +253,4 @@ class Gomoku
         t_coord                 human_move(t_player& player, t_player& opponent);
         t_player                get_player(t_player_type player_type, t_piece player_color, t_difficulty difficulty);
 
-
-        int64_t                 evaluate_board(t_moveset &moveset, uint64_t *board,  t_piece player_color, t_capture_count capture_count);
-        void                    print_patterns(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
 };
