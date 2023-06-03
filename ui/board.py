@@ -531,6 +531,7 @@ class Board(Surface):
                         return
                     elif resp == 3:
                         print('illegal move')
+                        self.computer.expecting = False
                         return
                     elif resp == 4:
                         print('Tie!')
@@ -555,6 +556,7 @@ class Board(Surface):
                     return
                 elif resp == 3:
                     print('illegal move')
+                    self.computer.expecting = False
                     return
                 elif resp == 4:
                     print('Tie!')
