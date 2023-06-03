@@ -899,7 +899,7 @@ Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent)
     auto end = std::chrono::steady_clock::now();
     auto diff = end - start;
     this->_average_time = std::chrono::duration<double>(diff).count();
-    std::cout << "AI move took " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
+    std::cout << std::chrono::duration<double, std::milli>(diff).count() << std::endl;
     return best_move.coord;
 }
 
