@@ -517,47 +517,50 @@ class Board(Surface):
                 # Process the received output
                 resp = self.computer.next_move()
                 if resp:
-                    if resp == 1:
-                        print('illegal move')
-                        return
-                    elif resp == 2:
+                    if isinstance(resp, dict):
+                        print(f'Human[{self.turn.turn}]', resp['time'], resp['move'])
+                        self.states.add(State(resp['board'], resp['time'], resp['move']))
+                        self.turn = self.p1 if self.turn == self.p2 else self.p2
+                    elif resp == 1:
+                        self.states.add(State(resp['board'], resp['time'], resp['move']))
                         print('Player 1 wins!')
                         return
-                    elif resp == 3:
+                    elif resp == 2:
+                        self.states.add(State(resp['board'], resp['time'], resp['move']))
                         print('Player 2 wins!')
+                        return
+                    elif resp == 3:
+                        print('illegal move')
                         return
                     elif resp == 4:
                         print('Tie!')
                         return
                     else:
-                        # print(f'Human[{self.turn.turn}]', resp['time'], resp['move'])
-                        self.states.add(State(resp['board'], resp['time'], resp['move']))
-                        self.turn = self.p1 if self.turn == self.p2 else self.p2
+                        return
 
         elif self.turn.player == COMPUTER:
             resp = self.computer.next_move()
             if resp:
-                if resp == 1:
-                    print('illegal move')
-                    return
-                elif resp == 2:
+                if isinstance(resp, dict):
+                    print(f'Computer[{self.turn.turn}]', resp['time'], resp['move'])
+                    self.states.add(State(resp['board'], resp['time'], resp['move']))
+                    self.turn = self.p1 if self.turn == self.p2 else self.p2
+                elif resp == 1:
+                    self.states.add(State(resp['board'], resp['time'], resp['move']))
                     print('Player 1 wins!')
                     return
-                elif resp == 3:
+                elif resp == 2:
+                    self.states.add(State(resp['board'], resp['time'], resp['move']))
                     print('Player 2 wins!')
+                    return
+                elif resp == 3:
+                    print('illegal move')
                     return
                 elif resp == 4:
                     print('Tie!')
                     return
                 else:
-                    # print(f'Computer[{self.turn.turn}]', resp['time'], resp['move'])
-                    self.states.add(State(resp['board'], resp['time'], resp['move']))
-                    self.turn = self.p1 if self.turn == self.p2 else self.p2
-
-    def player_symbol(self):
-        if self.turn == self.p1:
-            return '1'
-        return '2'
+                    return
 
     def reset(self):
         self.state.reset()

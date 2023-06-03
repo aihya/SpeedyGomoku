@@ -87,6 +87,8 @@ class Computer:
         return
 
     def extract_move(self, buffer):
+        self.expecting = False
+        
         if len(buffer) == 1:
             return None
 
@@ -96,7 +98,7 @@ class Computer:
             'board': [],
         }
         start, end = 2, -1
-        if len(buffer) - 1 == 20: # Human output
+        if len(buffer) == 21: # Human output
             move['time'] = 0
             move['move'] = tuple(int(c) for c in buffer[0].split())
             start, end = 1, -1
@@ -124,9 +126,9 @@ class Computer:
             f'{"-" * 37}\n',
             'Player 1 wins!\n',
             'Player 2 wins!\n',
-            'Tie\n',
             'Illegal move\n',
-            EOF,
+            'Tie\n',
+            EOF
         ])
 
         if index is None:
