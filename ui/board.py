@@ -315,15 +315,15 @@ class Stats(Surface):
         self.restart.update()
         self.surface.blit(self.restart.surface, self.restart.rect)
 
-        if not self.board.finished:
-            self.left.update()
-            self.right.update()
-            self.lff.update()
-            self.rff.update()
-            self.surface.blit(self.left.surface, self.left.rect)
-            self.surface.blit(self.right.surface, self.right.rect)
-            self.surface.blit(self.lff.surface, self.lff.rect)
-            self.surface.blit(self.rff.surface, self.rff.rect)
+        # if not self.board.finished:
+        self.left.update()
+        self.right.update()
+        self.lff.update()
+        self.rff.update()
+        self.surface.blit(self.left.surface, self.left.rect)
+        self.surface.blit(self.right.surface, self.right.rect)
+        self.surface.blit(self.lff.surface, self.lff.rect)
+        self.surface.blit(self.rff.surface, self.rff.rect)
 
         self.update_current_state(events)
 
