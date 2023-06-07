@@ -220,14 +220,11 @@ class Gomoku
         uint8_t                                 _depth;
         t_player                                _first_player;
         t_player                                _second_player;
-        t_difficulty                            _difficulty;
         t_capture_count                         _capture_count;
-        t_coord                                 _last_move;
         size_t                                  _turn;
-        double                                  _average_time;
 
     public:
-        std::list<uint64_t*>                    _move_history;
+        uint64_t*                               _board;
         t_moveset                               _ai_moveset;
 
     public:
