@@ -28,6 +28,8 @@ class Gomoku
 #define IS_CAPTURE(board, move, dir) (this->get_piece(board, move + dir) == GET_OPPONENT(piece)\
                                         && this->get_piece(board, move + (dir * 2)) == GET_OPPONENT(piece)\
                                             && this->get_piece(board, move + (dir * 3)) == piece)
+
+#define FLIP_CAPTURE(capture) t_capture_count{capture.minimizer_count, capture.maximizer_count}
 #define MAX_CAPTURE 5U
 
     public:
@@ -212,6 +214,7 @@ class Gomoku
         const static t_patterns                 _defense_patterns;
         const static t_patterns                 _illegal_patterns;
         const static t_patterns                 _capture_patterns;
+        const static t_coord                    _invalid_coord;
 
         uint8_t                                 _board_size;
         uint8_t                                 _depth;
@@ -265,4 +268,5 @@ class Gomoku
 
         int64_t                 evaluate_board(t_moveset &moveset, uint64_t *board,  t_piece player_color);
         bool                    is_winning_move(uint64_t* board, t_piece piece, t_coord move, uint8_t capture_count);
+        bool                    is_game_finished(t_coord piece_coord, t_player &player);
 };

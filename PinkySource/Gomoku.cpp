@@ -1,7 +1,6 @@
 #include "Gomoku.hpp"
 
 
-
 const Gomoku::t_patterns Gomoku::_attack_patterns = {
     {
         Gomoku::BLACK, {
@@ -320,6 +319,8 @@ const std::vector<Gomoku::t_coord> Gomoku::_moveset_cells {
     {1, 1},
     {-1, -1},
 };
+
+const Gomoku::t_coord Gomoku::_invalid_coord = { -1, -1 };
 
 uint64_t *Gomoku::copy_board(uint64_t *board)
 {
@@ -697,7 +698,7 @@ Gomoku::t_scored_move Gomoku::maximizer(t_moveset& moveset,
 
     if (depth == 0)
         return (t_scored_move{t_coord{}, this->evaluate_board(board, piece, count)});
-    best_eval = t_scored_move{t_coord{-1, -1}, INTMAX_MIN};
+    best_eval = t_scored_move{Gomoku::_invalid_coord, INTMAX_MIN};
     move_couter = 0;
     for (auto& update: this->generate_sorted_updates(moveset, board, piece))
     {
@@ -729,8 +730,8 @@ Gomoku::t_scored_move Gomoku::minimizer
     uint8_t             move_couter;
 
     if (depth == 0)
-        return t_scored_move{t_coord{}, -this->evaluate_board(board, piece, t_capture_count{count.minimizer_count, count.maximizer_count})};
-    best_eval = t_scored_move{t_coord{-1, -1}, INTMAX_MAX};
+        return t_scored_move{t_coord{}, -this->evaluate_board(board, piece, FLIP_CAPTURE(count))};
+    best_eval = t_scored_move{Gomoku::_invalid_coord, INTMAX_MAX};
     move_couter = 0;
     for (auto& update: this->generate_sorted_updates(moveset, board, piece))
     {
@@ -798,25 +799,25 @@ Gomoku::t_coord Gomoku::human_move(t_player& player, t_player &opponent)
     return (coord);
 }
 
-void Gomoku::make_move(t_player& player, t_player& opponent)
+bool Gomoku::is_game_finished(t_coord piece_coord, t_player &player)
 {
     uint64_t        *new_board;
     t_scored_update scored_move{0};
-    t_coord         piece_coord;
 
-    piece_coord = (this->*player.move)(player, opponent);
-    if (piece_coord == t_coord{-1, -1})
+    if (piece_coord == Gomoku::_invalid_coord)
+    {
         std::cout << "Player " << player.piece << " forfeits" << std::endl;
+        return true;
+    }
     else
     {
         new_board = this->copy_board(this->_move_history.front());
         this->generate_scored_update(new_board, piece_coord, player.piece, scored_move);
         this->update_game_state(new_board, this->_ai_moveset, scored_move.updates);
         this->_move_history.push_front(new_board);
-        this->_last_move = piece_coord;
         player.capture_count += scored_move.cupture_count;
         this->_turn++;
-        std::cout << _last_move.x << ' ' << _last_move.y << std::endl;
+        std::cout << piece_coord.x << ' ' << piece_coord.y << std::endl;
         this->print_board();
         if (this->is_winning_move(this->_move_history.front(), player.piece, piece_coord, player.capture_count))
         {
@@ -824,18 +825,24 @@ void Gomoku::make_move(t_player& player, t_player& opponent)
             std::cout << "Player " << player.piece << " wins!" << std::endl;
             // std::cout << "Game took " << this->_turn << " turns" << std::endl;
             // std::cout << "Average AI move time: " << this->_average_time / this->_turn << " ms" << std::endl;
-            exit(1);
+            return true;
         }
     }
+    return false;
 }
 
 void Gomoku::start_game()
 {
+    t_coord current_move;
     for (;;)
     {
-        this->make_move(this->_first_player, this->_second_player);
+        current_move  = (this->*_first_player.move)(this->_first_player, this->_second_player);
+        if (this->is_game_finished(current_move, this->_first_player))
+            break;
         std::cout << "-------------------------------------" << std::endl;
-        this->make_move(this->_second_player, this->_first_player);
+        current_move  = (this->*_second_player.move)(this->_second_player, this->_second_player);
+        if (this->is_game_finished(current_move, this->_second_player))
+            break;
         std::cout << "-------------------------------------" << std::endl;
     }
 }
