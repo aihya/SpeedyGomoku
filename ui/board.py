@@ -207,9 +207,9 @@ class Setup(Surface):
 
 class Stats(Surface):
 
-    __slots__ = ('_left', '_right', '_rff', '_lff', '_states')
+    __slots__ = ('_left', '_right', '_rff', '_lff', '_states', '_board', '_text', '_restart')
 
-    def __init__(self, states, *args, **kwargs):
+    def __init__(self, states, board, *args, **kwargs):
         super().__init__(WIDTH-HEIGHT, HEIGHT, *args, **kwargs)
         
         # Load images for left and right buttons
@@ -229,11 +229,30 @@ class Stats(Surface):
         self._lff.position   = (self.width / 2 - self.left.width * 2, self.height - 100)
         self._rff.position   = (self.width / 2 + self.right.width, self.height - 100)
 
+        self._text = {
+            'black': fonts.h3_t.render('Black', True, BLACK),
+            'white': fonts.h3_t.render('White', True, BLACK),
+        }
+
         self._states = states
+        self._board = board
+
+        restart_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/reload.png'), (50, 50))
+        self._restart = Button(
+            '#000000', 
+            '#31E8DF', 
+            'REPLAY', 
+            fonts.h3_t, 
+            relative_to=self, 
+            position=(self.width - 200, 30))
 
     @property
     def states(self):
         return self._states
+
+    @property
+    def board(self):
+        return self._board
 
     def check_hover(self):
         if self.abs_rect.collidepoint(pygame.mouse.get_pos()):
@@ -256,13 +275,15 @@ class Stats(Surface):
     def rff(self):
         return self._rff
 
-    def update(self, events):
-        self.surface.fill(WHITE)
-        self.left.update()
-        self.right.update()
-        self.lff.update()
-        self.rff.update()
+    @property
+    def text(self):
+        return self._text
 
+    @property
+    def restart(self):
+        return self._restart
+
+    def update_current_state(self, events):
         for event in events:
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 if self.left.clicked():
@@ -284,11 +305,28 @@ class Stats(Surface):
                     self.states.index = 0
                     self.lff.pressed = False
 
+    def update(self, events):
+        self.surface.fill(WHITE)
+        Board.draw_circle(self.surface, 50, 50, 20, BLACK)
+        Board.draw_circle(self.surface, 50, 100, 20, WHITE)
+        self.surface.blit(self.text['black'], (90, 32))
+        self.surface.blit(self.text['white'], (90, 82))
 
-        self.surface.blit(self.left.surface, self.left.rect)
-        self.surface.blit(self.right.surface, self.right.rect)
-        self.surface.blit(self.lff.surface, self.lff.rect)
-        self.surface.blit(self.rff.surface, self.rff.rect)
+        self.restart.update()
+        self.surface.blit(self.restart.surface, self.restart.rect)
+
+        if not self.board.finished:
+            self.left.update()
+            self.right.update()
+            self.lff.update()
+            self.rff.update()
+            self.surface.blit(self.left.surface, self.left.rect)
+            self.surface.blit(self.right.surface, self.right.rect)
+            self.surface.blit(self.lff.surface, self.lff.rect)
+            self.surface.blit(self.rff.surface, self.rff.rect)
+
+        self.update_current_state(events)
+
 
 class Board(Surface):
     """ 
@@ -651,7 +689,7 @@ class Game:
 
         self.computer = Computer(*args)
         self.board = Board(self.states, self.setup, self.p1, self.p2, self.computer)
-        self.stats = Stats(self.states, relative_to=self.window, position=(HEIGHT, 0))
+        self.stats = Stats(self.states, self.board, relative_to=self.window, position=(HEIGHT, 0))
 
     def loop(self):
         self.setup_game()
@@ -662,6 +700,9 @@ class Game:
             for event in events:
                 if event.type == pygame.QUIT:
                     exit(0)
+                if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                    if self.stats.restart.clicked():
+                        return
 
             self.stats.update(events)
             self.board.update(events)
