@@ -417,7 +417,7 @@ class Board(Surface):
         for r, row in enumerate(self.states.current.state):
             for c, col in enumerate(row):
                 if col in [1, 2]:
-                    color = "#ffffff" if col == 1 else "#000000"
+                    color = "#ffffff" if col == 2 else "#000000"
                     x = self.linspace[c] + 1
                     y = self.linspace[r] + 1
                     Board.draw_circle(self.surface, x, y, 16, pygame.Color(color))
@@ -431,7 +431,7 @@ class Board(Surface):
                         Board.draw_circle(self.surface, x+12, y-12, 5, (255, 255, 0))
                         count_text = fonts.h5_b.render(f'{counter}', True, (255, 0, 0))
 
-                    count_text = fonts.h5_b.render(f'{counter}', True, (0, 0, 0) if col == 1 else (255, 255, 255))
+                    count_text = fonts.h5_b.render(f'{counter}', True, (0, 0, 0) if col == 2 else (255, 255, 255))
                     count_rect = count_text.get_rect()
                     count_rect.center = (x, y)
                     self.surface.blit(count_text, count_rect)
@@ -445,7 +445,7 @@ class Board(Surface):
 
     def show_hover(self):
         radius = 16
-        color = "#ffffff" if self.turn == self.p1 else "#000000"
+        color = "#ffffff" if self.turn == self.p2 else "#000000"
         x, y = pygame.mouse.get_pos()
         x = self.linspace[math.floor((x-radius) / self.step)]+1
         y = self.linspace[math.floor((y-radius) / self.step)]+1
@@ -455,7 +455,7 @@ class Board(Surface):
 
         # Show the current count value on the hover piece.
         if self.turn.player == HUMAN:
-            color = "#000000" if self.turn == self.p1 else "#ffffff"
+            color = "#000000" if self.turn == self.p2 else "#ffffff"
             count_text = fonts.h5_b.render(f'{self.states.counter + 1}', True, color)
             count_rect = count_text.get_rect()
             count_rect.center = (x, y)
@@ -515,51 +515,48 @@ class Board(Surface):
                     self.computer.send(f'{x} {y}\n')
             else:
                 # Process the received output
+                self.computer.expecting = True
                 resp = self.computer.next_move()
                 if resp:
-                    if isinstance(resp, dict):
-                        print(f'Human[{self.turn.turn}]', resp['time'], resp['move'])
-                        self.states.add(State(resp['board'], resp['time'], resp['move']))
+                    if isinstance(resp, tuple) and resp[0] == 0: # No winner yet
+                        print(f'Human[{self.turn.turn}]', resp[1]['time'], resp[1]['move'])
+                        self.states.add(State(resp[1]['board'], resp[1]['time'], resp[1]['move']))
                         self.turn = self.p1 if self.turn == self.p2 else self.p2
-                    elif resp == 1:
-                        self.states.add(State(resp['board'], resp['time'], resp['move']))
-                        print('Player 1 wins!')
-                        return
-                    elif resp == 2:
-                        self.states.add(State(resp['board'], resp['time'], resp['move']))
-                        print('Player 2 wins!')
+                        self.computer.expecting = False
+                    elif isinstance(resp, tuple) and resp[0] in (1, 2):
+                        self.states.add(State(resp[1]['board'], resp[1]['time'], resp[1]['move']))
+                        print(f'Player {resp[0]} wins!')
+                        self.finished = True
                         return
                     elif resp == 3:
-                        print('illegal move')
                         self.computer.expecting = False
                         return
                     elif resp == 4:
-                        print('Tie!')
+                        self.finished = True
                         return
                     else:
                         return
 
         elif self.turn.player == COMPUTER:
+            # Process the received output
+            self.computer.expecting = True
             resp = self.computer.next_move()
             if resp:
-                if isinstance(resp, dict):
-                    print(f'Computer[{self.turn.turn}]', resp['time'], resp['move'])
-                    self.states.add(State(resp['board'], resp['time'], resp['move']))
+                if isinstance(resp, tuple) and resp[0] == 0: # No winner yet
+                    print(f'Computer[{self.turn.turn}]', resp[1]['time'], resp[1]['move'])
+                    self.states.add(State(resp[1]['board'], resp[1]['time'], resp[1]['move']))
                     self.turn = self.p1 if self.turn == self.p2 else self.p2
-                elif resp == 1:
-                    self.states.add(State(resp['board'], resp['time'], resp['move']))
-                    print('Player 1 wins!')
-                    return
-                elif resp == 2:
-                    self.states.add(State(resp['board'], resp['time'], resp['move']))
-                    print('Player 2 wins!')
+                    self.computer.expecting = False
+                elif isinstance(resp, tuple) and resp[0] in (1, 2): # Winner found
+                    self.states.add(State(resp[1]['board'], resp[1]['time'], resp[1]['move']))
+                    print(f'Player {resp[0]} wins!')
+                    self.finished = True
                     return
                 elif resp == 3:
-                    print('illegal move')
                     self.computer.expecting = False
                     return
                 elif resp == 4:
-                    print('Tie!')
+                    self.finished = True
                     return
                 else:
                     return

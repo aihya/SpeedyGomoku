@@ -821,7 +821,6 @@ bool Gomoku::is_game_finished(t_coord piece_coord, t_player &player)
         this->print_board();
         if (this->is_winning_move(this->_move_history.front(), player.piece, piece_coord, player.capture_count))
         {
-            std::cout << "-------------------------------------" << std::endl;
             std::cout << "Player " << player.piece << " wins!" << std::endl;
             // std::cout << "Game took " << this->_turn << " turns" << std::endl;
             // std::cout << "Average AI move time: " << this->_average_time / this->_turn << " ms" << std::endl;

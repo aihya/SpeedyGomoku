@@ -87,7 +87,6 @@ class Computer:
         return
 
     def extract_move(self, buffer):
-        self.expecting = False
         
         if len(buffer) == 1:
             return None
@@ -143,7 +142,7 @@ class Computer:
 
             if buffer:
                 # Extract the move informations and store it in a dictionary
-                return self.extract_move(buffer)
+                return index, self.extract_move(buffer)
 
         return index
 
