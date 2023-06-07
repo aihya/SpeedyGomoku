@@ -25,7 +25,12 @@ class Gomoku
 {
 
 #define GET_OPPONENT(piece) ((piece == Gomoku::BLACK) ? Gomoku::WHITE : Gomoku::BLACK)
-#define MAX_CAPTURE 8
+#define IS_CAPTURE(board, move, dir) (this->get_piece(board, move + dir) == GET_OPPONENT(piece)\
+                                        && this->get_piece(board, move + (dir * 2)) == GET_OPPONENT(piece)\
+                                            && this->get_piece(board, move + (dir * 3)) == piece)
+
+#define FLIP_CAPTURE(capture) t_capture_count{capture.minimizer_count, capture.maximizer_count}
+#define MAX_CAPTURE 5U
 
     public:
         typedef enum        e_piece
@@ -56,20 +61,19 @@ class Gomoku
             HARD
         }                   t_difficulty;
 
-
         typedef enum        e_scores
         {
             ILLEGAL_SCORE          = -10000000,
-            WINNING_SCORE          = 100000000,
-            WIN_BLOCK_SCORE        = 20000000,
-            FREE_FOUR_SCORE        = 1000000,
-            FOUR_SCORE             = 200000,
+            WINNING_SCORE          = 1000000,
+            WIN_BLOCK_SCORE        = 500000,
             CAPTURE_SCORE          = 100000,
-            FREE_BLOCK_SCORE       = 20000,
-            FREE_SCORE             = 10000,
-            THREE_SCORE            = 1000,
-            TWO_SCORE              = 100,
-            ONE_SCORE              = 10,
+            FREE_FOUR_SCORE        = 20000,
+            FREE_BLOCK_SCORE       = 2000,
+            FREE_SCORE             = 2000,
+            FOUR_SCORE             = 1000,
+            THREE_SCORE            = 100,
+            TWO_SCORE              = 10,
+            ONE_SCORE              = 1,
             ZERO_SCORE             = 0
         }                   t_scores;
 
@@ -210,6 +214,7 @@ class Gomoku
         const static t_patterns                 _defense_patterns;
         const static t_patterns                 _illegal_patterns;
         const static t_patterns                 _capture_patterns;
+        const static t_coord                    _invalid_coord;
 
         uint8_t                                 _board_size;
         uint8_t                                 _depth;
@@ -234,11 +239,11 @@ class Gomoku
         bool        is_move_valid(t_coord piece_coord, t_piece piece);
         void        start_game();
     private:
-        int64_t                 evaluate_board(uint64_t *board, t_piece player_piece);
+        int64_t                 evaluate_board(uint64_t *board, t_piece player_color, t_capture_count capture_count);
         t_piece                 get_piece(uint64_t *board, t_coord piece_coord);
         t_coord                 get_bot_move();
         uint64_t                *copy_board(uint64_t *board);
-        int32_t                 evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
+        int32_t                 evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction, bool capture = false);
         int32_t                 evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
         int32_t                 evaluate_special_pattern(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
         t_scored_move           minimizer(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
@@ -246,7 +251,7 @@ class Gomoku
         t_sorted_updates        generate_sorted_updates(t_moveset& moveset, uint64_t* board, t_piece piece);
         bool                    is_winning_move(uint64_t* board, t_piece piece, t_coord move);
         void                    print_board(uint64_t *board, t_moveset& moveset);
-        void                    generate_update_list(uint64_t* board, t_coord move, t_piece piece, t_update_list& update_list);
+        void                    generate_scored_update(uint64_t* board, t_coord move, t_piece piece, t_scored_update& scored_update);
         void                    update_game_state(uint64_t *board, t_moveset &moveset, const t_update_list& update_list);
         void                    update_node_state(uint64_t *board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
         void                    revert_node_state(uint64_t *board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
@@ -258,8 +263,10 @@ class Gomoku
         t_coord                 ai_move(t_player& player, t_player& opponent);
         t_coord                 human_move(t_player& player, t_player& opponent);
         t_player                get_player(t_player_type player_type, t_piece player_color, t_difficulty difficulty);
-
-
         int64_t                 evaluate_board(t_moveset &moveset, uint64_t *board,  t_piece player_color, t_capture_count capture_count);
         void                    print_patterns(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
+
+        int64_t                 evaluate_board(t_moveset &moveset, uint64_t *board,  t_piece player_color);
+        bool                    is_winning_move(uint64_t* board, t_piece piece, t_coord move, uint8_t capture_count);
+        bool                    is_game_finished(t_coord piece_coord, t_player &player);
 };
