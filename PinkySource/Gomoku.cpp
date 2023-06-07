@@ -698,7 +698,7 @@ Gomoku::t_scored_move Gomoku::maximizer(t_moveset& moveset,
     if (depth == 0)
         return (t_scored_move{t_coord{}, this->evaluate_board(board, piece, count)});
     best_eval = t_scored_move{t_coord{-1, -1}, INTMAX_MIN};
-    move_couter = -1;
+    move_couter = 0;
     for (auto& update: this->generate_sorted_updates(moveset, board, piece))
     {
         added_moveset.clear();
@@ -707,13 +707,14 @@ Gomoku::t_scored_move Gomoku::maximizer(t_moveset& moveset,
             return t_scored_move{update.move.coord, INTMAX_MAX - depth};
         this->update_node_state(board, added_moveset, moveset, update.updates);
         move_eval = this->minimizer(moveset, board, depth - 1, prunner, count, GET_OPPONENT(piece));
+        count.maximizer_count -= update.cupture_count;
         this->revert_node_state(board, added_moveset, moveset, update.updates);
         if (move_eval.score >= best_eval.score)
             best_eval = t_scored_move{update.move.coord, move_eval.score};
         prunner.alpha = std::max(prunner.alpha, best_eval.score);
         if (prunner.beta <= prunner.alpha)
             break;
-        if (++move_couter >= 17)
+        if (move_couter++ > 17)
             break;
     }
     return (best_eval);    
@@ -728,9 +729,9 @@ Gomoku::t_scored_move Gomoku::minimizer
     uint8_t             move_couter;
 
     if (depth == 0)
-        return (t_scored_move{t_coord{}, this->evaluate_board(board, GET_OPPONENT(piece), count)});
+        return t_scored_move{t_coord{}, -this->evaluate_board(board, piece, t_capture_count{count.minimizer_count, count.maximizer_count})};
     best_eval = t_scored_move{t_coord{-1, -1}, INTMAX_MAX};
-    move_couter = -1;
+    move_couter = 0;
     for (auto& update: this->generate_sorted_updates(moveset, board, piece))
     {
         added_moveset.clear();
@@ -739,13 +740,14 @@ Gomoku::t_scored_move Gomoku::minimizer
             return t_scored_move{update.move.coord, INTMAX_MIN + depth};
         this->update_node_state(board, added_moveset, moveset, update.updates);
         move_eval = this->maximizer(moveset, board, depth - 1, prunner, count, GET_OPPONENT(piece));
+        count.minimizer_count -= update.cupture_count;
         this->revert_node_state(board, added_moveset, moveset, update.updates);
         if (move_eval.score <= best_eval.score)
             best_eval = t_scored_move{update.move.coord, move_eval.score};
         prunner.beta = std::min(prunner.beta, best_eval.score);
         if (prunner.beta <= prunner.alpha)
             break;
-        if (++move_couter >= 17)
+        if (move_couter++ > 17)
             break;
     }
     return (best_eval);
