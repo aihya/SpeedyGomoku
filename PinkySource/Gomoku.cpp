@@ -899,7 +899,8 @@ Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent)
     auto end = std::chrono::steady_clock::now();
     auto diff = end - start;
     this->_average_time = std::chrono::duration<double>(diff).count();
-    std::cout << "AI move took " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
+    // std::cout << "AI move took " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
+    std::cout << std::chrono::duration<double, std::milli>(diff).count() << std::endl;
     return best_move.coord;
 }
 
@@ -949,11 +950,10 @@ void Gomoku::make_move(t_player& player, t_player& opponent)
         this->print_board();
         if (this->is_winning_move(this->_move_history.front(), player.piece, piece_coord))
         {
-            std::cout << "-------------------------------------" << std::endl;
             std::cout << "Player " << player.piece << " wins!" << std::endl;
             // std::cout << "Game took " << this->_turn << " turns" << std::endl;
             // std::cout << "Average AI move time: " << this->_average_time / this->_turn << " ms" << std::endl;
-            exit(1);
+            exit(0);
         }
     }
 }
