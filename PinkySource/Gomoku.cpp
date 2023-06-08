@@ -324,16 +324,6 @@ const std::vector<Gomoku::t_coord> Gomoku::_moveset_cells {
 
 const Gomoku::t_coord Gomoku::_invalid_coord = { -1, -1 };
 
-uint64_t *Gomoku::copy_board(uint64_t *board)
-{
-    uint64_t *board_copy;
-
-    board_copy = new uint64_t[this->_board_size]();
-    for (short i = 0; i < this->_board_size; i++)
-        board_copy[i] = board[i];
-    return (board_copy);
-}
-
 inline void Gomoku::add_board_piece(uint64_t *board, t_coord piece_coord, t_piece piece)
 {
     board[piece_coord.y] |= uint64_t(piece) << (piece_coord.x * 2);
@@ -366,19 +356,14 @@ void Gomoku::revert_board_update(uint64_t *board, const t_update_list &update_li
     }
 }
 
-void Gomoku::print_board()
-{
-    this->print_board(this->_board, this->_ai_moveset);
-}
-
-void Gomoku::print_board(uint64_t *board, t_moveset &moveset)
+void Gomoku::print_board(t_piece current_piece)
 {
     for (short y = 0; y < this->_board_size; y++)
     {
         for (short x = 0; x < this->_board_size; x++)
         {
             t_coord current_move = {x, y};
-            t_piece piece = this->get_piece(board, current_move);
+            t_piece piece = this->get_piece(this->_board, current_move);
             switch (piece)
             {
                 
@@ -389,7 +374,10 @@ void Gomoku::print_board(uint64_t *board, t_moveset &moveset)
                     std::cout << "O ";
                     break;
                 case Gomoku::EMPTY:
-                    std::cout << ". ";
+                    if (this->is_move_valid(current_move, current_piece))
+                        std::cout << ". ";
+                    else
+                        std::cout << "? ";
                     break;
                 default:
                     std::cout << "? ";
@@ -628,27 +616,6 @@ Gomoku::t_sorted_updates Gomoku::generate_sorted_updates(t_moveset& moveset, uin
     return (sorted_updates);
 }
 
-void Gomoku::update_game_state(uint64_t *board, t_moveset &moveset, const t_update_list& update_list)
-{
-    t_coord             new_move;
-
-    this->update_board(board, update_list);
-    for (const auto& updates: update_list)
-    {
-        if (updates.type == Gomoku::ADD)
-        {
-            moveset.erase(updates.coord);
-            for (auto& factor : Gomoku::_moveset_cells)
-            {
-                new_move = updates.coord + factor;
-                if (this->get_piece(board, new_move) == Gomoku::EMPTY)
-                    moveset.insert(new_move);
-            }
-        }
-        if (updates.type == Gomoku::REMOVE)
-            moveset.insert(updates.coord);
-    }    
-}
 
 void Gomoku::update_node_state(uint64_t *board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list)
 {
@@ -780,12 +747,19 @@ Gomoku::t_coord Gomoku::human_move(t_player& player, t_player &opponent)
     {
         try
         {
-            std::cin >> coord.x >> coord.y;
-            if (this->is_move_valid(coord, player.piece))
-                break;
-            else
-                std::cout << "Illegal move" << std::endl;
-            std::cin.clear();
+            switch (this->get_game_command())
+            {
+                case 'S':
+                    PRINT_COORD(this->ai_move(player, opponent));
+                    break;
+                case 'M':
+                    std::cin >> coord.x >> coord.y;
+                    if (this->is_move_valid(coord, player.piece))
+                        return coord;
+                    else
+                        std::cout << "Illegal move" << std::endl;
+                    break;
+            }
         }
         catch(const std::exception& e)
         {
@@ -796,48 +770,71 @@ Gomoku::t_coord Gomoku::human_move(t_player& player, t_player &opponent)
     return (coord);
 }
 
-bool Gomoku::is_game_finished(t_coord piece_coord, t_player &player)
+char Gomoku::get_game_command()
 {
-    uint64_t        *new_board;
-    t_scored_update scored_move{0};
+    char command;
 
-    if (piece_coord == Gomoku::_invalid_coord)
+    try
     {
-        std::cout << "Player " << player.piece << " forfeits" << std::endl;
-        return true;
+        std::cin >> command;
     }
+    catch(const std::exception& e)
+    {
+        command = 'N';
+    }
+    return command;
+}
+
+
+void Gomoku::update_game_state(t_coord current_move, t_player& player)
+{
+    t_coord             new_move;
+    t_scored_update     scored_update{0};
+
+    this->generate_scored_update(this->_board, current_move, player.piece, scored_update);
+    this->update_board(this->_board, scored_update.updates);
+    for (const auto& updates: scored_update.updates)
+    {
+        if (updates.type == Gomoku::ADD)
+        {
+            this->_ai_moveset.erase(updates.coord);
+            for (auto& factor : Gomoku::_moveset_cells)
+            {
+                new_move = updates.coord + factor;
+                if (this->get_piece(this->_board, new_move) == Gomoku::EMPTY)
+                    this->_ai_moveset.insert(new_move);
+            }
+        }
+        if (updates.type == Gomoku::REMOVE)
+            this->_ai_moveset.insert(updates.coord);
+    }    
+    player.capture_count += scored_update.cupture_count;
+    this->_turn++;
+}
+
+void Gomoku::make_move(t_player& player, t_player& opponent)
+{
+    t_coord         current_move;
+
+    current_move  = (this->*player.move)(player, opponent);
+    if (current_move == Gomoku::_invalid_coord)
+        PRINT_PLAYER_FORFEIT(player.piece);
     else
     {
-        this->generate_scored_update(this->_board, piece_coord, player.piece, scored_move);
-        this->update_game_state(this->_board, this->_ai_moveset, scored_move.updates);
-        player.capture_count += scored_move.cupture_count;
-        this->_turn++;
-        std::cout << piece_coord.x << " " << piece_coord.y << std::endl;
-        this->print_board();
-        if (this->is_winning_move(this->_board, player.piece, piece_coord, player.capture_count))
-        {
-            std::cout << "Player " << player.piece << " wins!" << std::endl;
-            return true;
-        }
+        PRINT_COORD(current_move);
+        this->update_game_state(current_move, player);
+        if (this->is_winning_move(this->_board, player.piece, current_move, player.capture_count))
+            PRINT_PLAYER_WIN(player.piece);
+        this->print_board(opponent.piece);
+        PRINT_DELINEATION();
     }
-    return false;
 }
 
 void Gomoku::start_game()
 {
     t_coord current_move;
-
     for (;;)
-    {
-        current_move  = (this->*_first_player.move)(this->_first_player, this->_second_player);
-        if (this->is_game_finished(current_move, this->_first_player))
-            break;
-        std::cout << "-------------------------------------" << std::endl;
-        current_move  = (this->*_second_player.move)(this->_second_player, this->_second_player);
-        if (this->is_game_finished(current_move, this->_second_player))
-            break;
-        std::cout << "-------------------------------------" << std::endl;
-    }
+        this->make_move(GET_CURRENT_PLAYER(), GET_OPPONENT_PLAYER());
 }
 
 int main(int argc, char **argv)
@@ -886,9 +883,9 @@ int main(int argc, char **argv)
         }
     }
 
-    Gomoku game(19, p1_diff, p2_diff, p1_type, p2_type);
-
     // Gomoku  game(19, Gomoku::EASY, Gomoku::EASY, Gomoku::AI, Gomoku::AI);
+
+    Gomoku game(19, p1_diff, p2_diff, p1_type, p2_type);
 
     game.start_game();
 
