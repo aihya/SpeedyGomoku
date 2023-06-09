@@ -30,6 +30,15 @@ class Gomoku
                                             && this->get_piece(board, move + (dir * 3)) == piece)
 
 #define FLIP_CAPTURE(capture) t_capture_count{capture.minimizer_count, capture.maximizer_count}
+
+#define GET_CURRENT_PLAYER() ((this->_turn % 2 == 0) ? this->_first_player : this->_second_player)
+#define GET_OPPONENT_PLAYER() ((this->_turn % 2 == 0) ? this->_second_player : this->_first_player)
+#define PRINT_COORD(coord) std::cout << coord;
+#define PRINT_DELINEATION() std::cout << "-------------------------------------" << std::endl
+
+#define PRINT_PLAYER_WIN(player) std::cout << "Player " << player << " wins !" << std::endl
+#define PRINT_PLAYER_FORFEIT(player) std::cout << "Player " << player << " forfeits !" << std::endl
+
 #define MAX_CAPTURE 5U
 
     public:
@@ -145,6 +154,10 @@ class Gomoku
             {
                 return (this->x < rhs.x || (this->x == rhs.x && this->y < rhs.y));
             }
+            friend std::ostream& operator<<(std::ostream& os, const s_coord& coord)
+            {
+                return (os << coord.x << " " << coord.y << std::endl);
+            }
         };
 
         typedef struct      s_coord t_coord;
@@ -228,28 +241,24 @@ class Gomoku
         t_moveset                               _ai_moveset;
 
     public:
-                    Gomoku(uint8_t board_size, t_difficulty first_difficulty, t_difficulty second_difficulty, t_player_type first_player_type, t_player_type second_player_type);
-                    ~Gomoku();
-        void        register_move(t_coord piece_coord, t_piece piece, uint64_t* board, t_moveset& moveset);
-        void        print_board();
-        void        make_move(t_player& player, t_player& opponent);
-        bool        is_move_valid(t_coord piece_coord, t_piece piece);
-        void        start_game();
+                                Gomoku(uint8_t board_size, t_difficulty first_difficulty, t_difficulty second_difficulty,
+                                        t_player_type first_player_type, t_player_type second_player_type);
+                                ~Gomoku();
+        void                    start_game();
     private:
-        int64_t                 evaluate_board(uint64_t *board, t_piece player_color, t_capture_count capture_count);
         t_piece                 get_piece(uint64_t *board, t_coord piece_coord);
-        t_coord                 get_bot_move();
-        uint64_t                *copy_board(uint64_t *board);
-        int32_t                 evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction, bool capture = false);
-        int32_t                 evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
-        int32_t                 evaluate_special_pattern(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
+        t_coord                 ai_move(t_player& player, t_player& opponent);
+        t_player                get_player(t_player_type player_type, t_piece player_color, t_difficulty difficulty);
+        t_coord                 human_move(t_player& player, t_player& opponent);
         t_scored_move           minimizer(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
         t_scored_move           maximizer(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
         t_sorted_updates        generate_sorted_updates(t_moveset& moveset, uint64_t* board, t_piece piece);
-        bool                    is_winning_move(uint64_t* board, t_piece piece, t_coord move);
-        void                    print_board(uint64_t *board, t_moveset& moveset);
+        int64_t                 evaluate_board(uint64_t *board, t_piece player_color, t_capture_count capture_count);
+        int32_t                 evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction, bool capture = false);
+        int32_t                 evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
+        void                    make_move(t_player& player, t_player& opponent);
         void                    generate_scored_update(uint64_t* board, t_coord move, t_piece piece, t_scored_update& scored_update);
-        void                    update_game_state(uint64_t *board, t_moveset &moveset, const t_update_list& update_list);
+        void                    update_game_state(t_coord current_move, t_player& player);
         void                    update_node_state(uint64_t *board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
         void                    revert_node_state(uint64_t *board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
         void                    extract_captured_stoned(uint64_t *board, t_update_list& update_list, t_coord move, t_coord dir, t_piece piece);
@@ -257,13 +266,10 @@ class Gomoku
         void                    remove_board_piece(uint64_t* board, t_coord piece_coord);
         void                    update_board(uint64_t *board, const t_update_list &update_list);
         void                    revert_board_update(uint64_t *board, const t_update_list &update_list);
-        t_coord                 ai_move(t_player& player, t_player& opponent);
-        t_coord                 human_move(t_player& player, t_player& opponent);
-        t_player                get_player(t_player_type player_type, t_piece player_color, t_difficulty difficulty);
-        int64_t                 evaluate_board(t_moveset &moveset, uint64_t *board,  t_piece player_color, t_capture_count capture_count);
+        void                    print_board(t_piece current_piece);
         void                    print_patterns(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
-
-        int64_t                 evaluate_board(t_moveset &moveset, uint64_t *board,  t_piece player_color);
+        bool                    is_move_valid(t_coord piece_coord, t_piece piece);
         bool                    is_winning_move(uint64_t* board, t_piece piece, t_coord move, uint8_t capture_count);
         bool                    is_game_finished(t_coord piece_coord, t_player &player);
+        char                    get_game_command();
 };
