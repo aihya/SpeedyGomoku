@@ -579,7 +579,7 @@ void Gomoku::print_patterns(uint64_t *board, t_coord piece_coord, t_piece piece,
     for (int i = 0; i < 6; i++)
     {
         current_pattern = (this->get_piece(board, piece_coord) << 10 | current_pattern);
-        std::cout << std::bitset<16>(current_pattern) << std::endl;
+        // std::cout << std::bitset<16>(current_pattern) << std::endl;
         current_pattern >>= 2;
         piece_coord -= direction;
     }
