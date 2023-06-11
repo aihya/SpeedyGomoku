@@ -832,7 +832,6 @@ void Gomoku::make_move(t_player& player, t_player& opponent)
 
 void Gomoku::start_game()
 {
-    t_coord current_move;
     for (;;)
         this->make_move(GET_CURRENT_PLAYER(), GET_OPPONENT_PLAYER());
 }
