@@ -3,13 +3,14 @@ class State:
     This class represents a board state read from the game logic.
     """
 
-    __slots__ = ('_state', '_count', '_move', '_time')
+    __slots__ = ('_state', '_count', '_move', '_time', '_suggestion')
 
     def __init__(self, state=None, time=0, move=None):
         self._state = state if state else [['0' for j in range(19)] for i in range(19)]
         self._count = {}
         self._time  = time
         self._move  = move
+        self._suggestion = None
 
     def __getitem__(self, index):
         return self.state[index]
@@ -47,7 +48,15 @@ class State:
     @move.setter
     def move(self, new_move: tuple):
         self._move = new_move
-        
+
+    @property
+    def suggestion(self):
+        return self._suggestion
+
+    @suggestion.setter
+    def suggestion(self, value):
+        self._suggestion = value
+
     def update(self, x, y, player, count):
         self.count[(x, y)] = count
         self.state[y][x] = player
