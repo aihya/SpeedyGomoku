@@ -33,11 +33,12 @@ class Gomoku
 
 #define GET_CURRENT_PLAYER() ((this->_turn % 2 == 0) ? this->_first_player : this->_second_player)
 #define GET_OPPONENT_PLAYER() ((this->_turn % 2 == 0) ? this->_second_player : this->_first_player)
-#define PRINT_COORD(coord) std::cout << coord;
-#define PRINT_DELINEATION() std::cout << "-------------------------------------" << std::endl
 
+#define PRINT_COORD(coord) std::cout << coord;
+#define PRINT_CAPTURE_COUNT() std::cout << "Capture: " << (int)this->_first_player.capture_count << " " << (int)this->_second_player.capture_count << std::endl
 #define PRINT_PLAYER_WIN(player) std::cout << "Player " << player << " wins !" << std::endl
 #define PRINT_PLAYER_FORFEIT(player) std::cout << "Player " << player << " forfeits !" << std::endl
+#define PRINT_DELINEATION() std::cout << "-------------------------------------" << std::endl
 
 #define MAX_CAPTURE 5U
 

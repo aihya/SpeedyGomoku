@@ -830,6 +830,7 @@ void Gomoku::make_move(t_player& player, t_player& opponent)
     {
         PRINT_COORD(current_move);
         this->update_game_state(current_move, player);
+        PRINT_CAPTURE_COUNT();
         this->print_board(opponent.piece);
         if (this->is_winning_move(this->_board, player.piece, current_move, player.capture_count))
             PRINT_PLAYER_WIN(player.piece);
