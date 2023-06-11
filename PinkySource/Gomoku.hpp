@@ -270,6 +270,5 @@ class Gomoku
         void                    print_patterns(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
         bool                    is_move_valid(t_coord piece_coord, t_piece piece);
         bool                    is_winning_move(uint64_t* board, t_piece piece, t_coord move, uint8_t capture_count);
-        bool                    is_game_finished(t_coord piece_coord, t_player &player);
         char                    get_game_command();
 };

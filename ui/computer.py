@@ -62,10 +62,10 @@ class Computer:
         if self.process:
             self.process.kill(signal.SIGCONT)
 
-    def send(self, what: str):
+    def send(self, what: str, expect=True):
         print('Sending:', what)
         self.process.send(what)
-        self.expecting = True
+        self.expecting = expect
 
     @property
     def expecting(self):
@@ -86,8 +86,14 @@ class Computer:
                 pass
         return
 
+    def extract_suggestion(self, buffer):
+        suggestion = {
+            'time': float(buffer[0]),
+            'move': tuple(int(c) for c in buffer[1].split())
+        }
+        return suggestion
+
     def extract_move(self, buffer):
-        
         if len(buffer) == 1:
             return None
 
@@ -106,7 +112,7 @@ class Computer:
             move['move'] = tuple(int(c) for c in buffer[1].split())
 
         for line in buffer[start:end]:
-            move['board'].append(['.XO'.find(c) for c in line if c in '.XO'])
+            move['board'].append(['.XO?'.find(c) for c in line if c in '.XO?'])
 
         return move
 
@@ -125,6 +131,7 @@ class Computer:
             f'{"-" * 37}\n',
             'Player 1 wins!\n',
             'Player 2 wins!\n',
+            'END SUGGESTION\n',
             'Illegal move\n',
             'Tie\n',
             EOF
@@ -136,11 +143,14 @@ class Computer:
         if index == 5:
             self.expecting = False
 
-        elif index in (0, 1, 2):
+        elif index in (0, 1, 2, 3):
             # Read the content sent from the subprocess
             buffer = self.process.before.decode('utf-8').split('\n')
 
-            if buffer:
+            if index == 3: # Suggestion
+                print('allo')
+                return index, self.extract_suggestion(buffer)
+            else:
                 # Extract the move informations and store it in a dictionary
                 return index, self.extract_move(buffer)
 

@@ -661,12 +661,12 @@ Gomoku::t_scored_move Gomoku::maximizer(t_moveset& moveset,
     t_moveset           added_moveset;
     t_scored_move       move_eval;
     t_scored_move       best_eval;
-    uint8_t             move_couter;
+    uint8_t             move_counter;
 
     if (depth == 0)
         return (t_scored_move{t_coord{}, this->evaluate_board(board, piece, count)});
     best_eval = t_scored_move{Gomoku::_invalid_coord, INTMAX_MIN};
-    move_couter = 0;
+    move_counter = 0;
     for (auto& update: this->generate_sorted_updates(moveset, board, piece))
     {
         added_moveset.clear();
@@ -682,7 +682,7 @@ Gomoku::t_scored_move Gomoku::maximizer(t_moveset& moveset,
         prunner.alpha = std::max(prunner.alpha, best_eval.score);
         if (prunner.beta <= prunner.alpha)
             break;
-        if (move_couter++ > 17)
+        if (move_counter++ > 17)
             break;
     }
     return (best_eval);    
@@ -694,17 +694,17 @@ Gomoku::t_scored_move Gomoku::minimizer
     t_moveset           added_moveset;
     t_scored_move       move_eval;
     t_scored_move       best_eval;
-    uint8_t             move_couter;
+    uint8_t             move_counter;
 
     if (depth == 0)
         return t_scored_move{t_coord{}, -this->evaluate_board(board, piece, FLIP_CAPTURE(count))};
     best_eval = t_scored_move{Gomoku::_invalid_coord, INTMAX_MAX};
-    move_couter = 0;
+    move_counter = 0;
     for (auto& update: this->generate_sorted_updates(moveset, board, piece))
     {
         added_moveset.clear();
         count.minimizer_count += update.cupture_count;
-        if (update.move.score >= Gomoku::WINNING_SCORE || count.maximizer_count >= MAX_CAPTURE)
+        if (update.move.score >= Gomoku::WINNING_SCORE || count.minimizer_count >= MAX_CAPTURE)
             return t_scored_move{update.move.coord, INTMAX_MIN + depth};
         this->update_node_state(board, added_moveset, moveset, update.updates);
         move_eval = this->maximizer(moveset, board, depth - 1, prunner, count, GET_OPPONENT(piece));
@@ -715,7 +715,7 @@ Gomoku::t_scored_move Gomoku::minimizer
         prunner.beta = std::min(prunner.beta, best_eval.score);
         if (prunner.beta <= prunner.alpha)
             break;
-        if (move_couter++ > 17)
+        if (move_counter++ > 17)
             break;
     }
     return (best_eval);
@@ -726,15 +726,21 @@ Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent)
     t_scored_move   best_move;
 
     if (_turn == 0)
-        return t_coord{9, 9};
-    auto start = std::chrono::steady_clock::now();
-    best_move = this->maximizer(this->_ai_moveset,
-        this->_board, this->_depth,
-        t_prunner{INTMAX_MIN, INTMAX_MAX},
-        t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
-    auto end = std::chrono::steady_clock::now();
-    auto diff = end - start;
-    std::cout << std::chrono::duration<double, std::milli>(diff).count() << std::endl;
+    {
+        std::cout << "0" << std::endl;
+        best_move.coord = t_coord{9, 9};
+    }
+    else
+    {
+        auto start = std::chrono::steady_clock::now();
+        best_move = this->maximizer(this->_ai_moveset,
+            this->_board, this->_depth,
+            t_prunner{INTMAX_MIN, INTMAX_MAX},
+            t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
+        auto end = std::chrono::steady_clock::now();
+        auto diff = end - start;
+        std::cout << std::chrono::duration<double, std::milli>(diff).count() << std::endl;
+    }
     return best_move.coord;
 }
 
@@ -751,6 +757,7 @@ Gomoku::t_coord Gomoku::human_move(t_player& player, t_player &opponent)
             {
                 case 'S':
                     PRINT_COORD(this->ai_move(player, opponent));
+                    std::cout << "END SUGGESTION" << std::endl;
                     break;
                 case 'M':
                     std::cin >> coord.x >> coord.y;
@@ -823,16 +830,15 @@ void Gomoku::make_move(t_player& player, t_player& opponent)
     {
         PRINT_COORD(current_move);
         this->update_game_state(current_move, player);
+        this->print_board(opponent.piece);
         if (this->is_winning_move(this->_board, player.piece, current_move, player.capture_count))
             PRINT_PLAYER_WIN(player.piece);
-        this->print_board(opponent.piece);
         PRINT_DELINEATION();
     }
 }
 
 void Gomoku::start_game()
 {
-    t_coord current_move;
     for (;;)
         this->make_move(GET_CURRENT_PLAYER(), GET_OPPONENT_PLAYER());
 }

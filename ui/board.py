@@ -207,9 +207,9 @@ class Setup(Surface):
 
 class Stats(Surface):
 
-    __slots__ = ('_left', '_right', '_rff', '_lff', '_states')
+    __slots__ = ('_left', '_right', '_rff', '_lff', '_states', '_board', '_text', '_restart', '_suggest')
 
-    def __init__(self, states, *args, **kwargs):
+    def __init__(self, states, board, *args, **kwargs):
         super().__init__(WIDTH-HEIGHT, HEIGHT, *args, **kwargs)
         
         # Load images for left and right buttons
@@ -229,11 +229,39 @@ class Stats(Surface):
         self._lff.position   = (self.width / 2 - self.left.width * 2, self.height - 100)
         self._rff.position   = (self.width / 2 + self.right.width, self.height - 100)
 
+        self._text = {
+            'black': fonts.h3_t.render('Black', True, BLACK),
+            'white': fonts.h3_t.render('White', True, BLACK),
+        }
+
         self._states = states
+        self._board = board
+
+        restart_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/reload.png'), (50, 50))
+        self._restart = Button(
+            '#000000', 
+            '#31E8DF', 
+            restart_img, 
+            None, 
+            relative_to=self)
+        self._restart.position = (self.width - self._restart.width - 30, 30)
+
+        suggest_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/suggest.png'), (50, 50))
+        self._suggest = Button(
+            '#000000', 
+            '#FFE601', 
+            suggest_img, 
+            None, 
+            relative_to=self)
+        self._suggest.position = (self.width - self._suggest.width - 30, self._restart.width + 30)
 
     @property
     def states(self):
         return self._states
+
+    @property
+    def board(self):
+        return self._board
 
     def check_hover(self):
         if self.abs_rect.collidepoint(pygame.mouse.get_pos()):
@@ -256,13 +284,19 @@ class Stats(Surface):
     def rff(self):
         return self._rff
 
-    def update(self, events):
-        self.surface.fill(WHITE)
-        self.left.update()
-        self.right.update()
-        self.lff.update()
-        self.rff.update()
+    @property
+    def text(self):
+        return self._text
 
+    @property
+    def restart(self):
+        return self._restart
+    
+    @property
+    def suggest(self):
+        return self._suggest
+
+    def update_current_state(self, events):
         for event in events:
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 if self.left.clicked():
@@ -284,11 +318,35 @@ class Stats(Surface):
                     self.states.index = 0
                     self.lff.pressed = False
 
+    def update(self, events):
+        self.surface.fill(WHITE)
+        Board.draw_circle(self.surface, 50, 50, 20, BLACK)
+        Board.draw_circle(self.surface, 50, 100, 20, WHITE)
+        self.surface.blit(self.text['black'], (90, 32))
+        self.surface.blit(self.text['white'], (90, 82))
+        if self.board.turn.turn == 1:
+            ind_x, ind_y = 50, 50
+        else:
+            ind_x, ind_y = 50, 100
+        Board.draw_circle(self.surface, ind_x, ind_y, 10, pygame.Color('#FFFF00'))
 
+        self.restart.update()
+        self.surface.blit(self.restart.surface, self.restart.rect)
+
+        self.suggest.update()
+        self.surface.blit(self.suggest.surface, self.suggest.rect)
+
+        self.left.update()
+        self.right.update()
+        self.lff.update()
+        self.rff.update()
         self.surface.blit(self.left.surface, self.left.rect)
         self.surface.blit(self.right.surface, self.right.rect)
         self.surface.blit(self.lff.surface, self.lff.rect)
         self.surface.blit(self.rff.surface, self.rff.rect)
+
+        self.update_current_state(events)
+
 
 class Board(Surface):
     """ 
@@ -402,21 +460,21 @@ class Board(Surface):
             font = fonts.h4_b if y == i else fonts.h4_t
             text = font.render(f'{i}', True, BLACK)
             text_rect = text.get_rect()
-            text_rect.center = (self.width - 30, self.linspace[i])
+            text_rect.center = (self.width - 25, self.linspace[i])
             self.surface.blit(text, text_rect)
 
             # Draw x-coords
             font = fonts.h4_b if x == i else fonts.h4_t
             text = font.render(f'{"ABCDEFGHIJKLMNOPQRS"[i]}', True, BLACK)
             text_rect = text.get_rect()
-            text_rect.center = (self.linspace[i], self.width - 30)
+            text_rect.center = (self.linspace[i], self.width - 25)
             self.surface.blit(text, text_rect)
         
 
     def draw_state(self):
         for r, row in enumerate(self.states.current.state):
             for c, col in enumerate(row):
-                if col in [1, 2]:
+                if col in (1, 2):
                     color = "#ffffff" if col == 2 else "#000000"
                     x = self.linspace[c] + 1
                     y = self.linspace[r] + 1
@@ -435,6 +493,18 @@ class Board(Surface):
                     count_rect = count_text.get_rect()
                     count_rect.center = (x, y)
                     self.surface.blit(count_text, count_rect)
+
+                elif col == 3 and self.turn.player == HUMAN:
+                    x = self.linspace[c] + 1
+                    y = self.linspace[r] + 1
+                    Board.draw_circle(self.surface, x, y, 3, pygame.Color('#E83907'))
+
+        if self.states.last == self.states.current and self.states.last.suggestion:
+            # Show suggestion only if we are at the last state
+            color = "#ffffff99" if self.turn.turn == 2 else "#00000099"
+            x = self.linspace[self.states.last.suggestion['move'][0]] + 1
+            y = self.linspace[self.states.last.suggestion['move'][1]] + 1
+            Board.draw_circle(self.surface, x, y, 16, pygame.Color(color))
 
     def check_hover(self):
         x, y = pygame.mouse.get_pos()
@@ -511,8 +581,12 @@ class Board(Surface):
                     x = math.floor((pos[0]-16) / self.step)
                     y = math.floor((pos[1]-16) / self.step)
 
-                    # Send coords to the process and want for responce
-                    self.computer.send(f'{x} {y}\n')
+                    # print()
+                    # if self.states.last.state[y][x] == '0':
+                        # Send coords to the process and want for responce
+                        # only if the position does not corresponde to an
+                        # illegal move or is not already occupied.
+                    self.computer.send(f'M\n{x} {y}\n')
             else:
                 # Process the received output
                 self.computer.expecting = True
@@ -523,17 +597,23 @@ class Board(Surface):
                         self.states.add(State(resp[1]['board'], resp[1]['time'], resp[1]['move']))
                         self.turn = self.p1 if self.turn == self.p2 else self.p2
                         self.computer.expecting = False
+                        print('turn:', self.turn.turn)
+
                     elif isinstance(resp, tuple) and resp[0] in (1, 2):
                         self.states.add(State(resp[1]['board'], resp[1]['time'], resp[1]['move']))
                         print(f'Player {resp[0]} wins!')
                         self.finished = True
-                        return
-                    elif resp == 3:
+
+                    elif isinstance(resp, tuple) and resp[0] == 3:
+                        self.states.last.suggestion = resp[1]
                         self.computer.expecting = False
-                        return
+
                     elif resp == 4:
+                        self.computer.expecting = False
+
+                    elif resp == 5:
                         self.finished = True
-                        return
+
                     else:
                         return
 
@@ -551,15 +631,8 @@ class Board(Surface):
                     self.states.add(State(resp[1]['board'], resp[1]['time'], resp[1]['move']))
                     print(f'Player {resp[0]} wins!')
                     self.finished = True
-                    return
-                elif resp == 3:
-                    self.computer.expecting = False
-                    return
                 elif resp == 4:
                     self.finished = True
-                    return
-                else:
-                    return
 
     def reset(self):
         self.state.reset()
@@ -651,7 +724,7 @@ class Game:
 
         self.computer = Computer(*args)
         self.board = Board(self.states, self.setup, self.p1, self.p2, self.computer)
-        self.stats = Stats(self.states, relative_to=self.window, position=(HEIGHT, 0))
+        self.stats = Stats(self.states, self.board, relative_to=self.window, position=(HEIGHT, 0))
 
     def loop(self):
         self.setup_game()
@@ -661,7 +734,18 @@ class Game:
             events = pygame.event.get()
             for event in events:
                 if event.type == pygame.QUIT:
+                    self.computer.stop()
                     exit(0)
+                if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                    if self.stats.restart.clicked():
+                        self.computer.stop()
+                        return
+                    if self.board.turn.player == HUMAN:
+                        if self.stats.suggest.clicked() and self.board.states.last.suggestion == None:
+                            self.stats.suggest.pressed = False
+                            self.computer.send('S')
+                    else:
+                        self.stats.suggest.disable()
 
             self.stats.update(events)
             self.board.update(events)

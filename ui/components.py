@@ -89,7 +89,12 @@ class Button(Surface):
         self._disabled = value
 
     def disable(self):
+        self.disabled = True
         self.bg = self._bg_hov
+
+    def unable(self):
+        self.disabled = False
+        self.bg = pygame.Color(self.bg_str)
 
     @property
     def hover(self):
