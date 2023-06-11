@@ -126,6 +126,7 @@ class Controller:
             else:
                 game = Game(self.window, self.setup)
                 game.loop()
+                self.phase = SETUP_SURFACE
 
             self.window.blit(self.setup)
             self.window.blit(self.board)
