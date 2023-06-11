@@ -494,7 +494,7 @@ class Board(Surface):
                     count_rect.center = (x, y)
                     self.surface.blit(count_text, count_rect)
 
-                elif col == 3 and self.turn.player == HUMAN:
+                elif col == 3:
                     x = self.linspace[c] + 1
                     y = self.linspace[r] + 1
                     Board.draw_circle(self.surface, x, y, 3, pygame.Color('#E83907'))

@@ -129,8 +129,8 @@ class Computer:
         # Return None if no match found.
         index = self.expect([
             f'{"-" * 37}\n',
-            'Player 1 wins!\n',
-            'Player 2 wins!\n',
+            'Player 1 wins !\n',
+            'Player 2 wins !\n',
             'END SUGGESTION\n',
             'Illegal move\n',
             'Tie\n',
