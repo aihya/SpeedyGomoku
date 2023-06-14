@@ -33,6 +33,7 @@ class Gomoku
 
 #define GET_CURRENT_PLAYER() ((this->_turn % 2 == 0) ? this->_first_player : this->_second_player)
 #define GET_OPPONENT_PLAYER() ((this->_turn % 2 == 0) ? this->_second_player : this->_first_player)
+#define GET_BOARD_CENTER() t_coord{((this->_board_size / 2)), ((this->_board_size / 2))}
 
 #define PRINT_COORD(coord) std::cout << coord;
 #define PRINT_CAPTURE_COUNT() std::cout << "Capture: " << (int)this->_first_player.capture_count << " " << (int)this->_second_player.capture_count << std::endl
@@ -41,6 +42,8 @@ class Gomoku
 #define PRINT_DELINEATION() std::cout << "-------------------------------------" << std::endl
 
 #define MAX_CAPTURE 5U
+#define LONG_PRO_SIZE 7
+#define PRO_SIZE 5
 
     public:
         typedef enum        e_piece
@@ -50,6 +53,13 @@ class Gomoku
             WHITE = 0b10,
             ERROR = 0b11,
         }                   t_piece;
+
+        typedef enum        e_rule
+        {
+            STANDARD,
+            LONG_PRO,
+            PRO,
+        }                   t_rule;
 
         typedef enum        e_game_state
         {
@@ -236,19 +246,22 @@ class Gomoku
         t_player                                _second_player;
         t_capture_count                         _capture_count;
         size_t                                  _turn;
+        t_rule                                  _rule;
 
     public:
         uint64_t*                               _board;
         t_moveset                               _ai_moveset;
 
     public:
-                                Gomoku(uint8_t board_size, t_difficulty first_difficulty, t_difficulty second_difficulty,
-                                        t_player_type first_player_type, t_player_type second_player_type);
+                                Gomoku(uint8_t board_size, t_difficulty first_difficulty,
+                                            t_difficulty second_difficulty, t_player_type first_player_type,
+                                                t_player_type second_player_type, t_rule rule);
                                 ~Gomoku();
         void                    start_game();
     private:
         t_piece                 get_piece(uint64_t *board, t_coord piece_coord);
         t_coord                 ai_move(t_player& player, t_player& opponent);
+        t_moveset               generate_rule_moveset(t_piece piece);
         t_player                get_player(t_player_type player_type, t_piece player_color, t_difficulty difficulty);
         t_coord                 human_move(t_player& player, t_player& opponent);
         t_scored_move           minimizer(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
@@ -271,5 +284,6 @@ class Gomoku
         void                    print_patterns(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
         bool                    is_move_valid(t_coord piece_coord, t_piece piece);
         bool                    is_winning_move(uint64_t* board, t_piece piece, t_coord move, uint8_t capture_count);
+        bool                    is_inside_square(t_coord piece_coord);
         char                    get_game_command();
 };
