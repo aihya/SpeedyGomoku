@@ -815,6 +815,8 @@ Gomoku::t_coord Gomoku::human_move(t_player& player, t_player &opponent)
     {
         try
         {
+            if (this->_turn == 0  && this->_rule != Gomoku::STANDARD)
+                return GET_BOARD_CENTER();
             switch (this->get_game_command())
             {
                 case 'S':
