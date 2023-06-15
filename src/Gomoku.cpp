@@ -889,9 +889,10 @@ Gomoku::t_sequence Gomoku::extract_winning_sequence(uint64_t* board, t_piece pie
     {
         if (this->evaluate_dir(board, start_coord, piece, dir) >= Gomoku::WINNING_SCORE)
         {
-            for(t_coord new_coord = start_coord; this->get_piece(board, start_coord) != piece; new_coord += dir)
+            sequence.push_back(start_coord);
+            for(t_coord new_coord = start_coord + dir; this->get_piece(board, new_coord) == piece; new_coord += dir)
                 sequence.push_back(new_coord);
-            for(t_coord new_coord = start_coord; this->get_piece(board, start_coord) != piece; new_coord -= dir)
+            for(t_coord new_coord = start_coord - dir; this->get_piece(board, new_coord) == piece; new_coord -= dir)
                 sequence.push_back(new_coord);
         }
     }
