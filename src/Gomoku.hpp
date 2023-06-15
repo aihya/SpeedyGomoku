@@ -34,6 +34,8 @@ class Gomoku
 #define GET_CURRENT_PLAYER() ((this->_turn % 2 == 0) ? this->_first_player : this->_second_player)
 #define GET_OPPONENT_PLAYER() ((this->_turn % 2 == 0) ? this->_second_player : this->_first_player)
 #define GET_BOARD_CENTER() t_coord{((this->_board_size / 2)), ((this->_board_size / 2))}
+#define STOP_GAME() this->_game_over = true
+#define IS_GAME_OVER() this->_game_over
 
 #define PRINT_COORD(coord) std::cout << coord;
 #define PRINT_CAPTURE_COUNT() std::cout << (int)this->_first_player.capture_count << " " << (int)this->_second_player.capture_count << std::endl
@@ -247,6 +249,7 @@ class Gomoku
         t_capture_count                         _capture_count;
         size_t                                  _turn;
         t_rule                                  _rule;
+        bool                                    _game_over;
 
     public:
         uint64_t*                               _board;
