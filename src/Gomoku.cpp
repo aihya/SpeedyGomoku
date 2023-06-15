@@ -765,8 +765,6 @@ Gomoku::t_moveset   Gomoku::generate_rule_moveset(t_piece piece)
     t_coord square_coord;
     uint8_t square_size;
 
-    if (this->_rule == Gomoku::STANDARD)
-        return (this->_ai_moveset);
     square_size = (this->_rule == Gomoku::PRO) ? PRO_SIZE + 1 : LONG_PRO_SIZE + 1;
     square_coord = GET_BOARD_CENTER() - t_coord{square_size / 2, square_size / 2};
     for (uint8_t x = 0; x < square_size * 4; x++)
@@ -787,19 +785,26 @@ Gomoku::t_moveset   Gomoku::generate_rule_moveset(t_piece piece)
 Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent)
 {
     t_scored_move   best_move;
-    t_moveset&      current_moveset = this->_ai_moveset;
+    t_moveset       current_moveset;
 
     auto start = std::chrono::steady_clock::now();
     if (_turn == 0)
         best_move.coord = GET_BOARD_CENTER();
     else
     {
-        if (_turn == 2)
+        if (_turn == 2 && this->_rule != Gomoku::STANDARD)
+        {
             current_moveset = this->generate_rule_moveset(player.piece);
-        best_move = this->maximizer(current_moveset,
-            this->_board, this->_depth,
-            t_prunner{INTMAX_MIN, INTMAX_MAX},
-            t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
+            best_move = this->maximizer(current_moveset,
+                this->_board, this->_depth,
+                t_prunner{INTMAX_MIN, INTMAX_MAX},
+                t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
+        }
+        else
+            best_move = this->maximizer(this->_ai_moveset,
+                this->_board, this->_depth,
+                t_prunner{INTMAX_MIN, INTMAX_MAX},
+                t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
     }
     auto end = std::chrono::steady_clock::now();
     std::cout << std::chrono::duration<double, std::milli>(end - start).count() << std::endl;
