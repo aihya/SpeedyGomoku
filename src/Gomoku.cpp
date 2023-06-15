@@ -416,6 +416,7 @@ Gomoku::Gomoku(uint8_t board_size, t_difficulty first_difficulty,
     this->_rule = rule;
     this->_depth = 5;
     this->_turn = 0;
+    this->_game_over = false;
 }
 
 Gomoku::~Gomoku()
@@ -543,7 +544,13 @@ int64_t Gomoku::evaluate_board(uint64_t *board, t_piece player_color, t_capture_
 
 inline bool Gomoku::is_winning_move(uint64_t* board, t_piece piece, t_coord move, uint8_t capture_count)
 {
-    return (capture_count >= MAX_CAPTURE || this->evaluate_move(board, move, piece) >= Gomoku::WINNING_SCORE);
+    if (capture_count >= MAX_CAPTURE)
+        return (true);
+    if (this->evaluate_move(board, move, piece) >= Gomoku::WINNING_SCORE)
+    {
+        return (true);
+    }
+    return (false);
 }
 
 void Gomoku::extract_captured_stoned(uint64_t *board, t_update_list& update_list, t_coord move, t_coord dir, t_piece piece)
@@ -742,7 +749,7 @@ Gomoku::t_moveset   Gomoku::generate_rule_moveset(t_piece piece)
 
     if (this->_rule == Gomoku::STANDARD)
         return (this->_ai_moveset);
-    square_size = (this->_rule == Gomoku::PRO) ? PRO_SIZE : LONG_PRO_SIZE;
+    square_size = (this->_rule == Gomoku::PRO) ? PRO_SIZE + 1 : LONG_PRO_SIZE + 1;
     square_coord = GET_BOARD_CENTER() - t_coord{square_size / 2, square_size / 2};
     for (uint8_t x = 0; x < square_size * 4; x++)
     {
@@ -870,7 +877,10 @@ void Gomoku::make_move(t_player& player, t_player& opponent)
         PRINT_CAPTURE_COUNT();
         this->print_board(opponent.piece);
         if (this->is_winning_move(this->_board, player.piece, current_move, player.capture_count))
+        {
             PRINT_PLAYER_WIN(player.piece);
+            STOP_GAME();
+        }
         PRINT_DELINEATION();
     }
 }
@@ -878,7 +888,8 @@ void Gomoku::make_move(t_player& player, t_player& opponent)
 void Gomoku::start_game()
 {
     for (;;)
-        this->make_move(GET_CURRENT_PLAYER(), GET_OPPONENT_PLAYER());
+        if (IS_GAME_OVER() == false)
+            this->make_move(GET_CURRENT_PLAYER(), GET_OPPONENT_PLAYER());
 }
 
 int main(int argc, char **argv)
@@ -927,9 +938,9 @@ int main(int argc, char **argv)
         }
     }
 
-    // Gomoku  game(19, Gomoku::EASY, Gomoku::EASY, Gomoku::AI, Gomoku::AI);
+    Gomoku  game(19, Gomoku::EASY, Gomoku::EASY, Gomoku::AI, Gomoku::AI, Gomoku::PRO);
 
-    Gomoku game(19, p1_diff, p2_diff, p1_type, p2_type, Gomoku::PRO);
+    // Gomoku game(19, p1_diff, p2_diff, p1_type, p2_type, Gomoku::PRO);
 
     game.start_game();
 
