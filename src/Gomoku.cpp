@@ -542,12 +542,24 @@ int64_t Gomoku::evaluate_board(uint64_t *board, t_piece player_color, t_capture_
     return (score);
 }
 
-inline bool Gomoku::is_winning_move(uint64_t* board, t_piece piece, t_coord move, uint8_t capture_count)
+bool Gomoku::is_winning_move(uint64_t* board, t_piece piece, t_coord move, uint8_t capture_count)
 {
     if (capture_count >= MAX_CAPTURE)
         return (true);
     if (this->evaluate_move(board, move, piece) >= Gomoku::WINNING_SCORE)
     {
+        t_sorted_updates possible_moves = this->generate_sorted_updates(this->_ai_moveset, this->_board, GET_OPPONENT(piece));
+
+        for (const auto& opp_move : possible_moves)
+        {
+            this->update_board(this->_board, opp_move.updates);
+            if (this->evaluate_move(board, move, piece) < Gomoku::WINNING_SCORE)
+            {
+                this->revert_board_update(this->_board, opp_move.updates);
+                return (false);
+            }
+            this->revert_board_update(this->_board, opp_move.updates);
+        }
         return (true);
     }
     return (false);
@@ -587,7 +599,7 @@ void Gomoku::print_patterns(uint64_t *board, t_coord piece_coord, t_piece piece,
     for (int i = 0; i < 6; i++)
     {
         current_pattern = (this->get_piece(board, piece_coord) << 10 | current_pattern);
-        // std::cout << std::bitset<16>(current_pattern) << std::endl;
+        std::cout << std::bitset<16>(current_pattern) << std::endl;
         current_pattern >>= 2;
         piece_coord -= direction;
     }
@@ -938,9 +950,9 @@ int main(int argc, char **argv)
         }
     }
 
-    Gomoku  game(19, Gomoku::EASY, Gomoku::EASY, Gomoku::AI, Gomoku::AI, Gomoku::PRO);
+    // Gomoku  game(19, Gomoku::EASY, Gomoku::EASY, Gomoku::AI, Gomoku::AI, Gomoku::PRO);
 
-    // Gomoku game(19, p1_diff, p2_diff, p1_type, p2_type, Gomoku::PRO);
+    Gomoku game(19, p1_diff, p2_diff, p1_type, p2_type, Gomoku::PRO);
 
     game.start_game();
 
