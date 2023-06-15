@@ -228,6 +228,7 @@ class Gomoku
 
         typedef std::map< Gomoku::e_piece, std::map<uint16_t, t_scores> >       t_patterns;
         typedef std::set<t_coord>                                               t_moveset;
+        typedef std::vector<t_coord>                                            t_sequence;
         typedef std::set<t_scored_update, moveComparator>                       t_sorted_updates;
 
     private:
@@ -270,6 +271,7 @@ class Gomoku
         t_scored_move           minimizer(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
         t_scored_move           maximizer(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
         t_sorted_updates        generate_sorted_updates(t_moveset& moveset, uint64_t* board, t_piece piece);
+        t_sequence              extract_winning_sequence(uint64_t* board, t_piece piece, t_coord start_coord);
         int64_t                 evaluate_board(uint64_t *board, t_piece player_color, t_capture_count capture_count);
         int32_t                 evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction, bool capture = false);
         int32_t                 evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);

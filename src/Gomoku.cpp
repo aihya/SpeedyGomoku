@@ -549,12 +549,11 @@ int64_t Gomoku::evaluate_board(uint64_t *board, t_piece player_color, t_capture_
 
 bool Gomoku::is_winning_move(uint64_t* board, t_piece piece, t_coord move, uint8_t capture_count)
 {
-    if (capture_count >= MAX_CAPTURE)
-        return (true);
+    t_sorted_updates possible_moves;
+
     if (this->evaluate_move(board, move, piece) >= Gomoku::WINNING_SCORE)
     {
-        t_sorted_updates possible_moves = this->generate_sorted_updates(this->_ai_moveset, this->_board, GET_OPPONENT(piece));
-
+        possible_moves = this->generate_sorted_updates(this->_ai_moveset, this->_board, GET_OPPONENT(piece));
         for (const auto& opp_move : possible_moves)
         {
             this->update_board(this->_board, opp_move.updates);
@@ -567,6 +566,8 @@ bool Gomoku::is_winning_move(uint64_t* board, t_piece piece, t_coord move, uint8
         }
         return (true);
     }
+    if (capture_count >= MAX_CAPTURE)
+        return (true);
     return (false);
 }
 
@@ -880,6 +881,23 @@ void Gomoku::update_game_state(t_coord current_move, t_player& player)
     this->_turn++;
 }
 
+Gomoku::t_sequence Gomoku::extract_winning_sequence(uint64_t* board, t_piece piece, t_coord start_coord)
+{
+    t_sequence  sequence;
+
+    for (auto& dir: Gomoku::_directions)
+    {
+        if (this->evaluate_dir(board, start_coord, piece, dir) >= Gomoku::WINNING_SCORE)
+        {
+            for(t_coord new_coord = start_coord; this->get_piece(board, start_coord) != piece; new_coord += dir)
+                sequence.push_back(new_coord);
+            for(t_coord new_coord = start_coord; this->get_piece(board, start_coord) != piece; new_coord -= dir)
+                sequence.push_back(new_coord);
+        }
+    }
+    return (sequence);
+}
+
 void Gomoku::make_move(t_player& player, t_player& opponent)
 {
     t_coord         current_move;
@@ -896,6 +914,8 @@ void Gomoku::make_move(t_player& player, t_player& opponent)
         if (this->is_winning_move(this->_board, player.piece, current_move, player.capture_count))
         {
             PRINT_PLAYER_WIN(player.piece);
+            for (const auto& coord: this->extract_winning_sequence(this->_board, player.piece, current_move))
+                PRINT_COORD(coord);
             STOP_GAME();
         }
         PRINT_DELINEATION();
