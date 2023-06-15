@@ -97,22 +97,25 @@ class Computer:
         if len(buffer) == 1:
             return None
 
-        move = {
-            'time': 0,
-            'move': [],
-            'board': [],
-        }
-        start, end = 2, -1
-        if len(buffer) == 21: # Human output
-            move['time'] = 0
-            move['move'] = tuple(int(c) for c in buffer[0].split())
-            start, end = 1, -1
+        if len(buffer) == 23:
+            s, e = 3, -1
+            move = {
+                'time'    : float(buffer[0]),
+                'move'    : tuple(int(c) for c in buffer[1].split()),
+                'captures': tuple(int(c) for c in buffer[2].split()),
+                'state'   : [],
+            }
         else:
-            move['time'] = float(buffer[0])
-            move['move'] = tuple(int(c) for c in buffer[1].split())
+            s, e = 2, -1
+            move = {
+                'time'    : 0,
+                'move'    : tuple(int(c) for c in buffer[0].split()),
+                'captures': tuple(int(c) for c in buffer[1].split()),
+                'state'   : [],
+            }
 
-        for line in buffer[start:end]:
-            move['board'].append(['.XO?'.find(c) for c in line if c in '.XO?'])
+        for line in buffer[s:e]:
+            move['state'].append(['.XO?'.find(c) for c in line if c in '.XO?'])
 
         return move
 

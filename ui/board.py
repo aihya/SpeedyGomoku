@@ -594,13 +594,14 @@ class Board(Surface):
                 if resp:
                     if isinstance(resp, tuple) and resp[0] == 0: # No winner yet
                         print(f'Human[{self.turn.turn}]', resp[1]['time'], resp[1]['move'])
-                        self.states.add(State(resp[1]['board'], resp[1]['time'], resp[1]['move']))
+                        print(resp)
+                        self.states.add(State(**resp[1]))
                         self.turn = self.p1 if self.turn == self.p2 else self.p2
                         self.computer.expecting = False
                         print('turn:', self.turn.turn)
 
                     elif isinstance(resp, tuple) and resp[0] in (1, 2):
-                        self.states.add(State(resp[1]['board'], resp[1]['time'], resp[1]['move']))
+                        self.states.add(State(**resp[1]))
                         print(f'Player {resp[0]} wins!')
                         self.finished = True
 
@@ -624,11 +625,11 @@ class Board(Surface):
             if resp:
                 if isinstance(resp, tuple) and resp[0] == 0: # No winner yet
                     print(f'Computer[{self.turn.turn}]', resp[1]['time'], resp[1]['move'])
-                    self.states.add(State(resp[1]['board'], resp[1]['time'], resp[1]['move']))
+                    self.states.add(State(**resp[1]))
                     self.turn = self.p1 if self.turn == self.p2 else self.p2
                     self.computer.expecting = False
                 elif isinstance(resp, tuple) and resp[0] in (1, 2): # Winner found
-                    self.states.add(State(resp[1]['board'], resp[1]['time'], resp[1]['move']))
+                    self.states.add(State(**resp[1]))
                     print(f'Player {resp[0]} wins!')
                     self.finished = True
                 elif resp == 4:
