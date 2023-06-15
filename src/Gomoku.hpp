@@ -38,7 +38,7 @@ class Gomoku
 #define IS_GAME_OVER() this->_game_over
 
 #define PRINT_COORD(coord) std::cout << coord;
-#define PRINT_CAPTURE_COUNT() std::cout << "Capture: " << (int)this->_first_player.capture_count << " " << (int)this->_second_player.capture_count << std::endl
+#define PRINT_CAPTURE_COUNT() std::cout << (int)this->_first_player.capture_count << " " << (int)this->_second_player.capture_count << std::endl
 #define PRINT_PLAYER_WIN(player) std::cout << "Player " << player << " wins !" << std::endl
 #define PRINT_PLAYER_FORFEIT(player) std::cout << "Player " << player << " forfeits !" << std::endl
 #define PRINT_DELINEATION() std::cout << "-------------------------------------" << std::endl
