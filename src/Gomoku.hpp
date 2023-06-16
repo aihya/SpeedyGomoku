@@ -9,6 +9,11 @@
 #include <string.h>
 #include <chrono>
 #include <array>
+#include <vector>
+#include <unistd.h>
+#include <thread>
+#include <mutex>
+
 /**
  * @brief Game class
  * This game is a simple implementation of the gomoku game using minimax algorithm.
@@ -216,6 +221,12 @@ class Gomoku
             uint8_t         minimizer_count;
         }                   t_capture_count;
 
+        typedef struct      s_thread_args
+        {
+            t_player        &player;
+            t_player        &opponent;
+        }                   t_thread_args;
+
         struct moveComparator {
             inline bool operator()(const t_scored_update& f_update, const t_scored_update& s_update) const {
                 if (f_update.move.score > s_update.move.score)
@@ -270,6 +281,8 @@ class Gomoku
         t_coord                 human_move(t_player& player, t_player& opponent);
         t_scored_move           minimizer(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
         t_scored_move           maximizer(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
+        void                    Gomoku::thread_func();
+        t_scored_move           get_best_move(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
         t_sorted_updates        generate_sorted_updates(t_moveset& moveset, uint64_t* board, t_piece piece);
         t_sequence              extract_winning_sequence(uint64_t* board, t_piece piece, t_coord start_coord);
         int64_t                 evaluate_board(uint64_t *board, t_piece player_color, t_capture_count capture_count);

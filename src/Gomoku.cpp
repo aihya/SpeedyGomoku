@@ -782,6 +782,45 @@ Gomoku::t_moveset   Gomoku::generate_rule_moveset(t_piece piece)
     }
     return (moveset);
 }
+
+void    Gomoku::thread_func()
+{
+    t_scored_move   move;
+
+    // move = this->minimizer();
+}
+
+Gomoku::t_scored_move   Gomoku::get_best_move(
+    t_moveset& moveset, uint64_t* board, uint8_t depth, 
+    t_prunner prunner, t_capture_count count, t_piece piece)
+{
+    int                         thread_states[4];
+    std::vector<std::thread>    threads;
+    t_sorted_updates            updates;
+    int                         available;  // Number of available threads
+    int                         idx;        // Index of the current processed update
+    t_scored_move               best_score;
+
+    best_score = t_scored_move{Gomoku::_invalid_coord, INTMAX_MIN};
+    idx = 0;
+    available = 4;
+    updates = this->generate_sorted_updates(moveset, board, piece);
+    for (auto &update: updates)
+    {
+        while (available == 0)
+            usleep(100);    // Grace period not to fry the processor
+
+        // t_thread_args *args = new t_thread_args();
+        std::thread t(thread_func, best_score);
+        idx++;
+    }
+
+    // In case a remaining thread is left running, 
+    // wait for it until it finish.
+    for (auto &thread: threads)
+        thread.join();
+}
+
 Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent)
 {
     t_scored_move   best_move;
