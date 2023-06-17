@@ -221,11 +221,11 @@ class Gomoku
             uint8_t         minimizer_count;
         }                   t_capture_count;
 
-        typedef struct      s_thread_args
+        typedef struct      s_board
         {
-            t_player        &player;
-            t_player        &opponent;
-        }                   t_thread_args;
+            uint64_t*       data;
+            size_t          size;
+        }                   t_board;
 
         struct moveComparator {
             inline bool operator()(const t_scored_update& f_update, const t_scored_update& s_update) const {
@@ -243,8 +243,6 @@ class Gomoku
         typedef std::set<t_scored_update, moveComparator>                       t_sorted_updates;
 
     private:
-
-
         const static std::array<t_coord, 4>     _directions;
         const static std::vector<t_coord>       _moveset_cells;
 
@@ -264,7 +262,7 @@ class Gomoku
         bool                                    _game_over;
 
     public:
-        uint64_t*                               _board;
+        t_board                                 _board;
         t_moveset                               _ai_moveset;
 
     public:
@@ -274,34 +272,37 @@ class Gomoku
                                 ~Gomoku();
         void                    start_game();
     private:
-        t_piece                 get_piece(uint64_t *board, t_coord piece_coord);
+        t_piece                 get_piece(t_board board, t_coord piece_coord);
         t_coord                 ai_move(t_player& player, t_player& opponent);
         t_moveset               generate_rule_moveset(t_piece piece);
         t_player                get_player(t_player_type player_type, t_piece player_color, t_difficulty difficulty);
         t_coord                 human_move(t_player& player, t_player& opponent);
-        t_scored_move           minimizer(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
-        t_scored_move           maximizer(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
-        void                    Gomoku::thread_func();
-        t_scored_move           get_best_move(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
-        t_sorted_updates        generate_sorted_updates(t_moveset& moveset, uint64_t* board, t_piece piece);
-        t_sequence              extract_winning_sequence(uint64_t* board, t_piece piece, t_coord start_coord);
-        int64_t                 evaluate_board(uint64_t *board, t_piece player_color, t_capture_count capture_count);
-        int32_t                 evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction, bool capture = false);
-        int32_t                 evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
+        t_scored_move           minimizer(t_moveset& moveset, t_board board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
+        t_scored_move           maximizer(t_moveset& moveset, t_board board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
+        static void             thread_func(uint8_t &threads_count, uint8_t &thread_inuse, 
+                                    t_scored_move &best_move, t_scored_update &update, 
+                                    t_moveset &moveset, t_board board, t_piece piece, 
+                                    uint8_t depth, t_capture_count count, t_prunner prunner);
+        t_scored_move           threaded_maximizer(t_moveset& moveset, t_board board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
+        t_sorted_updates        generate_sorted_updates(t_moveset& moveset, t_board board, t_piece piece);
+        t_sequence              extract_winning_sequence(t_board board, t_piece piece, t_coord start_coord);
+        int64_t                 evaluate_board(t_board board, t_piece player_color, t_capture_count capture_count);
+        int32_t                 evaluate_dir(t_board board, t_coord piece_coord, t_piece piece, t_coord direction, bool capture = false);
+        int32_t                 evaluate_move(t_board board, t_coord piece_coord, t_piece piece);
         void                    make_move(t_player& player, t_player& opponent);
-        void                    generate_scored_update(uint64_t* board, t_coord move, t_piece piece, t_scored_update& scored_update);
+        void                    generate_scored_update(t_board board, t_coord move, t_piece piece, t_scored_update& scored_update);
         void                    update_game_state(t_coord current_move, t_player& player);
-        void                    update_node_state(uint64_t *board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
-        void                    revert_node_state(uint64_t *board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
-        void                    extract_captured_stoned(uint64_t *board, t_update_list& update_list, t_coord move, t_coord dir, t_piece piece);
-        void                    add_board_piece(uint64_t *board, t_coord piece_coord, t_piece piece);
-        void                    remove_board_piece(uint64_t* board, t_coord piece_coord);
-        void                    update_board(uint64_t *board, const t_update_list &update_list);
-        void                    revert_board_update(uint64_t *board, const t_update_list &update_list);
+        void                    update_node_state(t_board board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
+        void                    revert_node_state(t_board board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
+        void                    extract_captured_stoned(t_board board, t_update_list& update_list, t_coord move, t_coord dir, t_piece piece);
+        void                    add_board_piece(t_board board, t_coord piece_coord, t_piece piece);
+        void                    remove_board_piece(t_board board, t_coord piece_coord);
+        void                    update_board(t_board board, const t_update_list &update_list);
+        void                    revert_board_update(t_board board, const t_update_list &update_list);
         void                    print_board(t_piece current_piece);
-        void                    print_patterns(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
+        void                    print_patterns(t_board board, t_coord piece_coord, t_piece piece, t_coord direction);
         bool                    is_move_valid(t_coord piece_coord, t_piece piece);
-        bool                    is_winning_move(uint64_t* board, t_piece piece, t_coord move, uint8_t capture_count);
+        bool                    is_winning_move(t_board board, t_piece piece, t_coord move, uint8_t capture_count);
         bool                    is_inside_square(t_coord piece_coord);
         char                    get_game_command();
 };

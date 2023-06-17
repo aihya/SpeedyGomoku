@@ -1,5 +1,6 @@
 #include "Gomoku.hpp"
 
+std::mutex  mutex;
 
 const Gomoku::t_patterns Gomoku::_attack_patterns = {
     {
@@ -339,9 +340,9 @@ void    Gomoku::update_board(uint64_t *board, const t_update_list &update_list)
     for (auto &piece : update_list)
     {
         if (piece.type == Gomoku::ADD)
-            this->add_board_piece(board, piece.coord, piece.piece);
+            Gomoku::add_board_piece(board, piece.coord, piece.piece);
         if (piece.type == Gomoku::REMOVE)
-            this->remove_board_piece(board, piece.coord);
+            Gomoku::remove_board_piece(board, piece.coord);
     }
 }
 
@@ -350,9 +351,9 @@ void Gomoku::revert_board_update(uint64_t *board, const t_update_list &update_li
     for (auto &piece : update_list)
     {
         if (piece.type == Gomoku::ADD)
-            this->remove_board_piece(board, piece.coord);
+            Gomoku::remove_board_piece(board, piece.coord);
         if (piece.type == Gomoku::REMOVE)
-            this->add_board_piece(board, piece.coord, piece.piece);
+            Gomoku::add_board_piece(board, piece.coord, piece.piece);
     }
 }
 
@@ -414,8 +415,9 @@ Gomoku::Gomoku(uint8_t board_size, t_difficulty first_difficulty,
 {
     if (board_size < 5 || board_size > 19)
         throw std::invalid_argument("Board size must be between 5 and 19");
+    this->_board.data = new uint64_t[board_size]();
+    this->_board.size = board_size;
     this->_board_size = board_size;
-    this->_board = new uint64_t[board_size]();
     this->_first_player  = get_player(first_player_type, Gomoku::BLACK, first_difficulty);
     this->_second_player = get_player(second_player_type, Gomoku::WHITE, second_difficulty);
     this->_rule = rule;
@@ -429,12 +431,12 @@ Gomoku::~Gomoku()
     delete[] this->_board;
 }
 
-inline Gomoku::t_piece Gomoku::get_piece(uint64_t *board, t_coord piece_coord)
+inline Gomoku::t_piece Gomoku::get_piece(t_board board, t_coord piece_coord)
 {
-    if (piece_coord.y < 0 || piece_coord.y >= this->_board_size
-            || piece_coord.x < 0 || piece_coord.x >= this->_board_size)
+    if (piece_coord.y < 0 || piece_coord.y >= board.size
+            || piece_coord.x < 0 || piece_coord.x >= board.size)
         return (Gomoku::ERROR);
-    return (t_piece((board[piece_coord.y] >> (piece_coord.x * 2)) & 0b11));
+    return (t_piece((board.data[piece_coord.y] >> (piece_coord.x * 2)) & 0b11));
 }
 
 bool    Gomoku::is_inside_square(t_coord piece_coord)
@@ -450,12 +452,12 @@ bool    Gomoku::is_inside_square(t_coord piece_coord)
 
 bool    Gomoku::is_move_valid(t_coord piece_coord, t_piece piece)
 {
-    uint64_t    *board = this->_board;
-    int32_t     score  = 0;
+    t_board     board = this->_board;
+    int32_t     score = 0;
 
     if (this->_rule != Gomoku::STANDARD && this->_turn == 2)
         return (!this->is_inside_square(piece_coord));
-    if (this->get_piece(board, piece_coord) != Gomoku::EMPTY)
+    if (Gomoku::get_piece(board, piece_coord) != Gomoku::EMPTY)
         return (false);
     this->add_board_piece(board, piece_coord, piece);
     for (auto &dir: Gomoku::_directions)
@@ -468,7 +470,7 @@ bool    Gomoku::is_move_valid(t_coord piece_coord, t_piece piece)
     return (score != Gomoku::ILLEGAL_SCORE);
 }
 
-int32_t Gomoku::evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction, bool capture)
+int32_t Gomoku::evaluate_dir(t_board board, t_coord piece_coord, t_piece piece, t_coord direction, bool capture)
 {
     int32_t                                 attack_score;
     int32_t                                 defense_score;
@@ -489,12 +491,12 @@ int32_t Gomoku::evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece
     for (int j = 0; j < 5; j++)
     {
         current_pattern <<= 2;
-        current_pattern |= this->get_piece(board, pattern_position);
+        current_pattern |= Gomoku::get_piece(board, pattern_position);
         pattern_position += direction;
     }
     for (int i = 0; i <= 6; i++)
     {
-        current_piece = this->get_piece(board, piece_coord);
+        current_piece = Gomoku::get_piece(board, piece_coord);
         current_pattern = ((uint16_t)(current_piece) << 10 | current_pattern);
         if (!capture && illegal_patterns.count(current_pattern))
             return (Gomoku::ILLEGAL_SCORE);
@@ -659,7 +661,7 @@ void Gomoku::update_node_state(uint64_t *board, t_moveset &added_moves, t_movese
 {
     t_coord new_move;
 
-    this->update_board(board, update_list);
+    Gomoku::update_board(board, update_list);
     for (const auto& updates: update_list)
     {
         if (updates.type == Gomoku::ADD)
@@ -783,42 +785,85 @@ Gomoku::t_moveset   Gomoku::generate_rule_moveset(t_piece piece)
     return (moveset);
 }
 
-void    Gomoku::thread_func()
+uint64_t    *copy_board(uint64_t *board, int board_size)
 {
-    t_scored_move   move;
+    uint64_t    *copy;
 
-    // move = this->minimizer();
+    copy = new uint64_t[board_size]();
+    for (int i = 0; i < board_size; i++)
+        copy[i] = board[i];
+    return copy;
 }
 
-Gomoku::t_scored_move   Gomoku::get_best_move(
-    t_moveset& moveset, uint64_t* board, uint8_t depth, 
+void    Gomoku::thread_func(
+    uint8_t &threads_count, uint8_t &thread_inuse, 
+    t_scored_move &best_move, t_scored_update &update, 
+    t_moveset &moveset, uint64_t *board, t_piece piece, uint8_t depth, 
+    t_capture_count count, t_prunner prunner)
+{
+    t_scored_move   move;
+    t_moveset       added_moveset;
+
+    thread_inuse = 1;
+    this->update_node_state(board, added_moveset, moveset, update.updates);
+    move = this->minimizer(moveset, board, depth - 1, prunner, FLIP_CAPTURE(count), GET_OPPONENT(piece));
+    this->revert_node_state(board, added_moveset, moveset, update.updates);
+
+    // Lock the mutex and update best_score.
+    mutex.lock();
+    if (move.score > best_move.score)
+    {
+        best_move.coord = move.coord;
+        best_move.score = move.score;
+    }
+    threads_count++;
+    mutex.unlock();
+    thread_inuse = 0;
+}
+
+Gomoku::t_scored_move   Gomoku::threaded_maximizer( 
+    t_moveset &moveset, uint64_t* board, uint8_t depth, 
     t_prunner prunner, t_capture_count count, t_piece piece)
 {
-    int                         thread_states[4];
-    std::vector<std::thread>    threads;
     t_sorted_updates            updates;
-    int                         available;  // Number of available threads
-    int                         idx;        // Index of the current processed update
     t_scored_move               best_score;
+    t_moveset                   movesets[4];
+    uint64_t                    *boards[4];
+    uint8_t                     thread_idx;         // Index of the first thread not in use
+    uint8_t                     threads_count;      // Number of available threads
+    uint8_t                     threads_inuse[4];   // Threads in use
 
+    for (int i = 0; i < 4; i++)
+    {
+        threads_inuse[i] = 0;
+        movesets[i]      = moveset;
+        boards[i]        = copy_board(board, this->_board_size);
+    }
+
+    threads_count = 4;
     best_score = t_scored_move{Gomoku::_invalid_coord, INTMAX_MIN};
-    idx = 0;
-    available = 4;
     updates = this->generate_sorted_updates(moveset, board, piece);
     for (auto &update: updates)
     {
-        while (available == 0)
-            usleep(100);    // Grace period not to fry the processor
+        // Wait for a thread to finish
+        while (threads_count == 0)
+            usleep(50);
 
-        // t_thread_args *args = new t_thread_args();
-        std::thread t(thread_func, best_score);
-        idx++;
+        // Get index of first available thread.
+        for (thread_idx = 0; threads_inuse[thread_idx] == 0; thread_idx++);
+
+        std::thread(&Gomoku::thread_func, this, 
+            threads_count, threads_inuse[thread_idx], best_score, update, 
+            movesets[thread_idx], boards[thread_idx], piece, depth);
+
+        threads_count--;
     }
 
-    // In case a remaining thread is left running, 
-    // wait for it until it finish.
-    for (auto &thread: threads)
-        thread.join();
+    // Wait for the all threads to finish.
+    while (threads_count != 4)
+        usleep(50);
+
+    return best_score;
 }
 
 Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent)
@@ -834,14 +879,22 @@ Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent)
         if (_turn == 2 && this->_rule != Gomoku::STANDARD)
         {
             current_moveset = this->generate_rule_moveset(player.piece);
-            best_move = this->maximizer(current_moveset,
-                this->_board, this->_depth,
+            // best_move = this->maximizer(current_moveset,
+            //     this->_board, this->_depth,
+            //     t_prunner{INTMAX_MIN, INTMAX_MAX},
+            //     t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
+            best_move = this->threaded_maximizer(
+                current_moveset, this->_board, this->_depth, 
                 t_prunner{INTMAX_MIN, INTMAX_MAX},
                 t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
         }
         else
-            best_move = this->maximizer(this->_ai_moveset,
-                this->_board, this->_depth,
+            // best_move = this->maximizer(this->_ai_moveset,
+            //     this->_board, this->_depth,
+            //     t_prunner{INTMAX_MIN, INTMAX_MAX},
+            //     t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
+            best_move = this->threaded_maximizer(
+                this->_ai_moveset, this->_board, this->_depth, 
                 t_prunner{INTMAX_MIN, INTMAX_MAX},
                 t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
     }
