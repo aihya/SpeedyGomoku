@@ -325,17 +325,17 @@ const std::vector<Gomoku::t_coord> Gomoku::_moveset_cells {
 
 const Gomoku::t_coord Gomoku::_invalid_coord = { -1, -1 };
 
-inline void Gomoku::add_board_piece(uint64_t *board, t_coord piece_coord, t_piece piece)
+inline void Gomoku::add_board_piece(t_board board, t_coord piece_coord, t_piece piece)
 {
-    board[piece_coord.y] |= uint64_t(piece) << (piece_coord.x * 2);
+    board.data[piece_coord.y] |= uint64_t(piece) << (piece_coord.x * 2);
 }
 
-inline void    Gomoku::remove_board_piece(uint64_t* board, t_coord piece_coord)
+inline void    Gomoku::remove_board_piece(t_board board, t_coord piece_coord)
 {
-    board[piece_coord.y] &= ~((uint64_t)(Gomoku::ERROR) << (piece_coord.x << 1));
+    board.data[piece_coord.y] &= ~((uint64_t)(Gomoku::ERROR) << (piece_coord.x << 1));
 }
 
-void    Gomoku::update_board(uint64_t *board, const t_update_list &update_list)
+void    Gomoku::update_board(t_board board, const t_update_list &update_list)
 {
     for (auto &piece : update_list)
     {
@@ -346,7 +346,7 @@ void    Gomoku::update_board(uint64_t *board, const t_update_list &update_list)
     }
 }
 
-void Gomoku::revert_board_update(uint64_t *board, const t_update_list &update_list)
+void Gomoku::revert_board_update(t_board board, const t_update_list &update_list)
 {
     for (auto &piece : update_list)
     {
@@ -428,7 +428,7 @@ Gomoku::Gomoku(uint8_t board_size, t_difficulty first_difficulty,
 
 Gomoku::~Gomoku()
 {
-    delete[] this->_board;
+    delete[] this->_board.data;
 }
 
 inline Gomoku::t_piece Gomoku::get_piece(t_board board, t_coord piece_coord)
@@ -459,14 +459,14 @@ bool    Gomoku::is_move_valid(t_coord piece_coord, t_piece piece)
         return (!this->is_inside_square(piece_coord));
     if (Gomoku::get_piece(board, piece_coord) != Gomoku::EMPTY)
         return (false);
-    this->add_board_piece(board, piece_coord, piece);
+    Gomoku::add_board_piece(board, piece_coord, piece);
     for (auto &dir: Gomoku::_directions)
     {
-        score = this->evaluate_dir(board, piece_coord, piece, dir);
+        score = Gomoku::evaluate_dir(board, piece_coord, piece, dir);
         if (score == Gomoku::ILLEGAL_SCORE)
             break;
     }
-    this->remove_board_piece(board, piece_coord);
+    Gomoku::remove_board_piece(board, piece_coord);
     return (score != Gomoku::ILLEGAL_SCORE);
 }
 
@@ -512,16 +512,16 @@ int32_t Gomoku::evaluate_dir(t_board board, t_coord piece_coord, t_piece piece, 
     return (attack_score + defense_score);
 }
 
-int32_t Gomoku::evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece)
+int32_t Gomoku::evaluate_move(t_board board, t_coord piece_coord, t_piece piece)
 {
     int32_t score = 0;
 
-    for (auto& dir: this->_directions)
-        score += this->evaluate_dir(board, piece_coord, piece, dir);
+    for (auto& dir: Gomoku::_directions)
+        score += Gomoku::evaluate_dir(board, piece_coord, piece, dir);
     return (score);
 }
 
-int64_t Gomoku::evaluate_board(uint64_t *board, t_piece player_color, t_capture_count capture_count)
+int64_t Gomoku::evaluate_board(t_board board, t_piece player_color, t_capture_count capture_count)
 {
     int64_t     score;
     t_coord     piece_coord;
@@ -530,41 +530,41 @@ int64_t Gomoku::evaluate_board(uint64_t *board, t_piece player_color, t_capture_
 
     score = capture_count.maximizer_count * Gomoku::CAPTURE_SCORE;
     score -= capture_count.minimizer_count * Gomoku::CAPTURE_SCORE;
-    for (piece_coord.y = 0; piece_coord.y < this->_board_size; piece_coord.y++)
+    for (piece_coord.y = 0; piece_coord.y < board.size; piece_coord.y++)
     {
-        line = board[piece_coord.y];
+        line = board.data[piece_coord.y];
         do {
             if (line == 0)
                 break;
             piece_coord.x = (__builtin_ffsll(line) - 1) >> 1;
             line &= ~((uint64_t)(Gomoku::ERROR) << (piece_coord.x << 1));
-            piece = this->get_piece(board, piece_coord);
+            piece = Gomoku::get_piece(board, piece_coord);
             if (piece == player_color)
-                score += this->evaluate_move(board, piece_coord, piece);
+                score += Gomoku::evaluate_move(board, piece_coord, piece);
             else
-                score -= this->evaluate_move(board, piece_coord, piece);
-        } while (piece_coord.x < this->_board_size);
+                score -= Gomoku::evaluate_move(board, piece_coord, piece);
+        } while (piece_coord.x < board.size);
     }
 
     return (score);
 }
 
-bool Gomoku::is_winning_move(uint64_t* board, t_piece piece, t_coord move, uint8_t capture_count)
+bool Gomoku::is_winning_move(t_board board, t_piece piece, t_coord move, uint8_t capture_count)
 {
     t_sorted_updates possible_moves;
 
-    if (this->evaluate_move(board, move, piece) >= Gomoku::WINNING_SCORE)
+    if (Gomoku::evaluate_move(board, move, piece) >= Gomoku::WINNING_SCORE)
     {
-        possible_moves = this->generate_sorted_updates(this->_ai_moveset, this->_board, GET_OPPONENT(piece));
+        possible_moves = Gomoku::generate_sorted_updates(this->_ai_moveset, this->_board, GET_OPPONENT(piece));
         for (const auto& opp_move : possible_moves)
         {
-            this->update_board(this->_board, opp_move.updates);
-            if (this->evaluate_move(board, move, piece) < Gomoku::WINNING_SCORE)
+            Gomoku::update_board(this->_board, opp_move.updates);
+            if (Gomoku::evaluate_move(board, move, piece) < Gomoku::WINNING_SCORE)
             {
-                this->revert_board_update(this->_board, opp_move.updates);
+                Gomoku::revert_board_update(this->_board, opp_move.updates);
                 return (false);
             }
-            this->revert_board_update(this->_board, opp_move.updates);
+            Gomoku::revert_board_update(this->_board, opp_move.updates);
         }
         return (true);
     }
@@ -573,7 +573,7 @@ bool Gomoku::is_winning_move(uint64_t* board, t_piece piece, t_coord move, uint8
     return (false);
 }
 
-void Gomoku::extract_captured_stoned(uint64_t *board, t_update_list& update_list, t_coord move, t_coord dir, t_piece piece)
+void Gomoku::extract_captured_stoned(t_board board, t_update_list& update_list, t_coord move, t_coord dir, t_piece piece)
 {
     t_coord        current_pos;
     t_coord        move_dir;
@@ -590,7 +590,7 @@ void Gomoku::extract_captured_stoned(uint64_t *board, t_update_list& update_list
     }
 }
 
-void Gomoku::print_patterns(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction)
+void Gomoku::print_patterns(t_board board, t_coord piece_coord, t_piece piece, t_coord direction)
 {
     uint16_t        current_pattern;
     t_coord         pattern_position;
@@ -601,45 +601,45 @@ void Gomoku::print_patterns(uint64_t *board, t_coord piece_coord, t_piece piece,
     for (int j = 0; j < 5; j++)
     {
         current_pattern <<= 2;
-        current_pattern |= this->get_piece(board, pattern_position);
+        current_pattern |= Gomoku::get_piece(board, pattern_position);
         pattern_position += direction;
     }
     for (int i = 0; i < 6; i++)
     {
-        current_pattern = (this->get_piece(board, piece_coord) << 10 | current_pattern);
+        current_pattern = (Gomoku::get_piece(board, piece_coord) << 10 | current_pattern);
         std::cout << std::bitset<16>(current_pattern) << std::endl;
         current_pattern >>= 2;
         piece_coord -= direction;
     }
 }
 
-void Gomoku::generate_scored_update(uint64_t* board, t_coord move, t_piece piece, t_scored_update& scored_update)
+void Gomoku::generate_scored_update(t_board board, t_coord move, t_piece piece, t_scored_update& scored_update)
 {
     int32_t         pattern_eval;
     uint16_t        current_pattern;
 
     scored_update.move.score = 0;
-    this->add_board_piece(board, move, piece);
-    for (auto& dir: this->_directions)
+    Gomoku::add_board_piece(board, move, piece);
+    for (auto& dir: Gomoku::_directions)
     {
-        pattern_eval = this->evaluate_dir(board, move, piece, dir);
+        pattern_eval = Gomoku::evaluate_dir(board, move, piece, dir);
         if (pattern_eval == Gomoku::ILLEGAL_SCORE)
             break;
         scored_update.move.score += pattern_eval;
         if (pattern_eval == Gomoku::CAPTURE_SCORE)
         {
-            this->extract_captured_stoned(board, scored_update.updates, move, dir, piece);
+            Gomoku::extract_captured_stoned(board, scored_update.updates, move, dir, piece);
             scored_update.cupture_count++;
         }
     }
-    this->remove_board_piece(board, move);
+    Gomoku::remove_board_piece(board, move);
     if (pattern_eval == Gomoku::ILLEGAL_SCORE)
         scored_update.updates.clear();
     else
         scored_update.updates.push_back(t_move_update{move, piece, Gomoku::ADD});
 }
 
-Gomoku::t_sorted_updates Gomoku::generate_sorted_updates(t_moveset& moveset, uint64_t* board, t_piece piece)
+Gomoku::t_sorted_updates Gomoku::generate_sorted_updates(t_moveset& moveset, t_board board, t_piece piece)
 {
     t_sorted_updates    sorted_updates;
     t_scored_update     scored_move;
@@ -648,7 +648,7 @@ Gomoku::t_sorted_updates Gomoku::generate_sorted_updates(t_moveset& moveset, uin
     {
         scored_move = {0};
         scored_move.move.coord = move;
-        this->generate_scored_update(board, move, piece, scored_move);
+        Gomoku::generate_scored_update(board, move, piece, scored_move);
         if (scored_move.updates.empty())
             continue;
         sorted_updates.insert(scored_move);
@@ -657,7 +657,7 @@ Gomoku::t_sorted_updates Gomoku::generate_sorted_updates(t_moveset& moveset, uin
 }
 
 
-void Gomoku::update_node_state(uint64_t *board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list)
+void Gomoku::update_node_state(t_board board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list)
 {
     t_coord new_move;
 
@@ -670,7 +670,7 @@ void Gomoku::update_node_state(uint64_t *board, t_moveset &added_moves, t_movese
             for (auto& factor : Gomoku::_moveset_cells)
             {
                 new_move = updates.coord + factor;
-                if (this->get_piece(board, new_move) == Gomoku::EMPTY && moveset.count(new_move) == 0)
+                if (Gomoku::get_piece(board, new_move) == Gomoku::EMPTY && moveset.count(new_move) == 0)
                     added_moves.insert(new_move);
             }
         }
@@ -681,9 +681,9 @@ void Gomoku::update_node_state(uint64_t *board, t_moveset &added_moves, t_movese
         moveset.insert(move);
 }
 
-void Gomoku::revert_node_state(uint64_t *board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list)
+void Gomoku::revert_node_state(t_board board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list)
 {
-    this->revert_board_update(board, update_list);
+    Gomoku::revert_board_update(board, update_list);
     for (const auto& move: added_moves)
         moveset.erase(move);
     for (const auto& updates: update_list)
@@ -696,7 +696,7 @@ void Gomoku::revert_node_state(uint64_t *board, t_moveset &added_moves, t_movese
 }
 
 Gomoku::t_scored_move Gomoku::maximizer(t_moveset& moveset,
-            uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece)
+            t_board board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece)
 {
     t_moveset           added_moveset;
     t_scored_move       move_eval;
@@ -704,19 +704,19 @@ Gomoku::t_scored_move Gomoku::maximizer(t_moveset& moveset,
     uint8_t             move_counter;
 
     if (depth == 0)
-        return (t_scored_move{Gomoku::_invalid_coord, this->evaluate_board(board, piece, count)});
+        return (t_scored_move{Gomoku::_invalid_coord, Gomoku::evaluate_board(board, piece, count)});
     move_counter = 0;
     best_eval = t_scored_move{Gomoku::_invalid_coord, INTMAX_MIN};
-    for (auto& update: this->generate_sorted_updates(moveset, board, piece))
+    for (auto& update: Gomoku::generate_sorted_updates(moveset, board, piece))
     {
         added_moveset.clear();
         count.maximizer_count += update.cupture_count;
         if (update.move.score >= Gomoku::WINNING_SCORE || count.maximizer_count >= MAX_CAPTURE)
             return t_scored_move{update.move.coord, INTMAX_MAX - depth};
-        this->update_node_state(board, added_moveset, moveset, update.updates);
-        move_eval = this->minimizer(moveset, board, depth - 1, prunner, FLIP_CAPTURE(count), GET_OPPONENT(piece));
+        Gomoku::update_node_state(board, added_moveset, moveset, update.updates);
+        move_eval = Gomoku::minimizer(moveset, board, depth - 1, prunner, FLIP_CAPTURE(count), GET_OPPONENT(piece));
         count.maximizer_count -= update.cupture_count;
-        this->revert_node_state(board, added_moveset, moveset, update.updates);
+        Gomoku::revert_node_state(board, added_moveset, moveset, update.updates);
         if (move_eval.score >= best_eval.score)
             best_eval = t_scored_move{update.move.coord, move_eval.score};
         prunner.alpha = std::max(prunner.alpha, best_eval.score);
@@ -729,7 +729,7 @@ Gomoku::t_scored_move Gomoku::maximizer(t_moveset& moveset,
 }
 
 Gomoku::t_scored_move Gomoku::minimizer
-    (t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece)
+    (t_moveset& moveset, t_board board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece)
 {
     t_moveset           added_moveset;
     t_scored_move       move_eval;
@@ -737,19 +737,19 @@ Gomoku::t_scored_move Gomoku::minimizer
     uint8_t             move_counter;
 
     if (depth == 0)
-        return t_scored_move{Gomoku::_invalid_coord, -this->evaluate_board(board, piece, count)};
+        return t_scored_move{Gomoku::_invalid_coord, -Gomoku::evaluate_board(board, piece, count)};
     move_counter = 0;
     best_eval = t_scored_move{Gomoku::_invalid_coord, INTMAX_MAX};
-    for (auto& update: this->generate_sorted_updates(moveset, board, piece))
+    for (auto& update: Gomoku::generate_sorted_updates(moveset, board, piece))
     {
         added_moveset.clear();
         count.maximizer_count += update.cupture_count;
         if (update.move.score >= Gomoku::WINNING_SCORE || count.maximizer_count >= MAX_CAPTURE)
             return t_scored_move{update.move.coord, INTMAX_MIN + depth};
-        this->update_node_state(board, added_moveset, moveset, update.updates);
-        move_eval = this->maximizer(moveset, board, depth - 1, prunner, FLIP_CAPTURE(count), GET_OPPONENT(piece));
+        Gomoku::update_node_state(board, added_moveset, moveset, update.updates);
+        move_eval = Gomoku::maximizer(moveset, board, depth - 1, prunner, FLIP_CAPTURE(count), GET_OPPONENT(piece));
         count.maximizer_count -= update.cupture_count;
-        this->revert_node_state(board, added_moveset, moveset, update.updates);
+        Gomoku::revert_node_state(board, added_moveset, moveset, update.updates);
         if (move_eval.score <= best_eval.score)
             best_eval = t_scored_move{update.move.coord, move_eval.score};
         prunner.beta = std::min(prunner.beta, best_eval.score);
@@ -785,82 +785,116 @@ Gomoku::t_moveset   Gomoku::generate_rule_moveset(t_piece piece)
     return (moveset);
 }
 
-uint64_t    *copy_board(uint64_t *board, int board_size)
+void copy_board(Gomoku::t_board &from, Gomoku::t_board &to)
 {
-    uint64_t    *copy;
-
-    copy = new uint64_t[board_size]();
-    for (int i = 0; i < board_size; i++)
-        copy[i] = board[i];
-    return copy;
+    to.data = new uint64_t[from.size]();
+    to.size = from.size;
+    for (int i = 0; i < to.size; i++)
+        to.data[i] = from.data[i];
 }
 
-void    Gomoku::thread_func(
-    uint8_t &threads_count, uint8_t &thread_inuse, 
-    t_scored_move &best_move, t_scored_update &update, 
-    t_moveset &moveset, uint64_t *board, t_piece piece, uint8_t depth, 
-    t_capture_count count, t_prunner prunner)
+// void    Gomoku::thread_func(
+//     uint8_t &threads_count, uint8_t &thread_inuse, 
+//     t_scored_move &best_move, t_scored_update &update, 
+//     t_moveset &moveset, t_board &board, t_piece &piece, uint8_t &depth, 
+//     t_capture_count &count, t_prunner &prunner)
+// {
+//     t_scored_move   move;
+//     t_moveset       added_moveset;
+
+//     thread_inuse = 1;
+//     Gomoku::update_node_state(board, added_moveset, moveset, update.updates);
+//     move = Gomoku::minimizer(moveset, board, depth - 1, prunner, FLIP_CAPTURE(count), GET_OPPONENT(piece));
+//     Gomoku::revert_node_state(board, added_moveset, moveset, update.updates);
+
+//     // Lock the mutex and update best_score.
+//     mutex.lock();
+//     if (move.score > best_move.score)
+//     {
+//         best_move.coord = move.coord;
+//         best_move.score = move.score;
+//     }
+//     threads_count++;
+//     mutex.unlock();
+//     thread_inuse = 0;
+// }
+
+void    Gomoku::thread_func(t_thread_args &args)
 {
     t_scored_move   move;
     t_moveset       added_moveset;
 
-    thread_inuse = 1;
-    this->update_node_state(board, added_moveset, moveset, update.updates);
-    move = this->minimizer(moveset, board, depth - 1, prunner, FLIP_CAPTURE(count), GET_OPPONENT(piece));
-    this->revert_node_state(board, added_moveset, moveset, update.updates);
+    (*(args.thread_inuse)) = 1;
+    Gomoku::update_node_state(*(args.board), added_moveset, *(args.moveset), args.update->updates);
+    move = Gomoku::minimizer(*(args.moveset), *(args.board), args.depth - 1, args.prunner, FLIP_CAPTURE(args.count), GET_OPPONENT(args.piece));
+    Gomoku::revert_node_state(*(args.board), added_moveset, *(args.moveset), args.update->updates);
 
     // Lock the mutex and update best_score.
     mutex.lock();
-    if (move.score > best_move.score)
+    if (move.score > args.best_move->score)
     {
-        best_move.coord = move.coord;
-        best_move.score = move.score;
+        args.best_move->coord = move.coord;
+        args.best_move->score = move.score;
     }
-    threads_count++;
+    // std::cout << "thread: " << std::this_thread::get_id() << " " << (int)args.best_move->score << std::endl;
+    (*(args.threads_count))++;
+    (*(args.thread_inuse)) = 0;
     mutex.unlock();
-    thread_inuse = 0;
 }
 
 Gomoku::t_scored_move   Gomoku::threaded_maximizer( 
-    t_moveset &moveset, uint64_t* board, uint8_t depth, 
+    t_moveset &moveset, t_board &board, uint8_t depth, 
     t_prunner prunner, t_capture_count count, t_piece piece)
 {
     t_sorted_updates            updates;
     t_scored_move               best_score;
-    t_moveset                   movesets[4];
-    uint64_t                    *boards[4];
-    uint8_t                     thread_idx;         // Index of the first thread not in use
+    t_moveset                   movesets[NUM_THREADS];
+    t_board                     boards[NUM_THREADS];
+    int                         thread_idx;         // Index of the first thread not in use
     uint8_t                     threads_count;      // Number of available threads
-    uint8_t                     threads_inuse[4];   // Threads in use
+    uint8_t                     threads_inuse[NUM_THREADS];   // Threads in use
+    t_thread_args               args[NUM_THREADS];
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < NUM_THREADS; i++)
     {
+        movesets[i] = moveset;
         threads_inuse[i] = 0;
-        movesets[i]      = moveset;
-        boards[i]        = copy_board(board, this->_board_size);
+        copy_board(board, boards[i]);
     }
 
-    threads_count = 4;
+    threads_count = NUM_THREADS;
     best_score = t_scored_move{Gomoku::_invalid_coord, INTMAX_MIN};
-    updates = this->generate_sorted_updates(moveset, board, piece);
-    for (auto &update: updates)
+    updates = Gomoku::generate_sorted_updates(moveset, board, piece);
+    for (t_scored_update update: updates)
     {
+
         // Wait for a thread to finish
         while (threads_count == 0)
             usleep(50);
+        threads_count--;
 
         // Get index of first available thread.
-        for (thread_idx = 0; threads_inuse[thread_idx] == 0; thread_idx++);
+        thread_idx = 0;
+        while (threads_inuse[thread_idx] == 1) thread_idx++;
 
-        std::thread(&Gomoku::thread_func, this, 
-            threads_count, threads_inuse[thread_idx], best_score, update, 
-            movesets[thread_idx], boards[thread_idx], piece, depth);
+        threads_inuse[thread_idx] = 1;
+        args[thread_idx].threads_count  = &threads_count;
+        args[thread_idx].thread_inuse   = &(threads_inuse[thread_idx]);
+        args[thread_idx].best_move      = &best_score;
+        args[thread_idx].update         = &update;
+        args[thread_idx].moveset        = &(movesets[thread_idx]);
+        args[thread_idx].board          = &(boards[thread_idx]);
+        args[thread_idx].piece          = piece;
+        args[thread_idx].depth          = depth;
+        args[thread_idx].count          = count;
+        args[thread_idx].prunner        = prunner;
 
-        threads_count--;
+        std::thread thread(Gomoku::thread_func, std::ref(args[thread_idx]));
+        thread.detach();
     }
 
     // Wait for the all threads to finish.
-    while (threads_count != 4)
+    while (threads_count != NUM_THREADS)
         usleep(50);
 
     return best_score;
@@ -959,8 +993,8 @@ void Gomoku::update_game_state(t_coord current_move, t_player& player)
     t_coord             new_move;
     t_scored_update     scored_update{0};
 
-    this->generate_scored_update(this->_board, current_move, player.piece, scored_update);
-    this->update_board(this->_board, scored_update.updates);
+    Gomoku::generate_scored_update(this->_board, current_move, player.piece, scored_update);
+    Gomoku::update_board(this->_board, scored_update.updates);
     for (const auto& updates: scored_update.updates)
     {
         if (updates.type == Gomoku::ADD)
@@ -980,18 +1014,18 @@ void Gomoku::update_game_state(t_coord current_move, t_player& player)
     this->_turn++;
 }
 
-Gomoku::t_sequence Gomoku::extract_winning_sequence(uint64_t* board, t_piece piece, t_coord start_coord)
+Gomoku::t_sequence Gomoku::extract_winning_sequence(t_board board, t_piece piece, t_coord start_coord)
 {
     t_sequence  sequence;
 
     for (auto& dir: Gomoku::_directions)
     {
-        if (this->evaluate_dir(board, start_coord, piece, dir) >= Gomoku::WINNING_SCORE)
+        if (Gomoku::evaluate_dir(board, start_coord, piece, dir) >= Gomoku::WINNING_SCORE)
         {
             sequence.push_back(start_coord);
-            for(t_coord new_coord = start_coord + dir; this->get_piece(board, new_coord) == piece; new_coord += dir)
+            for(t_coord new_coord = start_coord + dir; Gomoku::get_piece(board, new_coord) == piece; new_coord += dir)
                 sequence.push_back(new_coord);
-            for(t_coord new_coord = start_coord - dir; this->get_piece(board, new_coord) == piece; new_coord -= dir)
+            for(t_coord new_coord = start_coord - dir; Gomoku::get_piece(board, new_coord) == piece; new_coord -= dir)
                 sequence.push_back(new_coord);
         }
     }
