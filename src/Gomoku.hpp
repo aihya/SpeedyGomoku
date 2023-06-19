@@ -85,17 +85,16 @@ class Gomoku
 
         typedef enum        e_scores
         {
-            ILLEGAL_SCORE          = -10000000,
-            WINNING_SCORE          = 1000000,
-            WIN_BLOCK_SCORE        = 500000,
-            CAPTURE_SCORE          = 100000,
-            FREE_FOUR_SCORE        = 20000,
-            FREE_BLOCK_SCORE       = 2000,
-            FREE_SCORE             = 2000,
-            FOUR_SCORE             = 1000,
-            THREE_SCORE            = 100,
-            TWO_SCORE              = 10,
-            ONE_SCORE              = 1,
+            ILLEGAL_SCORE          = -1,
+
+            FIVE_SCORE             = 10000001,
+            OPEN_FOUR_SCORE        = 10000000,
+            CAPTURE_SCORE          = 2000000,
+            FOUR_SCORE             = 100000,
+            OPEN_THREE_SCORE       = 100000,
+            THREE_SCORE            = 10000,
+            OPEN_TWO_SCORE         = 10000,
+            TWO_SCORE              = 1000,
             ZERO_SCORE             = 0
         }                   t_scores;
 
@@ -195,6 +194,7 @@ class Gomoku
         {
             t_coord         coord;
             int64_t         score;
+            bool            winning;
         }                   t_scored_move;
 
         typedef struct      s_scored_update
@@ -273,6 +273,7 @@ class Gomoku
         t_sorted_updates        generate_sorted_updates(t_moveset& moveset, uint64_t* board, t_piece piece);
         t_sequence              extract_winning_sequence(uint64_t* board, t_piece piece, t_coord start_coord);
         int64_t                 evaluate_board(uint64_t *board, t_piece player_color, t_capture_count capture_count);
+        int64_t                 evaluate_moveset(t_moveset& moveset, uint64_t *board, t_piece player_color, t_capture_count capture_count);
         int32_t                 evaluate_dir(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction, bool capture = false);
         int32_t                 evaluate_move(uint64_t *board, t_coord piece_coord, t_piece piece);
         void                    make_move(t_player& player, t_player& opponent);
@@ -288,7 +289,7 @@ class Gomoku
         void                    print_board(t_piece current_piece);
         void                    print_patterns(uint64_t *board, t_coord piece_coord, t_piece piece, t_coord direction);
         bool                    is_move_valid(t_coord piece_coord, t_piece piece);
-        bool                    is_winning_move(uint64_t* board, t_piece piece, t_coord move, uint8_t capture_count);
+        bool                    is_winning_move(uint64_t* board, t_moveset &moveset, t_piece piece, t_coord move, uint8_t capture_count);
         bool                    is_inside_square(t_coord piece_coord);
         char                    get_game_command();
 };
