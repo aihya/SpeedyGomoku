@@ -15,6 +15,7 @@
 #include <mutex>
 #include <functional>
 #include <array>
+#include <iterator>
 
 /**
  * @brief Game class
@@ -53,7 +54,7 @@ class Gomoku
 #define MAX_CAPTURE 5U
 #define LONG_PRO_SIZE 7
 #define PRO_SIZE 5
-#define NUM_THREADS 10
+#define NUM_THREADS 4
     public:
         typedef enum        e_piece
         {
@@ -242,19 +243,18 @@ class Gomoku
         typedef std::set<t_coord>                                               t_moveset;
         typedef std::vector<t_coord>                                            t_sequence;
         typedef std::set<t_scored_update, moveComparator>                       t_sorted_updates;
-        
+
         typedef struct      s_thread_args
         {
-            uint8_t         *threads_count;
-            uint8_t         *thread_inuse;
-            t_scored_move   *best_move;
-            t_scored_update *update;
-            t_moveset       *moveset;
-            t_board         *board;
-            t_piece         piece;
-            uint8_t         depth;
-            t_capture_count count;
-            t_prunner       prunner;
+            t_scored_move       *best_move;
+            t_sorted_updates    *updates;
+            int                 *updates_idx;
+            t_moveset           *moveset;
+            t_board             *board;
+            t_piece             piece;
+            uint8_t             depth;
+            t_capture_count     count;
+            t_prunner           *prunner;
         }                   t_thread_args;
 
     private:
@@ -292,8 +292,8 @@ class Gomoku
         t_moveset               generate_rule_moveset(t_piece piece);
         t_player                get_player(t_player_type player_type, t_piece player_color, t_difficulty difficulty);
         t_coord                 human_move(t_player& player, t_player& opponent);
-        static t_scored_move    minimizer(t_moveset& moveset, t_board board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
-        static t_scored_move    maximizer(t_moveset& moveset, t_board board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
+        static t_scored_move    minimizer(t_moveset& moveset, t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
+        static t_scored_move    maximizer(t_moveset& moveset, t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
         // static void             thread_func(uint8_t &threads_count, uint8_t &thread_inuse, 
         //                             t_scored_move &best_move, t_scored_update &update, 
         //                             t_moveset &moveset, t_board &board, t_piece &piece, 

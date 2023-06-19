@@ -1,6 +1,7 @@
 #include "Gomoku.hpp"
 
-std::mutex  mutex;
+std::mutex  update_idx_mtx;
+std::mutex  general_mtx;
 
 const Gomoku::t_patterns Gomoku::_attack_patterns = {
     {
@@ -696,7 +697,7 @@ void Gomoku::revert_node_state(t_board board, t_moveset &added_moves, t_moveset 
 }
 
 Gomoku::t_scored_move Gomoku::maximizer(t_moveset& moveset,
-            t_board board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece)
+            t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece)
 {
     t_moveset           added_moveset;
     t_scored_move       move_eval;
@@ -722,14 +723,14 @@ Gomoku::t_scored_move Gomoku::maximizer(t_moveset& moveset,
         prunner.alpha = std::max(prunner.alpha, best_eval.score);
         if (prunner.beta <= prunner.alpha)
             break;
-        if (move_counter++ > 17)
-            break;
+        // if (move_counter++ > 17)
+        //     break;
     }
     return (best_eval);    
 }
 
 Gomoku::t_scored_move Gomoku::minimizer
-    (t_moveset& moveset, t_board board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece)
+    (t_moveset& moveset, t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece)
 {
     t_moveset           added_moveset;
     t_scored_move       move_eval;
@@ -755,8 +756,8 @@ Gomoku::t_scored_move Gomoku::minimizer
         prunner.beta = std::min(prunner.beta, best_eval.score);
         if (prunner.beta <= prunner.alpha)
             break;
-        if (move_counter++ > 17)
-            break;
+        // if (move_counter++ > 17)
+        //     break;
     }
     return (best_eval);
 }
@@ -793,111 +794,97 @@ void copy_board(Gomoku::t_board &from, Gomoku::t_board &to)
         to.data[i] = from.data[i];
 }
 
-// void    Gomoku::thread_func(
-//     uint8_t &threads_count, uint8_t &thread_inuse, 
-//     t_scored_move &best_move, t_scored_update &update, 
-//     t_moveset &moveset, t_board &board, t_piece &piece, uint8_t &depth, 
-//     t_capture_count &count, t_prunner &prunner)
-// {
-//     t_scored_move   move;
-//     t_moveset       added_moveset;
-
-//     thread_inuse = 1;
-//     Gomoku::update_node_state(board, added_moveset, moveset, update.updates);
-//     move = Gomoku::minimizer(moveset, board, depth - 1, prunner, FLIP_CAPTURE(count), GET_OPPONENT(piece));
-//     Gomoku::revert_node_state(board, added_moveset, moveset, update.updates);
-
-//     // Lock the mutex and update best_score.
-//     mutex.lock();
-//     if (move.score > best_move.score)
-//     {
-//         best_move.coord = move.coord;
-//         best_move.score = move.score;
-//     }
-//     threads_count++;
-//     mutex.unlock();
-//     thread_inuse = 0;
-// }
-
 void    Gomoku::thread_func(t_thread_args &args)
 {
-    t_scored_move   move;
-    t_moveset       added_moveset;
+    int                         idx;
+    t_moveset                   added_moveset;
+    t_scored_move               move;
+    t_scored_update             update;
+    t_sorted_updates::iterator  it;
+    size_t                      updates_size;
+    t_piece                     piece;
+    t_capture_count             count;
 
-    (*(args.thread_inuse)) = 1;
-    Gomoku::update_node_state(*(args.board), added_moveset, *(args.moveset), args.update->updates);
-    move = Gomoku::minimizer(*(args.moveset), *(args.board), args.depth - 1, args.prunner, FLIP_CAPTURE(args.count), GET_OPPONENT(args.piece));
-    Gomoku::revert_node_state(*(args.board), added_moveset, *(args.moveset), args.update->updates);
-
-    // Lock the mutex and update best_score.
-    mutex.lock();
-    if (move.score > args.best_move->score)
+    updates_size = args.updates->size();
+    while (true)
     {
-        args.best_move->coord = move.coord;
-        args.best_move->score = move.score;
+        update_idx_mtx.lock();
+        idx = ++(*args.updates_idx);
+        if (idx >= updates_size)
+        {
+            update_idx_mtx.unlock();
+            break ;
+        }
+        update_idx_mtx.unlock();
+        
+
+        it = args.updates->begin();
+        std::advance(it, idx);
+        update = *it;
+        piece = args.piece;
+        count = args.count;
+
+        added_moveset.clear();
+        Gomoku::update_node_state(*args.board, added_moveset, *args.moveset, update.updates);
+        move = Gomoku::minimizer(*args.moveset, *args.board, args.depth - 1, *args.prunner, FLIP_CAPTURE(count), GET_OPPONENT(piece));
+        Gomoku::revert_node_state(*args.board, added_moveset, *args.moveset, update.updates);
+
+        general_mtx.lock();
+        if (move.score > args.best_move->score)
+            *args.best_move = t_scored_move{update.move.coord, move.score};
+        args.prunner->alpha = std::max(args.prunner->alpha, args.best_move->score);
+        if (args.prunner->beta <= args.prunner->alpha)
+        {
+            std::cout << "7mm" << std::endl;
+            continue;
+        }
+        general_mtx.unlock();
     }
-    // std::cout << "thread: " << std::this_thread::get_id() << " " << (int)args.best_move->score << std::endl;
-    (*(args.threads_count))++;
-    (*(args.thread_inuse)) = 0;
-    mutex.unlock();
 }
 
 Gomoku::t_scored_move   Gomoku::threaded_maximizer( 
     t_moveset &moveset, t_board &board, uint8_t depth, 
     t_prunner prunner, t_capture_count count, t_piece piece)
 {
-    t_sorted_updates            updates;
-    t_scored_move               best_score;
-    t_moveset                   movesets[NUM_THREADS];
-    t_board                     boards[NUM_THREADS];
-    int                         thread_idx;         // Index of the first thread not in use
-    uint8_t                     threads_count;      // Number of available threads
-    uint8_t                     threads_inuse[NUM_THREADS];   // Threads in use
-    t_thread_args               args[NUM_THREADS];
+    std::thread         threads[NUM_THREADS];
+    t_thread_args       threads_args[NUM_THREADS];
+    t_moveset           movesets[NUM_THREADS];
+    t_board             boards[NUM_THREADS];
+    t_scored_move       best_move;
+    t_sorted_updates    updates;
+    int                 updates_idx;
 
-    for (int i = 0; i < NUM_THREADS; i++)
-    {
-        movesets[i] = moveset;
-        threads_inuse[i] = 0;
-        copy_board(board, boards[i]);
-    }
+    // Initialize best_move and update_idx
+    best_move = t_scored_move{Gomoku::_invalid_coord, INTMAX_MIN};
+    updates_idx = -1;
 
-    threads_count = NUM_THREADS;
-    best_score = t_scored_move{Gomoku::_invalid_coord, INTMAX_MIN};
+    // Generate moves to process.
     updates = Gomoku::generate_sorted_updates(moveset, board, piece);
-    for (t_scored_update update: updates)
+
+    for (int idx = 0; idx < NUM_THREADS && idx < updates.size(); idx++)
     {
+        // Copy moveset and board
+        copy_board(board, boards[idx]);
+        movesets[idx] = moveset;
 
-        // Wait for a thread to finish
-        while (threads_count == 0)
-            usleep(50);
-        threads_count--;
-
-        // Get index of first available thread.
-        thread_idx = 0;
-        while (threads_inuse[thread_idx] == 1) thread_idx++;
-
-        threads_inuse[thread_idx] = 1;
-        args[thread_idx].threads_count  = &threads_count;
-        args[thread_idx].thread_inuse   = &(threads_inuse[thread_idx]);
-        args[thread_idx].best_move      = &best_score;
-        args[thread_idx].update         = &update;
-        args[thread_idx].moveset        = &(movesets[thread_idx]);
-        args[thread_idx].board          = &(boards[thread_idx]);
-        args[thread_idx].piece          = piece;
-        args[thread_idx].depth          = depth;
-        args[thread_idx].count          = count;
-        args[thread_idx].prunner        = prunner;
-
-        std::thread thread(Gomoku::thread_func, std::ref(args[thread_idx]));
-        thread.detach();
+        // Set thread arguments
+        threads_args[idx].best_move   = &best_move;
+        threads_args[idx].moveset     = &(movesets[idx]);
+        threads_args[idx].board       = &(boards[idx]);
+        threads_args[idx].updates     = &updates;
+        threads_args[idx].updates_idx = &updates_idx;
+        threads_args[idx].piece       = piece;
+        threads_args[idx].depth       = depth;
+        threads_args[idx].count       = count;
+        threads_args[idx].prunner     = &prunner;
+        
+        // Create thread
+        threads[idx] = std::thread(&Gomoku::thread_func, std::ref(threads_args[idx]));
     }
 
-    // Wait for the all threads to finish.
-    while (threads_count != NUM_THREADS)
-        usleep(50);
-
-    return best_score;
+    for (int i = 0; i < NUM_THREADS && i < updates.size(); i++)
+        threads[i].join();
+    return (best_move);
 }
 
 Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent)
