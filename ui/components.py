@@ -7,12 +7,23 @@ from init import *
 TEXT  = 1
 IMAGE = 2
 
+class DropDown(Surface):
+
+    __slots__ = ()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def update(self, events):
+        for event in events:
+            pass
+
 class Button(Surface):
     """
     Class representing an interactive button object
     """
 
-    def __init__(self, fg: str, bg: str, content, font, disabled=False, interactive=True, *args, **kwargs):
+    def __init__(self, fg: str, bg: str, content, font, disabled=False, interactive=True, size=None, *args, **kwargs):
 
         # Load font
         self._font = font
@@ -25,16 +36,21 @@ class Button(Surface):
         self._bg_hov.r = self.bg.r - 30 if self.bg.r >= 30 else self.bg.r
         self._bg_hov.b = self.bg.b - 30 if self.bg.b >= 30 else self.bg.b
         self._bg_hov.g = self.bg.g - 30 if self.bg.g >= 30 else self.bg.g
+        self._size = size
         
         if isinstance(content, str):
             self._content = self.font.render(content, True, self.fg)
         else:
             self._content = content
 
-        super().__init__(
-            self.content.get_width() + 60, 
-            self.content.get_height() + 30, 
-            *args, **kwargs)
+        if self._size:
+            super().__init__(*self._size, alpha=True, *args, **kwargs)
+        else:
+            super().__init__(
+                self.content.get_width() + 60, 
+                self.content.get_height() + 30, 
+                alpha=True, 
+                *args, **kwargs)
 
         self._content_rect = self._content.get_rect()
         self._content_rect.center = (int(self.width / 2), int(self.height / 2))
@@ -43,6 +59,14 @@ class Button(Surface):
         self._pressed = False
         self._disabled = disabled
         self._interactive = interactive
+
+    @property
+    def size(self):
+        return self._size
+    
+    @size.setter
+    def size(self, value):
+        self._size = value
 
     @property
     def bg(self):

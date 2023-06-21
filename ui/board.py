@@ -19,8 +19,8 @@ class Setup(Surface):
         super().__init__(WIDTH-HEIGHT, HEIGHT, alpha=True, *args, **kwargs)
         self._repeat = True
 
-        self._start = Button("#000000", "#66F587", "START", fonts.h3_t, relative_to=self)
-        self._start.position = (self.width / 2 - self._start.width / 2, self.height - 100)
+        self._start = Button("#000000", "#66F587", "START", fonts.h3_t, size=(self.width, 80), relative_to=self)
+        self._start.position = (0, self.height - 80)
         
         # Player 1 setup surface
         self._p1_surf = Surface(300, 400, (50, 120), self, True)
