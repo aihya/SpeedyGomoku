@@ -699,7 +699,10 @@ Gomoku::t_scored_move Gomoku::maximizer(t_moveset& moveset,
         added_moveset.clear();
         count.maximizer_count += update.cupture_count;
         if (update.move.winning || count.maximizer_count >= MAX_CAPTURE)
-            return t_scored_move{update.move.coord, INTMAX_MAX - depth};
+        {
+            if (this->is_winning_move(board, moveset, piece, update.move.coord, count.maximizer_count))
+                return t_scored_move{update.move.coord, INTMAX_MAX - depth};
+        }
         this->update_node_state(board, added_moveset, moveset, update.updates);
         move_eval = this->minimizer(moveset, board, depth - 1, prunner, FLIP_CAPTURE(count), GET_OPPONENT(piece));
         count.maximizer_count -= update.cupture_count;
@@ -732,7 +735,10 @@ Gomoku::t_scored_move Gomoku::minimizer
         added_moveset.clear();
         count.maximizer_count += update.cupture_count;
         if (update.move.winning|| count.maximizer_count >= MAX_CAPTURE)
-            return t_scored_move{update.move.coord, INTMAX_MIN + depth};
+        {
+            if (this->is_winning_move(board, moveset, piece, update.move.coord, count.maximizer_count))
+                return t_scored_move{update.move.coord, INTMAX_MIN + depth};
+        }
         this->update_node_state(board, added_moveset, moveset, update.updates);
         move_eval = this->maximizer(moveset, board, depth - 1, prunner, FLIP_CAPTURE(count), GET_OPPONENT(piece));
         this->revert_node_state(board, added_moveset, moveset, update.updates);
@@ -972,8 +978,8 @@ int main(int argc, char **argv)
         }
     }
 
-    Gomoku game(19, p1_diff, p2_diff, p1_type, p2_type, Gomoku::PRO);
-    // Gomoku game(19, p1_diff, p2_diff, Gomoku::AI, Gomoku::AI, Gomoku::PRO);
+    // Gomoku game(19, p1_diff, p2_diff, p1_type, p2_type, Gomoku::PRO);
+    Gomoku game(19, p1_diff, p2_diff, Gomoku::AI, Gomoku::AI, Gomoku::PRO);
 
     game.start_game();
 
