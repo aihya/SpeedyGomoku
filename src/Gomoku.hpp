@@ -92,9 +92,11 @@ class Gomoku
             CAPTURE_SCORE          = 2000000,
             FOUR_SCORE             = 100000,
             OPEN_THREE_SCORE       = 100000,
-            THREE_SCORE            = 10000,
-            OPEN_TWO_SCORE         = 10000,
-            TWO_SCORE              = 1000,
+            THREE_SCORE            = 1000,
+            OPEN_TWO_SCORE         = 1000,
+            TWO_SCORE              = 100,
+            FIVE_BLOCK_SCORE       = 1000000,
+            OPEN_BLOCK_SCORE       = 100000,
             ZERO_SCORE             = 0
         }                   t_scores;
 
@@ -292,4 +294,7 @@ class Gomoku
         bool                    is_winning_move(uint64_t* board, t_moveset &moveset, t_piece piece, t_coord move, uint8_t capture_count);
         bool                    is_inside_square(t_coord piece_coord);
         char                    get_game_command();
+
+        int32_t                 evaluate_dir(uint64_t *board, t_moveset &moveset, t_coord piece_coord, t_piece piece, t_coord direction, bool capture);
+
 };
