@@ -30,6 +30,8 @@ class Gomoku
                                             && this->get_piece(board, move + (dir * 3)) == piece)
 
 #define FLIP_CAPTURE(capture) t_capture_count{capture.minimizer_count, capture.maximizer_count}
+#define FLIP_PRUNNER(prunner) t_prunner{-prunner.beta, -prunner.alpha}
+#define SW_PRUNNER(prunner) t_prunner{-prunner.alpha - 1, -prunner.alpha}
 
 #define GET_CURRENT_PLAYER() ((this->_turn % 2 == 0) ? this->_first_player : this->_second_player)
 #define GET_OPPONENT_PLAYER() ((this->_turn % 2 == 0) ? this->_second_player : this->_first_player)
@@ -197,6 +199,12 @@ class Gomoku
             t_coord         coord;
             int64_t         score;
             bool            winning;
+
+            // overload of unary minus operator
+            s_scored_move operator-() const
+            {
+                return (s_scored_move{this->coord, -this->score, this->winning});
+            }
         }                   t_scored_move;
 
         typedef struct      s_scored_update
@@ -296,5 +304,6 @@ class Gomoku
         char                    get_game_command();
 
         int32_t                 evaluate_dir(uint64_t *board, t_moveset &moveset, t_coord piece_coord, t_piece piece, t_coord direction, bool capture);
+        t_scored_move           negamax(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
 
 };
