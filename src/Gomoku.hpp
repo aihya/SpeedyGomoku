@@ -9,6 +9,8 @@
 #include <string.h>
 #include <chrono>
 #include <array>
+#include "TTable.hpp"
+#include "ZobristTable.hpp"
 /**
  * @brief Game class
  * This game is a simple implementation of the gomoku game using minimax algorithm.
@@ -32,6 +34,7 @@ class Gomoku
 #define FLIP_CAPTURE(capture) t_capture_count{capture.minimizer_count, capture.maximizer_count}
 #define FLIP_PRUNNER(prunner) t_prunner{-prunner.beta, -prunner.alpha}
 #define SW_PRUNNER(prunner) t_prunner{-prunner.alpha - 1, -prunner.alpha}
+#define INITIAL_PRUNNER t_prunner{-INTMAX_MAX, INTMAX_MAX}
 
 #define GET_CURRENT_PLAYER() ((this->_turn % 2 == 0) ? this->_first_player : this->_second_player)
 #define GET_OPPONENT_PLAYER() ((this->_turn % 2 == 0) ? this->_second_player : this->_first_player)
@@ -91,14 +94,14 @@ class Gomoku
 
             FIVE_SCORE             = 10000001,
             OPEN_FOUR_SCORE        = 10000000,
-            CAPTURE_SCORE          = 2000000,
+            FIVE_BLOCK_SCORE       = 2000000,
+            CAPTURE_SCORE          = 1000000,
             FOUR_SCORE             = 100000,
             OPEN_THREE_SCORE       = 100000,
+            OPEN_BLOCK_SCORE       = 100000,
             THREE_SCORE            = 1000,
             OPEN_TWO_SCORE         = 1000,
             TWO_SCORE              = 100,
-            FIVE_BLOCK_SCORE       = 1000000,
-            OPEN_BLOCK_SCORE       = 100000,
             ZERO_SCORE             = 0
         }                   t_scores;
 
@@ -212,6 +215,9 @@ class Gomoku
             uint8_t         cupture_count;
             t_scored_move   move;
             t_update_list   updates;
+            inline bool operator< (const s_scored_update& s_update) const {
+                return (this->move.score > s_update.move.score || (this->move.coord < s_update.move.coord));
+            }
         }                   t_scored_update;
 
         typedef struct      s_prunner
@@ -226,23 +232,16 @@ class Gomoku
             uint8_t         minimizer_count;
         }                   t_capture_count;
 
-        struct moveComparator {
-            inline bool operator()(const t_scored_update& f_update, const t_scored_update& s_update) const {
-                if (f_update.move.score > s_update.move.score)
-                    return (f_update.move.score > s_update.move.score);
-                return (f_update.move.coord < s_update.move.coord);
-            }
-        };
-
     private:
 
         typedef std::map< Gomoku::e_piece, std::map<uint16_t, t_scores> >       t_patterns;
         typedef std::set<t_coord>                                               t_moveset;
         typedef std::vector<t_coord>                                            t_sequence;
-        typedef std::set<t_scored_update, moveComparator>                       t_sorted_updates;
+        typedef std::set<t_scored_update>                                       t_sorted_updates;
 
     private:
 
+        static TTable                           _transposition_table;
 
         const static std::array<t_coord, 4>     _directions;
         const static std::vector<t_coord>       _moveset_cells;
@@ -263,6 +262,56 @@ class Gomoku
         bool                                    _game_over;
 
     public:
+        typedef struct s_board
+        {
+            uint64_t        *board;
+            uint8_t         size;
+            uint64_t        hash;
+            ZobristTable    *zobrist_table;
+
+            s_board(uint8_t size) : size(size), hash(0) {
+                this->board = new uint64_t[size];
+                for (uint8_t i = 0; i < size; i++)
+                    this->board[i] = 0;
+                this->zobrist_table = new ZobristTable(size * size, 2);
+            }
+
+            ~s_board() {
+                delete this->zobrist_table;
+            }
+            
+            inline void add_piece(t_coord piece_coord, t_piece piece)
+            {
+                this->update_hash(piece_coord, piece);
+                this->board[piece_coord.y] |= uint64_t(piece) << (piece_coord.x * 2);
+            }
+
+            inline void remove_piece(t_coord piece_coord)
+            {
+                this->update_hash(piece_coord, this->get_piece(piece_coord));
+                this->board[piece_coord.y] &= ~((uint64_t)(Gomoku::ERROR) << (piece_coord.x << 1));
+            }
+            
+            inline t_piece get_piece(t_coord piece_coord)
+            {
+                if (piece_coord.x >= this->size || piece_coord.y >= this->size)
+                    return (Gomoku::ERROR);
+                if (piece_coord.x < 0 || piece_coord.y < 0)
+                    return (Gomoku::ERROR);
+                return (t_piece)((this->board[piece_coord.y] >> (piece_coord.x << 1)) & 3);
+            }
+
+            inline uint64_t get_hash(t_coord piece_coord, t_piece piece)
+            {
+                return (this->zobrist_table->get(piece_coord.y * this->size + piece_coord.x, piece));
+            }
+
+            inline void update_hash(t_coord piece_coord, t_piece piece)
+            {
+                this->hash ^= this->get_hash(piece_coord, piece);
+            }
+        }            t_board;
+
         uint64_t*                               _board;
         t_moveset                               _ai_moveset;
 
@@ -304,6 +353,8 @@ class Gomoku
         char                    get_game_command();
 
         int32_t                 evaluate_dir(uint64_t *board, t_moveset &moveset, t_coord piece_coord, t_piece piece, t_coord direction, bool capture);
-        t_scored_move           negamax(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
+        t_scored_move           negascout(t_moveset& moveset, uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
+        t_coord         iterative_depth_search(t_moveset& moveset,
+            uint64_t* board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
 
 };
