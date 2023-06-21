@@ -691,7 +691,7 @@ void Gomoku::revert_node_state(t_board board, t_moveset &added_moves, t_moveset 
     {
         if (updates.type == Gomoku::REMOVE)
             moveset.erase(updates.coord);
-        if (updates.type == Gomoku::ADD)
+        else if (updates.type == Gomoku::ADD)
             moveset.insert(updates.coord);
     }
 }
@@ -832,12 +832,7 @@ void    Gomoku::thread_func(t_thread_args &args)
         general_mtx.lock();
         if (move.score > args.best_move->score)
             *args.best_move = t_scored_move{update.move.coord, move.score};
-        args.prunner->alpha = std::max(args.prunner->alpha, args.best_move->score);
-        if (args.prunner->beta <= args.prunner->alpha)
-        {
-            std::cout << "7mm" << std::endl;
-            continue;
-        }
+        // args.prunner->alpha = std::max(args.prunner->alpha, args.best_move->score);
         general_mtx.unlock();
     }
 }
