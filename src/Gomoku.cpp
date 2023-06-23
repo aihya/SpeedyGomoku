@@ -10,6 +10,7 @@ const Gomoku::t_patterns Gomoku::_attack_patterns = {
             {0b000101010101, Gomoku::FIVE_SCORE},
             {0b100101010101, Gomoku::FIVE_SCORE},
             {0b110101010101, Gomoku::FIVE_SCORE},
+
             {0b000101010100, Gomoku::OPEN_FOUR_SCORE},
             {0b110101010100, Gomoku::FOUR_SCORE},
             {0b100101010100, Gomoku::FOUR_SCORE},
@@ -110,43 +111,83 @@ const Gomoku::t_patterns Gomoku::_illegal_patterns
             {0b000100010100, Gomoku::ILLEGAL_SCORE},
             {0b000101000100, Gomoku::ILLEGAL_SCORE},
             {0b100101100000, Gomoku::ILLEGAL_SCORE},
-            {0b100101100011, Gomoku::ILLEGAL_SCORE},
             {0b100101100010, Gomoku::ILLEGAL_SCORE},
+            {0b100101100011, Gomoku::ILLEGAL_SCORE},
             {0b100101100001, Gomoku::ILLEGAL_SCORE},
             {0b100101101000, Gomoku::ILLEGAL_SCORE},
             {0b100101101010, Gomoku::ILLEGAL_SCORE},
             {0b100101101011, Gomoku::ILLEGAL_SCORE},
             {0b100101101001, Gomoku::ILLEGAL_SCORE},
+            {0b100101101100, Gomoku::ILLEGAL_SCORE},
+            {0b100101101110, Gomoku::ILLEGAL_SCORE},
+            {0b100101101111, Gomoku::ILLEGAL_SCORE},
+            {0b100101101101, Gomoku::ILLEGAL_SCORE},
             {0b100101100100, Gomoku::ILLEGAL_SCORE},
-            {0b100101100101, Gomoku::ILLEGAL_SCORE},
-            {0b100101100111, Gomoku::ILLEGAL_SCORE},
             {0b100101100110, Gomoku::ILLEGAL_SCORE},
+            {0b100101100111, Gomoku::ILLEGAL_SCORE},
+            {0b100101100101, Gomoku::ILLEGAL_SCORE},
+            {0b000010010110, Gomoku::ILLEGAL_SCORE},
+            {0b001010010110, Gomoku::ILLEGAL_SCORE},
+            {0b001110010110, Gomoku::ILLEGAL_SCORE},
+            {0b000110010110, Gomoku::ILLEGAL_SCORE},
+            {0b100010010110, Gomoku::ILLEGAL_SCORE},
+            {0b101010010110, Gomoku::ILLEGAL_SCORE},
+            {0b101110010110, Gomoku::ILLEGAL_SCORE},
+            {0b100110010110, Gomoku::ILLEGAL_SCORE},
+            {0b110010010110, Gomoku::ILLEGAL_SCORE},
+            {0b111010010110, Gomoku::ILLEGAL_SCORE},
+            {0b111110010110, Gomoku::ILLEGAL_SCORE},
+            {0b110110010110, Gomoku::ILLEGAL_SCORE},
+            {0b010010010110, Gomoku::ILLEGAL_SCORE},
+            {0b011010010110, Gomoku::ILLEGAL_SCORE},
+            {0b011110010110, Gomoku::ILLEGAL_SCORE},
+            {0b010110010110, Gomoku::ILLEGAL_SCORE},
         }
     },
     {
         Gomoku::WHITE, {
-            {0b001010100000, Gomoku::ILLEGAL_SCORE},
-            {0b001010100011, Gomoku::ILLEGAL_SCORE},
-            {0b001010100001, Gomoku::ILLEGAL_SCORE},
-            {0b001010100010, Gomoku::ILLEGAL_SCORE},
-            {0b000010101000, Gomoku::ILLEGAL_SCORE},
-            {0b110010101000, Gomoku::ILLEGAL_SCORE},
-            {0b010010101000, Gomoku::ILLEGAL_SCORE},
-            {0b100010101000, Gomoku::ILLEGAL_SCORE},
-            {0b001000101000, Gomoku::ILLEGAL_SCORE},
-            {0b001010001000, Gomoku::ILLEGAL_SCORE},
-            {0b011010010000, Gomoku::ILLEGAL_SCORE},
-            {0b011010010011, Gomoku::ILLEGAL_SCORE},
-            {0b011010010001, Gomoku::ILLEGAL_SCORE},
-            {0b011010010010, Gomoku::ILLEGAL_SCORE},
-            {0b011010010100, Gomoku::ILLEGAL_SCORE},
-            {0b011010010101, Gomoku::ILLEGAL_SCORE},
-            {0b011010010111, Gomoku::ILLEGAL_SCORE},
-            {0b011010010110, Gomoku::ILLEGAL_SCORE},
-            {0b011010011000, Gomoku::ILLEGAL_SCORE},
-            {0b011010011010, Gomoku::ILLEGAL_SCORE},
-            {0b011010011011, Gomoku::ILLEGAL_SCORE},
-            {0b011010011001, Gomoku::ILLEGAL_SCORE},
+            { 0b001010100000, Gomoku::ILLEGAL_SCORE},
+            { 0b001010100011, Gomoku::ILLEGAL_SCORE},
+            { 0b001010100001, Gomoku::ILLEGAL_SCORE},
+            { 0b001010100010, Gomoku::ILLEGAL_SCORE},
+            { 0b000010101000, Gomoku::ILLEGAL_SCORE},
+            { 0b110010101000, Gomoku::ILLEGAL_SCORE},
+            { 0b010010101000, Gomoku::ILLEGAL_SCORE},
+            { 0b100010101000, Gomoku::ILLEGAL_SCORE},
+            { 0b001000101000, Gomoku::ILLEGAL_SCORE},
+            { 0b001010001000, Gomoku::ILLEGAL_SCORE},
+            { 0b011010010000, Gomoku::ILLEGAL_SCORE},
+            { 0b011010010010, Gomoku::ILLEGAL_SCORE},
+            { 0b011010010011, Gomoku::ILLEGAL_SCORE},
+            { 0b011010010001, Gomoku::ILLEGAL_SCORE},
+            { 0b011010011000, Gomoku::ILLEGAL_SCORE},
+            { 0b011010011010, Gomoku::ILLEGAL_SCORE},
+            { 0b011010011011, Gomoku::ILLEGAL_SCORE},
+            { 0b011010011001, Gomoku::ILLEGAL_SCORE},
+            { 0b011010011100, Gomoku::ILLEGAL_SCORE},
+            { 0b011010011110, Gomoku::ILLEGAL_SCORE},
+            { 0b011010011111, Gomoku::ILLEGAL_SCORE},
+            { 0b011010011101, Gomoku::ILLEGAL_SCORE},
+            { 0b011010010100, Gomoku::ILLEGAL_SCORE},
+            { 0b011010010110, Gomoku::ILLEGAL_SCORE},
+            { 0b011010010111, Gomoku::ILLEGAL_SCORE},
+            { 0b011010010101, Gomoku::ILLEGAL_SCORE},
+            { 0b000001101001, Gomoku::ILLEGAL_SCORE},
+            { 0b001001101001, Gomoku::ILLEGAL_SCORE},
+            { 0b001101101001, Gomoku::ILLEGAL_SCORE},
+            { 0b000101101001, Gomoku::ILLEGAL_SCORE},
+            { 0b100001101001, Gomoku::ILLEGAL_SCORE},
+            { 0b101001101001, Gomoku::ILLEGAL_SCORE},
+            { 0b101101101001, Gomoku::ILLEGAL_SCORE},
+            { 0b100101101001, Gomoku::ILLEGAL_SCORE},
+            { 0b110001101001, Gomoku::ILLEGAL_SCORE},
+            { 0b111001101001, Gomoku::ILLEGAL_SCORE},
+            { 0b111101101001, Gomoku::ILLEGAL_SCORE},
+            { 0b110101101001, Gomoku::ILLEGAL_SCORE},
+            { 0b010001101001, Gomoku::ILLEGAL_SCORE},
+            { 0b011001101001, Gomoku::ILLEGAL_SCORE},
+            { 0b011101101001, Gomoku::ILLEGAL_SCORE},
+            { 0b010101101001, Gomoku::ILLEGAL_SCORE},
         },
     }
 };
@@ -255,13 +296,76 @@ const Gomoku::t_patterns Gomoku::_defense_patterns = {
 const Gomoku::t_patterns Gomoku::_capture_patterns
 {
     {
+
         Gomoku::BLACK, {
-            { 0b01101001, Gomoku::CAPTURE_SCORE },
+            { 0b011010010000, Gomoku::CAPTURE_SCORE },
+            { 0b011010010010, Gomoku::CAPTURE_SCORE },
+            { 0b011010010011, Gomoku::CAPTURE_SCORE },
+            { 0b011010010001, Gomoku::CAPTURE_SCORE },
+            { 0b011010011000, Gomoku::CAPTURE_SCORE },
+            { 0b011010011010, Gomoku::CAPTURE_SCORE },
+            { 0b011010011011, Gomoku::CAPTURE_SCORE },
+            { 0b011010011001, Gomoku::CAPTURE_SCORE },
+            { 0b011010011100, Gomoku::CAPTURE_SCORE },
+            { 0b011010011110, Gomoku::CAPTURE_SCORE },
+            { 0b011010011111, Gomoku::CAPTURE_SCORE },
+            { 0b011010011101, Gomoku::CAPTURE_SCORE },
+            { 0b011010010100, Gomoku::CAPTURE_SCORE },
+            { 0b011010010110, Gomoku::CAPTURE_SCORE },
+            { 0b011010010111, Gomoku::CAPTURE_SCORE },
+            { 0b011010010101, Gomoku::CAPTURE_SCORE },
+            { 0b000001101001, Gomoku::CAPTURE_SCORE },
+            { 0b001001101001, Gomoku::CAPTURE_SCORE },
+            { 0b001101101001, Gomoku::CAPTURE_SCORE },
+            { 0b000101101001, Gomoku::CAPTURE_SCORE },
+            { 0b100001101001, Gomoku::CAPTURE_SCORE },
+            { 0b101001101001, Gomoku::CAPTURE_SCORE },
+            { 0b101101101001, Gomoku::CAPTURE_SCORE },
+            { 0b100101101001, Gomoku::CAPTURE_SCORE },
+            { 0b110001101001, Gomoku::CAPTURE_SCORE },
+            { 0b111001101001, Gomoku::CAPTURE_SCORE },
+            { 0b111101101001, Gomoku::CAPTURE_SCORE },
+            { 0b110101101001, Gomoku::CAPTURE_SCORE },
+            { 0b010001101001, Gomoku::CAPTURE_SCORE },
+            { 0b011001101001, Gomoku::CAPTURE_SCORE },
+            { 0b011101101001, Gomoku::CAPTURE_SCORE },
+            { 0b010101101001, Gomoku::CAPTURE_SCORE },
         }
     },
     {
         Gomoku::WHITE, {
-            { 0b10010110, Gomoku::CAPTURE_SCORE },
+            { 0b100101100000, Gomoku::CAPTURE_SCORE },
+            { 0b100101100010, Gomoku::CAPTURE_SCORE },
+            { 0b100101100011, Gomoku::CAPTURE_SCORE },
+            { 0b100101100001, Gomoku::CAPTURE_SCORE },
+            { 0b100101101000, Gomoku::CAPTURE_SCORE },
+            { 0b100101101010, Gomoku::CAPTURE_SCORE },
+            { 0b100101101011, Gomoku::CAPTURE_SCORE },
+            { 0b100101101001, Gomoku::CAPTURE_SCORE },
+            { 0b100101101100, Gomoku::CAPTURE_SCORE },
+            { 0b100101101110, Gomoku::CAPTURE_SCORE },
+            { 0b100101101111, Gomoku::CAPTURE_SCORE },
+            { 0b100101101101, Gomoku::CAPTURE_SCORE },
+            { 0b100101100100, Gomoku::CAPTURE_SCORE },
+            { 0b100101100110, Gomoku::CAPTURE_SCORE },
+            { 0b100101100111, Gomoku::CAPTURE_SCORE },
+            { 0b100101100101, Gomoku::CAPTURE_SCORE },
+            { 0b000010010110, Gomoku::CAPTURE_SCORE },
+            { 0b001010010110, Gomoku::CAPTURE_SCORE },
+            { 0b001110010110, Gomoku::CAPTURE_SCORE },
+            { 0b000110010110, Gomoku::CAPTURE_SCORE },
+            { 0b100010010110, Gomoku::CAPTURE_SCORE },
+            { 0b101010010110, Gomoku::CAPTURE_SCORE },
+            { 0b101110010110, Gomoku::CAPTURE_SCORE },
+            { 0b100110010110, Gomoku::CAPTURE_SCORE },
+            { 0b110010010110, Gomoku::CAPTURE_SCORE },
+            { 0b111010010110, Gomoku::CAPTURE_SCORE },
+            { 0b111110010110, Gomoku::CAPTURE_SCORE },
+            { 0b110110010110, Gomoku::CAPTURE_SCORE },
+            { 0b010010010110, Gomoku::CAPTURE_SCORE },
+            { 0b011010010110, Gomoku::CAPTURE_SCORE },
+            { 0b011110010110, Gomoku::CAPTURE_SCORE },
+            { 0b010110010110, Gomoku::CAPTURE_SCORE },
         },
     }
 };
@@ -375,7 +479,6 @@ Gomoku::Gomoku(uint8_t board_size, t_difficulty first_difficulty,
 {
     if (board_size != 15 && board_size != 19)
         throw std::invalid_argument("Board size must be between 15 or 19");
-    // this->_board = t_board{board_size};
     this->_first_player  = get_player(first_player_type, Gomoku::BLACK, first_difficulty);
     this->_second_player = get_player(second_player_type, Gomoku::WHITE, second_difficulty);
     this->_rule = rule;
@@ -444,13 +547,11 @@ int32_t Gomoku::evaluate_dir(t_board &board, t_coord piece_coord, t_piece piece,
     }
     for (int i = 0; i < 6; i++)
     {
-        if (current_pattern == Gomoku::ERROR)
-            break;
         current_piece = board.get_piece(piece_coord);
         current_pattern = ((uint16_t)(current_piece) << 10 | current_pattern);
         if (board_eval == false && illegal_patterns.count(current_pattern))
             return (Gomoku::ILLEGAL_SCORE);
-        if (capture_patterns.count(current_pattern >> 4))
+        if (capture_patterns.count(current_pattern))
             return (Gomoku::CAPTURE_SCORE);
         if (attack_patterns.count(current_pattern))
             attack_score = std::max(int32_t(attack_patterns.at(current_pattern)), attack_score);
@@ -516,10 +617,11 @@ int64_t Gomoku::evaluate_moveset(t_moveset& moveset, t_board &board, t_piece pla
                 }
                 if (pattern_score == Gomoku::CAPTURE_SCORE)
                 {
+                    captured_stones.clear();
                     this->extract_captured_stoned(board, captured_stones, move, dir, piece);
                     move_score += (captured_stones.size() / 2) * Gomoku::CAPTURE_SCORE;
                     this->update_board(board, captured_stones);
-                    move_score += this->evaluate_dir(board, move, piece, dir, true);
+                    move_score += this->evaluate_dir(board, move, piece, dir, false);
                     this->revert_board_update(board, captured_stones);
                 }
                 else
@@ -594,7 +696,7 @@ void Gomoku::generate_scored_update(t_board &board, t_coord move, t_piece piece,
         if (pattern_eval == Gomoku::CAPTURE_SCORE)
         {
             this->extract_captured_stoned(board, scored_update.updates, move, dir, piece);
-            scored_update.cupture_count++;
+            scored_update.cupture_count += scored_update.updates.size() / 2;
         }
         if (pattern_eval >= Gomoku::FIVE_SCORE)
             scored_update.move.winning = true;
@@ -616,6 +718,8 @@ Gomoku::t_sorted_updates Gomoku::generate_sorted_updates(t_moveset& moveset, t_b
     {
         scored_move = {0};
         scored_move.move.coord = move;
+        if (move == _last_best)
+            scored_move.move.score = INTMAX_MAX;
         this->generate_scored_update(board, move, piece, scored_move);
         if (scored_move.updates.empty())
             continue;
@@ -663,6 +767,7 @@ void Gomoku::revert_node_state(t_board &board, t_moveset &added_moves, t_moveset
     }
 }
 
+
 Gomoku::t_scored_move Gomoku::negascout(t_moveset& moveset,
             t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece)
 {
@@ -670,10 +775,23 @@ Gomoku::t_scored_move Gomoku::negascout(t_moveset& moveset,
     t_scored_move       move_eval;
     t_scored_move       best_eval;
     uint8_t             move_counter;
+    TTable::t_TTEntry   entry;
+    int64_t             alpha = prunner.alpha;
 
-
+    entry = this->_ttable.get_entry(board.hash);
+    if (entry.type != TTable::ERROR && entry.depth >= depth && depth != this->_depth)
+    {
+        if (entry.type == TTable::EXACT)
+            return (t_scored_move{Gomoku::_invalid_coord, entry.value});
+        if (entry.type == TTable::LOWER_BOUND)
+            prunner.alpha = std::max(prunner.alpha, entry.value);
+        if (entry.type == TTable::UPPER_BOUND)
+            prunner.beta = std::min(prunner.beta, entry.value);
+        if (prunner.alpha >= prunner.beta)
+            return (t_scored_move{Gomoku::_invalid_coord, entry.value});
+    }
     if (depth == 0)
-        return (t_scored_move{Gomoku::_invalid_coord, this->evaluate_board(board, piece, count)});
+        return (t_scored_move{Gomoku::_invalid_coord, this->evaluate_moveset(moveset, board, piece, count)});
     move_counter = 0;
     best_eval = t_scored_move{Gomoku::_invalid_coord, -INTMAX_MAX};
     for (const auto& update: this->generate_sorted_updates(moveset, board, piece))
@@ -682,7 +800,7 @@ Gomoku::t_scored_move Gomoku::negascout(t_moveset& moveset,
         count.maximizer_count += update.cupture_count;
         if (update.move.winning || count.maximizer_count >= MAX_CAPTURE)
             if (is_winning_move(board, moveset, piece, update.move.coord, count.maximizer_count))
-                return t_scored_move{update.move.coord, INTMAX_MAX - depth};
+                return t_scored_move{update.move.coord, this->evaluate_moveset(moveset, board, piece, count)};
         this->update_node_state(board, added_moveset, moveset, update.updates);
         if (move_counter == 0)
             move_eval = -this->negascout(moveset, board, depth - 1, FLIP_PRUNNER(prunner), FLIP_CAPTURE(count), GET_OPPONENT(piece));
@@ -701,6 +819,13 @@ Gomoku::t_scored_move Gomoku::negascout(t_moveset& moveset,
             break;
         move_counter++;
     }
+    TTable::t_bound bound = TTable::EXACT;
+    if (best_eval.score <= alpha)
+        bound = TTable::UPPER_BOUND;
+    if (best_eval.score >= prunner.beta)
+        bound = TTable::LOWER_BOUND;
+    if (entry.type == TTable::ERROR || entry.depth < depth)
+        this->_ttable.add_entry(board.hash, depth, {best_eval.coord.x, best_eval.coord.y}, best_eval.score, bound);
     return (best_eval);    
 }
 
@@ -739,61 +864,58 @@ Gomoku::t_coord Gomoku::iterative_depth_search(t_moveset& moveset,
         auto end = std::chrono::steady_clock::now();
         if (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() >= 500)
             break;
-        best_move = this->negascout(moveset, this->_board, depth, INITIAL_PRUNNER, count, piece);
+        best_move = this->negascout(moveset, board, depth, INITIAL_PRUNNER, count, piece);
+        this->_last_best = best_move.coord;
     }
     return (best_move.coord);
 }
 
-Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent)
+Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent, t_board& board)
 {
     t_coord         best_move;
-    t_moveset       current_moveset;
+    t_moveset       current_moveset = this->_ai_moveset;
+    t_board         new_board(board);
 
-    auto start = std::chrono::steady_clock::now();
     if (_turn == 0)
-        best_move = GET_BOARD_CENTER(this->_board);
+        best_move = GET_BOARD_CENTER(new_board);
     else
     {
         if (_turn == 2 && this->_rule != Gomoku::STANDARD)
-        {
-            current_moveset = this->generate_rule_moveset(player.piece, this->_board);
-            best_move = this->iterative_depth_search(current_moveset,
-                this->_board, this->_depth,
-                t_prunner{-INTMAX_MAX, INTMAX_MAX},
-                t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
-        }
-        else
-            best_move = this->iterative_depth_search(this->_ai_moveset,
-                this->_board, this->_depth,
-                t_prunner{-INTMAX_MAX, INTMAX_MAX},
-                t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
+            current_moveset = this->generate_rule_moveset(player.piece, new_board);
+        best_move = this->iterative_depth_search(current_moveset,
+            new_board, this->_depth,
+            t_prunner{-INTMAX_MAX, INTMAX_MAX},
+            t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
     }
-    auto end = std::chrono::steady_clock::now();
-    std::cout << std::chrono::duration<double, std::milli>(end - start).count() << std::endl;
     return best_move;
 }
 
-Gomoku::t_coord Gomoku::human_move(t_player& player, t_player &opponent)
+Gomoku::t_coord Gomoku::human_move(t_player& player, t_player &opponent, t_board& board)
 {
     t_coord coord;
 
-    (void)opponent;
+    // simulate the best move in another thread
+    std::thread t(&Gomoku::ai_move, this, std::ref(player), std::ref(opponent), std::ref(board));
+    t.detach();
     for (;;)
     {
         try
         {
             if (this->_turn == 0  && this->_rule != Gomoku::STANDARD)
-                return GET_BOARD_CENTER(this->_board);
+                return GET_BOARD_CENTER(board);
             switch (this->get_game_command())
             {
                 case 'S':
-                    PRINT_COORD(this->ai_move(player, opponent));
+                    PRINT_COORD(this->ai_move(player, opponent, board));
                     std::cout << "END SUGGESTION" << std::endl;
                     break;
                 case 'M':
                     std::cin >> coord.x >> coord.y;
-                    if (this->is_move_valid(this->_board, coord, player.piece))
+                    if (this->is_move_valid(board, coord, player.piece))
+                    {
+                        // std::terminate();
                         return coord;
+                    }
                     else
                         std::cout << "Illegal move" << std::endl;
                     break;
@@ -803,8 +925,8 @@ Gomoku::t_coord Gomoku::human_move(t_player& player, t_player &opponent)
         {
             std::cout << "Invalid move" << '\n';
         }
-        
     }
+    // terminate thread if no move is made
     return (coord);
 }
 
@@ -868,11 +990,14 @@ Gomoku::t_sequence Gomoku::extract_winning_sequence(t_board &board, t_piece piec
     return (sequence);
 }
 
-void Gomoku::make_move(t_player& player, t_player& opponent)
+void Gomoku::make_move(t_player& player, t_player& opponent, t_board& board)
 {
     t_coord         current_move;
 
-    current_move  = (this->*player.move)(player, opponent);
+    auto start = std::chrono::steady_clock::now();
+    current_move  = (this->*player.move)(player, opponent, board);
+    auto end = std::chrono::steady_clock::now();
+    std::cout << std::chrono::duration<double, std::milli>(end - start).count() << std::endl;
     if (current_move == Gomoku::_invalid_coord)
         PRINT_PLAYER_FORFEIT(player.piece);
     else
@@ -896,7 +1021,7 @@ void Gomoku::start_game()
 {
     for (;;)
         if (IS_GAME_OVER() == false)
-            this->make_move(GET_CURRENT_PLAYER(), GET_OPPONENT_PLAYER());
+            this->make_move(GET_CURRENT_PLAYER(), GET_OPPONENT_PLAYER(), this->_board);
 }
 
 int main(int argc, char **argv)
@@ -946,7 +1071,6 @@ int main(int argc, char **argv)
     }
 
     Gomoku game(19, p1_diff, p2_diff, p1_type, p2_type, Gomoku::PRO);
-    // Gomoku game(19, p1_diff, p2_diff, Gomoku::AI, Gomoku::AI, Gomoku::PRO);
 
     game.start_game();
 
