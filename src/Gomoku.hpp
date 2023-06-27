@@ -12,6 +12,8 @@
 #include "TTable.hpp"
 #include "ZobristTable.hpp"
 #include <thread>
+#include <atomic>
+#include <unistd.h>
 /**
  * @brief Game class
  * This game is a simple implementation of the gomoku game using minimax algorithm.
@@ -93,16 +95,16 @@ class Gomoku
         {
             ILLEGAL_SCORE          = -1,
 
-            FIVE_SCORE             = 1000001,
-            OPEN_FOUR_SCORE        = 1000000,
-            FIVE_BLOCK_SCORE       = 500000,
-            CAPTURE_SCORE          = 200000,
-            FOUR_SCORE             = 10000,
-            OPEN_THREE_SCORE       = 1000,
-            OPEN_BLOCK_SCORE       = 1000,
-            THREE_SCORE            = 100,
-            OPEN_TWO_SCORE         = 100,
-            TWO_SCORE              = 10,
+            FIVE_SCORE             = 100001,
+            OPEN_FOUR_SCORE        = 100000,
+            FIVE_BLOCK_SCORE       = 50000,
+            CAPTURE_SCORE          = 20000,
+            FOUR_SCORE             = 1000,
+            OPEN_THREE_SCORE       = 100,
+            OPEN_BLOCK_SCORE       = 100,
+            THREE_SCORE            = 10,
+            OPEN_TWO_SCORE         = 10,
+            TWO_SCORE              = 1,
             ZERO_SCORE             = 0
         }                   t_scores;
 
@@ -139,6 +141,11 @@ class Gomoku
                 return (this->x == rhs.x && this->y == rhs.y);
             }
             
+            bool operator!=(const s_coord& rhs) const
+            {
+                return (this->x != rhs.x || this->y != rhs.y);
+            }
+
             s_coord operator+(const s_coord& rhs) const
             {
                 return (s_coord{this->x + rhs.x, this->y + rhs.y});
@@ -318,7 +325,7 @@ class Gomoku
         bool                                    _game_over;
         TTable                                  _ttable;
         t_coord                                 _last_best;
-
+        double                                  average_time;
     public:
 
         t_board                                 _board;
@@ -337,14 +344,15 @@ class Gomoku
         t_moveset               generate_rule_moveset(t_piece piece, t_board &board);
         t_player                get_player(t_player_type player_type, t_piece player_color, t_difficulty difficulty);
         t_scored_move           negascout(t_moveset& moveset, t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
-        t_sorted_updates        generate_sorted_updates(t_moveset& moveset, t_board &board, t_piece piece);
+        t_sorted_updates        generate_sorted_updates(t_moveset& moveset, t_board &board, t_piece piece, uint8_t depth);
         t_sequence              extract_winning_sequence(t_board &board, t_piece piece, t_coord start_coord);
         int64_t                 evaluate_board(t_board &board, t_piece player_color, t_capture_count capture_count);
         int64_t                 evaluate_moveset(t_moveset& moveset, t_board &board, t_piece player_color, t_capture_count capture_count);
         int32_t                 evaluate_dir(t_board &board, t_coord piece_coord, t_piece piece, t_coord direction, bool capture = false);
         int32_t                 evaluate_move(t_board &board, t_coord piece_coord, t_piece piece);
         void                    make_move(t_player& player, t_player& opponent, t_board& board);
-        void                    generate_scored_update(t_board &board, t_coord move, t_piece piece, t_scored_update& scored_update);
+        void                    update_ttable(TTable& ttable, t_board& board, t_scored_move& best_move, uint8_t depth, int64_t alpha, int64_t beta);
+        void                    generate_scored_update(t_board &board, t_coord move, t_piece piece, t_scored_update& scored_update, uint8_t depth);
         void                    update_game_state(t_board& board, t_player& player, t_coord current_move);
         void                    update_node_state(t_board &board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
         void                    revert_node_state(t_board &board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
@@ -358,4 +366,7 @@ class Gomoku
         char                    get_game_command();
 
 
+        void                    generate_update(t_board &board, t_coord move, t_piece piece, t_update_list& update_list);
+        int64_t                 ProbeHash(t_board& board, uint8_t depth, int64_t alpha, int64_t beta);
+        bool                    is_coord_between(t_coord point, t_coord coordA, t_coord coordB);
 };
