@@ -481,7 +481,7 @@ Gomoku::Gomoku(uint8_t board_size, t_difficulty first_difficulty,
     this->_first_player  = get_player(first_player_type, Gomoku::BLACK, first_difficulty);
     this->_second_player = get_player(second_player_type, Gomoku::WHITE, second_difficulty);
     this->_rule = rule;
-    this->_depth = 3;
+    this->_depth = 4;
     this->_game_over = false;
     this->_turn = 0;
 }
@@ -621,27 +621,40 @@ int64_t Gomoku::evaluate_board(t_board &board, t_piece player_color, t_capture_c
                     if (board.get_piece(current_coord) == GET_OPPONENT(current_player))
                         break;
                 }
+
                 if (board.get_piece(current_coord) == GET_OPPONENT(current_player))
                     tail_block = true;
-                if (pattern_length != 5 && head_block && tail_block)
-                    continue;
+                // if (pattern_length != 5 && head_block && tail_block)
+                //     continue;
                 uint16_t head_pattern = current_pattern;
                 uint16_t tail_pattern = ((current_pattern & FIVE_MASK) << 2) | board.get_piece(current_coord);
 
                 if (current_player == player_color)
                 {
-                    if (player_patterns.count(head_pattern))
-                        pattern_score = player_patterns.at(head_pattern);
-                    if (player_patterns.count(tail_pattern))
-                        pattern_score = player_patterns.at(tail_pattern);;
+                    if (tail_block)
+                    {
+                        if (player_patterns.count(tail_pattern))
+                            pattern_score = player_patterns.at(tail_pattern);;
+                    }
+                    else
+                    {
+                        if (player_patterns.count(head_pattern))
+                            pattern_score = player_patterns.at(head_pattern);
+                    }
                     score += pattern_score;
                 }
                 else
                 {
-                    if (opp_patterns.count(head_pattern))
-                        pattern_score = opp_patterns.at(head_pattern);
-                    if (opp_patterns.count(tail_pattern))
-                        pattern_score = opp_patterns.at(tail_pattern);
+                    if (tail_block)
+                    {
+                        if (opp_patterns.count(tail_pattern))
+                            pattern_score = opp_patterns.at(tail_pattern);
+                    }
+                    else
+                    {
+                        if (opp_patterns.count(head_pattern))
+                            pattern_score = opp_patterns.at(head_pattern);
+                    }
                     score -= pattern_score;
                 }
             }
@@ -855,12 +868,13 @@ Gomoku::t_scored_move Gomoku::negascout(t_moveset& moveset,
         this->update_node_state(board, added_moveset, moveset, update.updates);
         if (update.move.winning || count.maximizer_count >= MAX_CAPTURE)
         {
+            best_eval.coord = update.move.coord;
             best_eval.score = this->evaluate_board(board, piece, count);
-            if (is_winning_move(board, moveset, piece, update.move.coord, count.maximizer_count))
-            {
-                this->revert_node_state(board, added_moveset, moveset, update.updates);
-                return t_scored_move{update.move.coord, this->evaluate_board(board, piece, count)};
-            }
+            // if (is_winning_move(board, moveset, piece, update.move.coord, count.maximizer_count))
+            // {
+            this->revert_node_state(board, added_moveset, moveset, update.updates);
+            return best_eval;
+            // }
             // return (t_scored_move{update.move.coord, INTMAX_MAX - depth});
         }
         if (best_eval.score == -INTMAX_MIN)
