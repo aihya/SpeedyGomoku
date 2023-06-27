@@ -45,6 +45,7 @@ class Gomoku
 #define STOP_GAME() this->_game_over = true
 #define IS_GAME_OVER() this->_game_over
 
+
 #define PRINT_COORD(coord) std::cout << coord;
 #define PRINT_CAPTURE_COUNT() std::cout << (int)this->_first_player.capture_count << " " << (int)this->_second_player.capture_count << std::endl
 #define PRINT_PLAYER_WIN(player) std::cout << "Player " << player << " wins !" << std::endl
@@ -348,10 +349,11 @@ class Gomoku
         t_sequence              extract_winning_sequence(t_board &board, t_piece piece, t_coord start_coord);
         int64_t                 evaluate_board(t_board &board, t_piece player_color, t_capture_count capture_count);
         int64_t                 evaluate_moveset(t_moveset& moveset, t_board &board, t_piece player_color, t_capture_count capture_count);
-        int32_t                 evaluate_dir(t_board &board, t_coord piece_coord, t_piece piece, t_coord direction, bool capture = false);
+        int32_t                 evaluate_move(t_board &board, t_coord piece_coord, t_piece piece, t_coord direction, bool capture = false);
+        int64_t                 evaluate_pattern(t_board& board, t_coord start, t_piece player_color, std::set<std::pair<t_coord, t_coord>> &head_tail_set);
         int32_t                 evaluate_move(t_board &board, t_coord piece_coord, t_piece piece);
         void                    make_move(t_player& player, t_player& opponent, t_board& board);
-        void                    update_ttable(TTable& ttable, t_board& board, t_scored_move& best_move, uint8_t depth, int64_t alpha, int64_t beta);
+        void                    update_ttable(t_board& board, t_scored_move& best_move, uint8_t depth, int64_t alpha, int64_t beta);
         void                    generate_scored_update(t_board &board, t_coord move, t_piece piece, t_scored_update& scored_update, uint8_t depth);
         void                    update_game_state(t_board& board, t_player& player, t_coord current_move);
         void                    update_node_state(t_board &board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
@@ -364,9 +366,4 @@ class Gomoku
         bool                    is_winning_move(t_board &board, t_moveset &moveset, t_piece piece, t_coord move, uint8_t capture_count);
         bool                    is_inside_square(t_board& board, t_coord piece_coord);
         char                    get_game_command();
-
-
-        void                    generate_update(t_board &board, t_coord move, t_piece piece, t_update_list& update_list);
-        int64_t                 ProbeHash(t_board& board, uint8_t depth, int64_t alpha, int64_t beta);
-        bool                    is_coord_between(t_coord point, t_coord coordA, t_coord coordB);
 };
