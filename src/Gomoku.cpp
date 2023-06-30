@@ -481,7 +481,7 @@ Gomoku::Gomoku(uint8_t board_size, t_difficulty first_difficulty,
     this->_first_player  = get_player(first_player_type, Gomoku::BLACK, first_difficulty);
     this->_second_player = get_player(second_player_type, Gomoku::WHITE, second_difficulty);
     this->_rule = rule;
-    this->_depth = 3;
+    this->_depth = 4;
     this->_game_over = false;
     this->_turn = 0;
 }
@@ -520,22 +520,18 @@ bool    Gomoku::is_move_valid(t_board& board, t_coord piece_coord, t_piece piece
     return (score != Gomoku::ILLEGAL_SCORE);
 }
 
-int32_t Gomoku::evaluate_move(t_board &board, t_coord piece_coord, t_piece piece, t_coord direction, bool board_eval)
+int32_t Gomoku::evaluate_move(t_board &board, t_coord piece_coord, t_piece piece, t_coord direction)
 {
     int32_t                                 attack_score;
-    int32_t                                 defense_score;
     uint16_t                                current_pattern;
-    uint16_t                                initial_pattern;
     t_piece                                 current_piece;
     t_coord                                 pattern_position;
 
     const std::map<uint16_t, t_scores>      &attack_patterns         = Gomoku::_attack_patterns.at(piece);
     const std::map<uint16_t, t_scores>      &capture_patterns        = Gomoku::_capture_patterns.at(piece);
     const std::map<uint16_t, t_scores>      &illegal_patterns        = Gomoku::_illegal_patterns.at(piece);
-    const std::map<uint16_t, t_scores>      &defense_patterns        = Gomoku::_defense_patterns.at(piece);
 
     attack_score = 0;
-    defense_score = 0;
     current_pattern = 0;
     pattern_position = piece_coord + direction;
     for (int j = 0; j < 5; j++)
@@ -548,18 +544,16 @@ int32_t Gomoku::evaluate_move(t_board &board, t_coord piece_coord, t_piece piece
     {
         current_piece = board.get_piece(piece_coord);
         current_pattern = ((uint16_t)(current_piece) << 10 | current_pattern);
-        if (board_eval == false && illegal_patterns.count(current_pattern))
+        if (illegal_patterns.count(current_pattern))
             return (Gomoku::ILLEGAL_SCORE);
         if (capture_patterns.count(current_pattern))
             return (Gomoku::CAPTURE_SCORE);
         if (attack_patterns.count(current_pattern))
             attack_score = std::max(int32_t(attack_patterns.at(current_pattern)), attack_score);
-        if (defense_patterns.count(current_pattern))
-            defense_score = std::max(int32_t(defense_patterns.at(current_pattern)), defense_score);   
         piece_coord -= direction;
         current_pattern >>= 2;
     }
-    return (attack_score + defense_score);
+    return (attack_score);
 }
 
 int64_t Gomoku::evaluate_pattern(t_board& board, t_coord start, t_piece player_color, std::set<std::pair<t_coord, t_coord>> &head_tail_set)
@@ -637,49 +631,6 @@ int64_t Gomoku::evaluate_board(t_board &board, t_piece player_color, t_capture_c
         } while (piece_coord.x < board.size);
     }
 
-    return (score);
-}
-int64_t Gomoku::evaluate_moveset(t_moveset& moveset, t_board &board, t_piece player_color, t_capture_count capture_count)
-{
-    int64_t       score = 0;
-    int32_t       move_score = 0;
-    int32_t       pattern_score = 0;
-    t_update_list captured_stones;
-    
-    score += capture_count.maximizer_count * Gomoku::CAPTURE_SCORE;
-    score -= capture_count.minimizer_count * Gomoku::CAPTURE_SCORE;
-    for (const auto& move : moveset)
-    {
-        for (const auto& piece: {Gomoku::WHITE, Gomoku::BLACK})
-        {
-            board.add_piece(move, piece);
-            for (auto& dir: this->_directions)
-            {
-                pattern_score = this->evaluate_move(board, move, piece, dir, false);
-                if (move_score == Gomoku::ILLEGAL_SCORE)
-                {
-                    move_score = 0;
-                    break;
-                }
-                if (pattern_score == Gomoku::CAPTURE_SCORE)
-                {
-                    captured_stones.clear();
-                    this->extract_captured_stoned(board, captured_stones, move, dir, piece);
-                    move_score += (captured_stones.size() / 2) * Gomoku::CAPTURE_SCORE;
-                    this->update_board(board, captured_stones);
-                    move_score += this->evaluate_move(board, move, piece, dir, false);
-                    this->revert_board_update(board, captured_stones);
-                }
-                else
-                    move_score += pattern_score;
-            }
-            if (piece == player_color)
-                score += move_score;
-            else
-                score -= move_score;
-            board.remove_piece(move);
-        }
-    }
     return (score);
 }
 
@@ -913,16 +864,15 @@ Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent, t_board& b
 {
     t_coord         best_move;
     t_moveset       current_moveset = this->_ai_moveset;
-    t_board         new_board(board);
 
     if (_turn == 0)
-        best_move = GET_BOARD_CENTER(new_board);
+        best_move = GET_BOARD_CENTER(board);
     else
     {
         if (_turn == 2 && this->_rule != Gomoku::STANDARD)
-            current_moveset = this->generate_rule_moveset(player.piece, new_board);
+            current_moveset = this->generate_rule_moveset(player.piece, board);
         best_move = this->iterative_depth_search(current_moveset,
-            new_board, this->_depth,
+            board, this->_depth,
             t_prunner{-INTMAX_MAX, INTMAX_MAX},
             t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
     }
@@ -933,9 +883,6 @@ Gomoku::t_coord Gomoku::human_move(t_player& player, t_player &opponent, t_board
 {
     t_coord coord;
 
-    // simulate the best move in another thread
-    // std::thread t(&Gomoku::ai_move, this, std::ref(player), std::ref(opponent), std::ref(board));
-    // t.detach();
     for (;;)
     {
         try
@@ -962,7 +909,6 @@ Gomoku::t_coord Gomoku::human_move(t_player& player, t_player &opponent, t_board
             std::cout << "Invalid move" << '\n';
         }
     }
-    // terminate thread if no move is made
     return (coord);
 }
 
@@ -1064,19 +1010,7 @@ void Gomoku::start_game()
             break;
         this->make_move(GET_CURRENT_PLAYER(), GET_OPPONENT_PLAYER(), this->_board);
     }
-        // this->_board.add_piece({9, 9}, Gomoku::BLACK);
-        // this->_board.add_piece({9, 6}, Gomoku::WHITE);
-        // this->_board.add_piece({9, 7}, Gomoku::WHITE);
-        // this->_board.add_piece({9, 8}, Gomoku::WHITE);
-        // this->_board.add_piece({9, 9}, Gomoku::BLACK);
-        // this->_board.add_piece({9, 10}, Gomoku::BLACK);
-        // this->_board.add_piece({9, 11}, Gomoku::BLACK);
-        // this->_board.add_piece({9, 12}, Gomoku::BLACK);
-        // this->_board.add_piece({9, 13}, Gomoku::BLACK);
-        // std::cout << this->evaluate_board(this->_board, Gomoku::BLACK, {0, 0}) << std::endl;
-        // print_board(this->_board, Gomoku::BLACK);
     this->average_time /= this->_turn;
-
     std::cout << "Average time: " << this->average_time << std::endl;
 }
 

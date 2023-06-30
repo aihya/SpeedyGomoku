@@ -349,7 +349,7 @@ class Gomoku
         t_sequence              extract_winning_sequence(t_board &board, t_piece piece, t_coord start_coord);
         int64_t                 evaluate_board(t_board &board, t_piece player_color, t_capture_count capture_count);
         int64_t                 evaluate_moveset(t_moveset& moveset, t_board &board, t_piece player_color, t_capture_count capture_count);
-        int32_t                 evaluate_move(t_board &board, t_coord piece_coord, t_piece piece, t_coord direction, bool capture = false);
+        int32_t                 evaluate_move(t_board &board, t_coord piece_coord, t_piece piece, t_coord direction);
         int64_t                 evaluate_pattern(t_board& board, t_coord start, t_piece player_color, std::set<std::pair<t_coord, t_coord>> &head_tail_set);
         int32_t                 evaluate_move(t_board &board, t_coord piece_coord, t_piece piece);
         void                    make_move(t_player& player, t_player& opponent, t_board& board);
