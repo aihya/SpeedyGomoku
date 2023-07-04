@@ -13,12 +13,12 @@ class TTable {
         typedef struct s_TTEntry {
             int                 depth;
             std::pair<int, int> best_move;
-            int64_t             value;
-            t_bound             type;
+            int64_t             score;
+            t_bound             bound;
         }               t_TTEntry;
 
-        void add_entry(uint64_t zobrist, int depth, std::pair<int, int> best_move, int64_t value, t_bound type) {
-            table[zobrist] = {depth, best_move, value, type};
+        void add_entry(uint64_t zobrist, int depth, std::pair<int, int> best_move, int64_t value, t_bound bound) {
+            table[zobrist] = {depth, best_move, value, bound};
         }
 
         t_TTEntry get_entry(uint64_t zobrist) {
