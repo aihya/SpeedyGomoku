@@ -514,6 +514,7 @@ bool    Gomoku::is_move_valid(t_board& board, t_coord piece_coord, t_piece piece
 int32_t Gomoku::evaluate_move(t_board &board, t_coord piece_coord, t_piece piece, t_coord direction)
 {
     int32_t                                 attack_score;
+    int32_t                                 defense_score;
     uint16_t                                current_pattern;
     t_piece                                 current_piece;
     t_coord                                 pattern_position;
@@ -521,8 +522,10 @@ int32_t Gomoku::evaluate_move(t_board &board, t_coord piece_coord, t_piece piece
     const std::map<uint16_t, t_scores>      &attack_patterns         = Gomoku::_attack_patterns.at(piece);
     const std::map<uint16_t, t_scores>      &capture_patterns        = Gomoku::_capture_patterns.at(piece);
     const std::map<uint16_t, t_scores>      &illegal_patterns        = Gomoku::_illegal_patterns.at(piece);
+    const std::map<uint16_t, t_scores>      &defense_patterns        = Gomoku::_defense_patterns.at(piece);
 
     attack_score = 0;
+    defense_score = 0;
     current_pattern = 0;
     pattern_position = piece_coord + direction;
     for (int j = 0; j < 5; j++)
@@ -541,10 +544,12 @@ int32_t Gomoku::evaluate_move(t_board &board, t_coord piece_coord, t_piece piece
             return (Gomoku::CAPTURE_SCORE);
         if (attack_patterns.count(current_pattern))
             attack_score = std::max(int32_t(attack_patterns.at(current_pattern)), attack_score);
+        if (defense_patterns.count(current_pattern))
+            attack_score = std::max(int32_t(defense_patterns.at(current_pattern)), attack_score);
         piece_coord -= direction;
         current_pattern >>= 2;
     }
-    return (attack_score);
+    return (attack_score + defense_score);
 }
 
 int64_t Gomoku::evaluate_pattern(t_board& board, t_coord start, t_piece player_color, std::set<std::pair<t_coord, t_coord>> &head_tail_set)
@@ -572,9 +577,14 @@ int64_t Gomoku::evaluate_pattern(t_board& board, t_coord start, t_piece player_c
         current_pattern = board.get_piece(head_tail.first);
         for (int pattern_length = 0; pattern_length < 5; pattern_length++)
         {
+            if (board.get_piece(current_coord) == GET_OPPONENT(player_color))
+            {
+                current_pattern = 0;
+                break;
+            }
+            head_tail_set.insert(head_tail);
             current_pattern  <<= 2;
             current_pattern  |= board.get_piece(current_coord);
-            head_tail_set.insert(head_tail);
             current_coord    += dir;
             head_tail.first  += dir;
             head_tail.second += dir;
@@ -602,11 +612,7 @@ int64_t Gomoku::evaluate_board(t_board &board, t_piece player_color, t_capture_c
     t_coord                                 piece_coord;
     t_piece                                 current_player;
     std::set<std::pair<t_coord, t_coord>>   head_tail_set;
-    static std::array<std::array<uint32_t, 19>, 4>   head_tail_log;
 
-    // for (int j = 0; j < 19; j++)
-    //     for (int i = 0; i < 4; i++)
-    //         head_tail_log[i][j] = 0;
     score = capture_count.maximizer_count * Gomoku::CAPTURE_SCORE;
     score -= capture_count.minimizer_count * Gomoku::CAPTURE_SCORE;
     for (piece_coord.y = 0; piece_coord.y < board.size; piece_coord.y++)
@@ -624,9 +630,6 @@ int64_t Gomoku::evaluate_board(t_board &board, t_piece player_color, t_capture_c
                 score -= evaluate_pattern(board, piece_coord, current_player, head_tail_set);
         } while (piece_coord.x < board.size);
     }
-    // for (int j = 0; j < 19; j++)
-    //     for (int i = 0; i < 4; i++)
-    //         head_tail_log[i][j] = 0;
     return (score);
 }
 
@@ -782,7 +785,7 @@ Gomoku::t_scored_move Gomoku::negascout(t_moveset& moveset,
     t_scored_move       best_eval;
     int64_t             alpha = prunner.alpha;
 
-    if (depth == 0 || !moveset.size()) // should add a function call for final state
+    if (depth == 0) // should add a function call for final state
         return (t_scored_move{Gomoku::_invalid_coord, this->evaluate_board(board, piece, count)});
     best_eval = t_scored_move{Gomoku::_invalid_coord, -INTMAX_MAX};
     // due to the results killer moves should always be the first move played in an iteration / it will mak the ai way faster !
@@ -799,6 +802,9 @@ Gomoku::t_scored_move Gomoku::negascout(t_moveset& moveset,
                 this->revert_node_state(board, added_moveset, moveset, update.updates);
                 return (t_scored_move{update.move.coord, INTMAX_MAX - depth});
             }
+            best_eval = t_scored_move{update.move.coord, this->evaluate_board(board, piece, count)};
+            this->revert_board_update(board, update.updates);
+            return (best_eval);
         }
         if (best_eval.score == -INTMAX_MIN)
             move_eval = -this->negascout(moveset, board, depth - 1, FLIP_PRUNNER(prunner), FLIP_CAPTURE(count), GET_OPPONENT(piece));
@@ -853,22 +859,22 @@ Gomoku::t_coord Gomoku::iterative_depth_search(t_moveset& moveset,
 
     this->_last_best = t_scored_move{Gomoku::_invalid_coord, -INTMAX_MIN};
     // sorted_updates = this->generate_sorted_updates(moveset, board, piece);
-    move_score = this->negascout(moveset, board, depth, INITIAL_PRUNNER, count, piece);
-    // for (uint8_t depth = 1; depth < this->_depth; depth++)
-    // {
-    //     for (const auto& update: sorted_updates)
-    //     {
-    //         auto end = std::chrono::steady_clock::now();
-    //         if (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() >= 500)
-    //             break;
-    //         update_board(board, update.updates);
-    //         if (move_score.score > best_move.score)
-    //             best_move = move_score;
-    //     }
-    //     this->_last_best = best_move;
-    //     // this should be catched by the visu and stored in case the ai is too slow
-    //     std::cout << "depth: " << (int)depth << " coord: " << this->_last_best.coord << std::endl;
-    // }
+    for (uint8_t i_depth = 1; i_depth < depth; i_depth++)
+    {
+        // for (const auto& update: sorted_updates)
+        // {
+        auto end = std::chrono::steady_clock::now();
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() >= 500)
+            break;
+        //     update_board(board, update.updates);
+        //     if (move_score.score > best_move.score)
+        //         best_move = move_score;
+        // }
+        // this->_last_best = best_move;
+        // // this should be catched by the visu and stored in case the ai is too slow
+        // std::cout << "depth: " << (int)depth << " coord: " << this->_last_best.coord << std::endl;
+        move_score = this->negascout(moveset, board, i_depth, INITIAL_PRUNNER, count, piece);
+    }
     return (move_score.coord);
 }
 
