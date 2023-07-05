@@ -96,9 +96,9 @@ class Gomoku
         {
             ILLEGAL_SCORE          = -1,
 
-            FIVE_SCORE             = 100001,
-            OPEN_FOUR_SCORE        = 100000,
-            FIVE_BLOCK_SCORE       = 50000,
+            FIVE_SCORE             = 1000001,
+            OPEN_FOUR_SCORE        = 1000000,
+            FIVE_BLOCK_SCORE       = 1000000,
             CAPTURE_SCORE          = 20000,
             FOUR_SCORE             = 1000,
             OPEN_THREE_SCORE       = 100,
@@ -293,6 +293,17 @@ class Gomoku
             uint8_t         minimizer_count;
         }                   t_capture_count;
 
+        typedef struct      s_move_occurence
+        {
+            t_coord         coord;
+            uint8_t         occurence;
+
+            bool operator< (const s_move_occurence& rhs) const
+            {
+                return (this->coord < rhs.coord);
+            }
+        }                   t_move_occurence;
+
         // instead of having and added moveset set for each node we can make the moveset know if it's been added or not
         typedef struct    s_move
         {
@@ -305,8 +316,8 @@ class Gomoku
     private:
 
         typedef std::map< Gomoku::e_piece, std::map<uint16_t, t_scores> >       t_patterns;
-        typedef std::set<t_coord>                                               t_moveset;
-        // typedef std::set<t_move>                                                t_moveset;<-- each time we add a move we increment the dependency count of the move it's generating
+        // typedef std::map<t_coord, int>                                          t_moveset;
+        typedef std::set<t_coord>                                               t_moveset;// <-- each time we add a move we increment the dependency count of the move it's generating
         typedef std::vector<t_coord>                                            t_sequence;
         typedef std::set<t_scored_update>                                       t_sorted_updates;
 
@@ -321,7 +332,7 @@ class Gomoku
         const static t_patterns                 _illegal_patterns;
         const static t_patterns                 _capture_patterns;
         const static t_coord                    _invalid_coord;
-;
+
         uint8_t                                 _depth;
         t_player                                _first_player;
         t_player                                _second_player;
@@ -330,7 +341,8 @@ class Gomoku
         t_rule                                  _rule;
         bool                                    _game_over;
         TTable                                  _ttable;
-        t_scored_move                           _last_best;
+        uint8_t                                 _current_depth;
+        t_coord                                 _last_best;
         double                                  average_time;
     public:
 
@@ -350,7 +362,8 @@ class Gomoku
         t_moveset               generate_rule_moveset(t_piece piece, t_board &board);
         t_player                get_player(t_player_type player_type, t_piece player_color, t_difficulty difficulty);
         t_scored_move           negascout(t_moveset& moveset, t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
-        t_sorted_updates        generate_sorted_updates(t_moveset& moveset, t_board &board, t_piece piece);
+        // t_sorted_updates        generate_sorted_updates(t_moveset& moveset, t_board &board, t_piece piece);
+        t_sorted_updates        generate_sorted_updates(t_moveset& moveset, t_board &board, t_piece piece, uint8_t depth = 0);
         t_sequence              extract_winning_sequence(t_board &board, t_piece piece, t_coord start_coord);
         int64_t                 evaluate_board(t_board &board, t_piece player_color, t_capture_count capture_count);
         int32_t                 evaluate_move(t_board &board, t_coord piece_coord, t_piece piece, t_coord direction);
