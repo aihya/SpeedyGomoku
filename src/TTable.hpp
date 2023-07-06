@@ -14,20 +14,28 @@ class TTable {
             int                 depth;
             std::pair<int, int> best_move;
             int64_t             score;
+            int                 piece;
+            uint64_t            hash;
             t_bound             bound;
         }               t_TTEntry;
 
-        void add_entry(uint64_t zobrist, int depth, std::pair<int, int> best_move, int64_t value, t_bound bound) {
-            table[zobrist] = {depth, best_move, value, bound};
+        void add_entry(uint64_t zobrist, int depth, std::pair<int, int> best_move, int64_t value, int piece, t_bound bound) {
+            table[zobrist % size] = {depth, best_move, value, piece, zobrist,bound};
         }
 
         t_TTEntry get_entry(uint64_t zobrist) {
-            auto it = table.find(zobrist);
-            if (it == table.end()) {
-                return {-1, {-1, -1}, -1, TTable::ERROR};
-            }
-            return it->second;
+            return table[zobrist % size];
+        }
+        TTable(size_t size_in_mb) {
+            size = size_in_mb * 1024 * 1024 / sizeof(s_TTEntry);
+            table = new t_TTEntry[size];
+            for (size_t i = 0; i < size; i++)
+                table[i] = {0, {0, 0}, 0, 0, ERROR};
+        }
+        ~TTable() {
+            delete[] table;
         }
     private:
-        std::unordered_map<uint64_t, s_TTEntry> table;
+        t_TTEntry *table;
+        size_t    size;
 };
