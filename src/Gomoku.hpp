@@ -36,7 +36,7 @@ class Gomoku
 
 #define FLIP_CAPTURE(capture) t_capture_count{capture.minimizer_count, capture.maximizer_count}
 #define FLIP_PRUNNER(prunner) t_prunner{-prunner.beta, -prunner.alpha}
-#define SW_PRUNNER(prunner) t_prunner{-prunner.alpha - 1, -prunner.alpha}
+#define SW_PRUNNER(prunner) t_prunner{-(prunner.alpha + 1), -prunner.alpha}
 #define INITIAL_PRUNNER t_prunner{-INTMAX_MAX, INTMAX_MAX}
 
 #define GET_CURRENT_PLAYER() ((this->_turn % 2 == 0) ? this->_first_player : this->_second_player)
@@ -402,8 +402,9 @@ class Gomoku
         void                    update_ttable(t_board& board, t_scored_move& best_move, uint8_t depth, int64_t alpha, int64_t beta);
         void                    generate_scored_update(t_board &board, t_coord move, t_piece piece, t_scored_update& scored_update);
         void                    update_game_state(t_board& board, t_player& player, t_coord current_move);
-        void                    update_node_state(t_board &board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
-        void                    revert_node_state(t_board &board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
+        // void                    update_node_state(t_board &board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
+        void                    update_node_state(t_board &board, t_piece piece, t_moveset &added_moves, t_moveset &moveset, const t_scored_update& sorted_update);
+        void                    revert_node_state(t_board &board, t_piece piece, t_moveset &added_moves, t_moveset &moveset, const t_scored_update& sorted_update);
         void                    extract_captured_stoned(t_board &board, t_update_list& update_list, t_coord move, t_coord dir, t_piece piece);
         void                    update_board(t_board &board, const t_update_list &update_list);
         void                    revert_board_update(t_board &board, const t_update_list &update_list);
@@ -413,6 +414,6 @@ class Gomoku
         bool                    is_inside_square(t_board& board, t_coord piece_coord);
         char                    get_game_command();
 
-        bool is_final_state(t_board& board);
+        t_piece is_final_state(t_board& board);
         int  distance_to_edge(t_board& board, t_coord position, t_coord direction);
 };
