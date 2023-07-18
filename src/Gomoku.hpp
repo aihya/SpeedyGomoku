@@ -14,6 +14,7 @@
 #include <thread>
 #include <atomic>
 #include <unistd.h>
+#include <unordered_set>
 /**
  * @brief Game class
  * This game is a simple implementation of the gomoku game using minimax algorithm.
@@ -36,7 +37,7 @@ class Gomoku
 
 #define FLIP_CAPTURE(capture) t_capture_count{capture.minimizer_count, capture.maximizer_count}
 #define FLIP_PRUNNER(prunner) t_prunner{-prunner.beta, -prunner.alpha}
-#define SW_PRUNNER(prunner) t_prunner{-(prunner.alpha + 1), -prunner.alpha}
+#define SW_PRUNNER(prunner) t_prunner{-prunner.alpha - 1, -prunner.alpha}
 #define INITIAL_PRUNNER t_prunner{-INTMAX_MAX, INTMAX_MAX}
 
 #define GET_CURRENT_PLAYER() ((this->_turn % 2 == 0) ? this->_first_player : this->_second_player)
@@ -55,6 +56,8 @@ class Gomoku
 #define MAX_CAPTURE 5U
 #define LONG_PRO_SIZE 7
 #define PRO_SIZE 5
+#define MAX_BOARD_EVAL  INTMAX_MAX - 1000
+#define MIN_BOARD_EVAL -INTMAX_MAX + 1000
 
     public:
         typedef enum        e_piece
@@ -206,12 +209,10 @@ class Gomoku
         {
             t_coord         coord;
             int64_t         score;
-            bool            winning;
-
             // overload of unary minus operator
             s_scored_move operator-() const
             {
-                return (s_scored_move{this->coord, -this->score, this->winning});
+                return (s_scored_move{this->coord, -this->score});
             }
         }                   t_scored_move;
 
@@ -220,8 +221,8 @@ class Gomoku
             uint8_t         cupture_count;
             t_scored_move   move;
             t_update_list   updates;
-            inline bool operator< (const s_scored_update& s_update) const {
-                return (this->move.score > s_update.move.score || (this->move.coord < s_update.move.coord));
+            inline bool operator> (const s_scored_update& s_update) const {
+                return (this->move.score > s_update.move.score );
             }
         }                   t_scored_update;
 
@@ -268,7 +269,7 @@ class Gomoku
                     this->capture_count.black_count += count;
                 else
                     this->capture_count.white_count += count;
-                this->hash ^= this->capture_count.capture_hash;
+                // this->hash ^= this->capture_count.capture_hash;
             }
 
             inline void remove_capture(t_piece piece, uint8_t count)
@@ -315,23 +316,6 @@ class Gomoku
             int64_t beta;
         }                   t_prunner;
 
-        // typedef struct      s_capture_count
-        // {
-        //     uint8_t         maximizer_count;
-        //     uint8_t         minimizer_count;
-        // }                   t_capture_count;
-
-        typedef struct      s_move_occurence
-        {
-            t_coord         coord;
-            uint8_t         occurence;
-
-            bool operator< (const s_move_occurence& rhs) const
-            {
-                return (this->coord < rhs.coord);
-            }
-        }                   t_move_occurence;
-
         // instead of having and added moveset set for each node we can make the moveset know if it's been added or not
         typedef struct    s_move
         {
@@ -340,14 +324,38 @@ class Gomoku
 
             s_move(t_coord coord, uint8_t dependency_count) : coord(coord), dependency_count(dependency_count) {}
             s_move(t_coord coord) : coord(coord), dependency_count(0) {}
+            bool operator==(const s_move& lhs)
+            {
+                return (lhs.coord == coord && lhs.dependency_count == dependency_count);
+            }
         }                 t_move;
-    private:
 
-        typedef std::map< Gomoku::e_piece, std::map<uint16_t, t_scores> >       t_patterns;
-        // typedef std::map<t_coord, int>                                          t_moveset;
-        typedef std::set<t_coord>                                               t_moveset;// <-- each time we add a move we increment the dependency count of the move it's generating
-        typedef std::vector<t_coord>                                            t_sequence;
-        typedef std::set<t_scored_update>                                       t_sorted_updates;
+    private:
+        // Hash function for t_coord
+        struct TCoordHash {
+            std::size_t operator()(const t_coord& coord) const {
+                std::size_t x_hash = std::hash<int>{}(coord.x);
+                std::size_t y_hash = std::hash<int>{}(coord.y);
+                return x_hash ^ y_hash;
+            }
+        };
+
+        // Custom hash function for std::pair<t_coord, t_coord>
+        struct PairHash {
+            std::size_t operator()(const std::pair<t_coord, t_coord>& pair) const {
+                std::size_t first_hash = TCoordHash{}(pair.first);
+                std::size_t second_hash = TCoordHash{}(pair.second);
+                return first_hash ^ (second_hash << 1);
+            }
+        };
+        
+        typedef std::map<uint16_t, t_scores>                               t_patterns;
+        typedef std::map<Gomoku::e_piece, t_patterns>                      t_pattern_dict;
+        typedef std::set<t_coord>                                          t_moveset;// <-- each time we add a move we increment the dependency count of the move it's generating
+        typedef std::vector<t_coord>                                       t_sequence;
+        typedef std::vector<t_scored_update>                               t_sorted_updates;
+        typedef std::array<std::array<t_coord, 2>, 300>                    t_killer_move;
+        typedef std::unordered_set<std::pair<t_coord, t_coord>, PairHash>  t_head_tail_set;
 
     private:
 
@@ -355,10 +363,10 @@ class Gomoku
         const static std::array<t_coord, 4>     _directions;
         const static std::vector<t_coord>       _moveset_cells;
 
-        const static t_patterns                 _attack_patterns;
-        const static t_patterns                 _defense_patterns;
-        const static t_patterns                 _illegal_patterns;
-        const static t_patterns                 _capture_patterns;
+        const static t_pattern_dict             _attack_patterns;
+        const static t_pattern_dict             _defense_patterns;
+        const static t_pattern_dict             _illegal_patterns;
+        const static t_pattern_dict             _capture_patterns;
         const static t_coord                    _invalid_coord;
 
         uint8_t                                 _depth;
@@ -378,6 +386,7 @@ class Gomoku
 
         t_board                                 _board;
         t_moveset                               _ai_moveset;
+        t_killer_move                           _killer_moves;
 
     public:
                                 Gomoku(uint8_t board_size, t_difficulty first_difficulty,
@@ -392,17 +401,16 @@ class Gomoku
         t_moveset               generate_rule_moveset(t_piece piece, t_board &board);
         t_player                get_player(t_player_type player_type, t_piece player_color, t_difficulty difficulty);
         t_scored_move           negascout(t_moveset& moveset, t_board &board, uint8_t depth, t_prunner prunner, t_piece piece);
-        // t_sorted_updates        generate_sorted_updates(t_moveset& moveset, t_board &board, t_piece piece);
-        t_sorted_updates        generate_sorted_updates(t_moveset& moveset, t_board &board, t_piece piece, TTable::t_TTEntry&entry, uint8_t depth = 0);
+        // t_sorted_updates        generate_sorted_updates(t_moveset& moveset, t_board &board, t_piece piece, uint8_t depth = 0);
+        void                    generate_sorted_updates(t_moveset& moveset, t_board &board, t_sorted_updates& sorted_updates, t_piece piece);
         t_sequence              extract_winning_sequence(t_board &board, t_piece piece, t_coord start_coord);
         int64_t                 evaluate_board(t_board &board, t_piece player_color);
         int32_t                 evaluate_move(t_board &board, t_coord piece_coord, t_piece piece, t_coord direction);
-        int64_t                 evaluate_pattern(t_board& board, t_coord start, t_piece player_color, std::set<std::pair<t_coord, t_coord>> &head_tail_set);
+        // int64_t                 evaluate_pattern(t_board& board, t_coord start, t_piece player_color, std::set<std::pair<t_coord, t_coord>> &head_tail_set);
+        int64_t                 evaluate_pattern(t_board& board, t_coord start, t_piece player_color, std::unordered_set<std::pair<t_coord, t_coord>, PairHash> &head_tail_set);
         void                    make_move(t_player& player, t_player& opponent, t_board& board);
-        void                    update_ttable(t_board& board, t_scored_move& best_move, uint8_t depth, int64_t alpha, int64_t beta);
         void                    generate_scored_update(t_board &board, t_coord move, t_piece piece, t_scored_update& scored_update);
         void                    update_game_state(t_board& board, t_player& player, t_coord current_move);
-        // void                    update_node_state(t_board &board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
         void                    update_node_state(t_board &board, t_piece piece, t_moveset &added_moves, t_moveset &moveset, const t_scored_update& sorted_update);
         void                    revert_node_state(t_board &board, t_piece piece, t_moveset &added_moves, t_moveset &moveset, const t_scored_update& sorted_update);
         void                    extract_captured_stoned(t_board &board, t_update_list& update_list, t_coord move, t_coord dir, t_piece piece);
@@ -410,10 +418,11 @@ class Gomoku
         void                    revert_board_update(t_board &board, const t_update_list &update_list);
         void                    print_board(t_board &board, t_piece current_piece);
         bool                    is_move_valid(t_board& board, t_coord piece_coord, t_piece piece);
-        bool                    is_winning_move(t_board &board, t_moveset &moveset, t_piece piece, t_coord move);
         bool                    is_inside_square(t_board& board, t_coord piece_coord);
         char                    get_game_command();
 
         t_piece is_final_state(t_board& board);
         int  distance_to_edge(t_board& board, t_coord position, t_coord direction);
+
+        t_scored_move           minimax_with_memory(t_moveset& moveset, t_board &board, uint8_t depth, t_prunner prunner, t_piece piece, bool max);
 };
