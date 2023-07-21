@@ -269,7 +269,7 @@ class Gomoku
                     this->capture_count.black_count += count;
                 else
                     this->capture_count.white_count += count;
-                // this->hash ^= this->capture_count.capture_hash;
+                this->hash ^= this->capture_count.capture_hash;
             }
 
             inline void remove_capture(t_piece piece, uint8_t count)
@@ -294,14 +294,9 @@ class Gomoku
                 return (t_piece)((this->data[piece_coord.y] >> (piece_coord.x << 1)) & 3);
             }
 
-            inline uint64_t get_cell_value(t_coord piece_coord, t_piece piece)
-            {
-                return (this->zobrist_table->get(piece % 2, piece_coord.y * this->size + piece_coord.x));
-            }
-
             inline void update_piece_hash(t_coord piece_coord, t_piece piece)
             {
-                this->hash ^= this->get_cell_value(piece_coord, piece);
+                this->hash ^= this->zobrist_table->get(piece >> 1, (piece_coord.y * this->size) + piece_coord.x);
             }
         }            t_board;
         typedef struct                  s_player

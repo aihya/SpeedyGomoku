@@ -25,16 +25,16 @@ class TTable {
         void add_entry(uint64_t zobrist, int depth, std::pair<int, int> best_move, int64_t value, int piece, t_bound bound) {
             if (table[index(zobrist)].bound != ERROR)
             {
-                if (table[index(zobrist)].hash == zobrist && table[index(zobrist)].depth <= depth)
-                    table[zobrist % size] = {depth, best_move, value, piece, zobrist,bound};
+                if (table[index(zobrist)].depth <= depth)
+                    table[index(zobrist)] = {depth, best_move, value, piece, zobrist,bound};
             }
             else
-                table[zobrist % size] = {depth, best_move, value, piece, zobrist,bound};
+                table[index(zobrist)] = {depth, best_move, value, piece, zobrist,bound};
         }
 
         t_TTEntry* get_entry(uint64_t zobrist) {
             if (table[zobrist %  size].hash == zobrist)
-                return &table[zobrist % size];
+                return &table[index(zobrist)];
             return NULL;
         }
 
@@ -44,11 +44,20 @@ class TTable {
                 table[i] = {0, {0, 0}, 0, 0, ERROR};            
         }
 
+        t_TTEntry *get_table(void)
+        {
+            return table;
+        }
+        
+        size_t get_size(void)
+        {
+            return size;
+        }
+
         TTable(size_t size_in_mb) {
             size = size_in_mb * 1024 * 1024 / sizeof(s_TTEntry);
             table = new t_TTEntry[size];
-            for (size_t i = 0; i < size; i++)
-                table[i] = {0, {0, 0}, 0, 0, ERROR};
+            clear_table();
         }
 
         ~TTable() {

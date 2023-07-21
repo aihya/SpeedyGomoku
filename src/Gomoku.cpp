@@ -471,7 +471,7 @@ Gomoku::Gomoku(uint8_t board_size, t_difficulty first_difficulty,
     this->_first_player  = get_player(first_player_type, Gomoku::BLACK, first_difficulty);
     this->_second_player = get_player(second_player_type, Gomoku::WHITE, second_difficulty);
     this->_rule = rule;
-    this->_depth = 4;
+    this->_depth = 5;
     this->_game_over = false;
     this->_turn = 0;
     this->hit_count = 0;
@@ -864,19 +864,22 @@ Gomoku::t_scored_move Gomoku::minimax_with_memory(t_moveset& moveset, t_board &b
     this->node_count++;
     TTable::t_TTEntry *entry = _ttable.get_entry(board.hash); 
 
-    if (depth != 4)
+    if (entry && entry->depth >= depth)
     {
-        if (entry && entry->depth >= depth && entry->piece == piece)
+        if (entry->piece == piece)
         {
-            if (entry->bound == TTable::LOWER_BOUND)
+            this->hit_count++;
+            if (entry->bound == TTable::UPPER_BOUND)
                 prunner.alpha = std::max(prunner.alpha, entry->score);
-            else if (entry->bound == TTable::UPPER_BOUND)
+            if (entry->bound == TTable::LOWER_BOUND)
                 prunner.beta = std::min(prunner.beta, entry->score);
             if (entry->bound == TTable::EXACT)
-                return (t_scored_move{Gomoku::_invalid_coord, entry->score});
+                return (t_scored_move{entry->best_move, entry->score});
+            if (prunner.alpha >= prunner.beta)
+                return (t_scored_move{entry->best_move, entry->score});
         }
     }
-    if (depth == 0)
+    if (depth == 0 || is_final_state(board) != Gomoku::ERROR)
         return (t_scored_move{Gomoku::_invalid_coord, this->evaluate_board(board, piece) + depth});
     t_sorted_updates sorted_update;
     this->generate_sorted_updates(moveset, board, sorted_update, piece);
@@ -914,9 +917,9 @@ Gomoku::t_scored_move Gomoku::minimax_with_memory(t_moveset& moveset, t_board &b
     }
     TTable::t_bound bound = TTable::EXACT;
     if (best_eval.score <= oprunner.alpha)
-        bound = TTable::UPPER_BOUND;
-    if (best_eval.score >= oprunner.beta)
         bound = TTable::LOWER_BOUND;
+    if (best_eval.score >= oprunner.beta)
+        bound = TTable::UPPER_BOUND;
     _ttable.add_entry(board.hash, depth, {best_eval.coord.x, best_eval.coord.y}, best_eval.score, piece, bound);
     return (best_eval);    
 }
@@ -952,11 +955,12 @@ Gomoku::t_coord Gomoku::iterative_depth_search(t_moveset& moveset,
 
     auto start = std::chrono::steady_clock::now();
     t_sorted_updates lesorted; ;
-    for (uint8_t i_depth = 1; i_depth <= depth;)
+    for (uint8_t i_depth = 0; i_depth < depth;)
     {
         auto end = std::chrono::steady_clock::now();
-        if (std::chrono::duration<double, std::milli>(end - start).count() >= 500)
-            break;
+        _current_depth = i_depth;
+        // if (std::chrono::duration<double, std::milli>(end - start).count() >= 500)
+        //     break;
         // move_score = this->negascout(moveset, board, i_depth, prunner, piece);
         move_score = minimax_with_memory(moveset, board, i_depth, prunner, piece, true);
         // if (move_score.score <= prunner.alpha || move_score.score >= prunner.beta)
@@ -1124,7 +1128,18 @@ void Gomoku::start_game()
         if (IS_GAME_OVER())
             break;
         this->make_move(GET_CURRENT_PLAYER(), GET_OPPONENT_PLAYER(), this->_board);
+        // if (_turn > 40)
+        //     break;
     }
+    // //     add_mov
+            // _board.add_piece(Gomoku::t_coord(9, 9), Gomoku::BLACK);
+            // std::cout << _board.hash << std::endl;
+            // _board.add_piece(Gomoku::t_coord(9, 10), Gomoku::WHITE);
+            // std::cout << _board.hash << std::endl;
+            // _board.add_piece(Gomoku::t_coord(9, 11), Gomoku::BLACK);
+            // std::cout << _board.hash << std::endl;
+    //     this->make_move(GET_CURRENT_PLAYER(), GET_OPPONENT_PLAYER(), this->_board);
+    // }
     this->average_time /= this->_turn;
     std::cout << "Average time: " << this->average_time << std::endl;
     std::cout << "Hit count: " << this->hit_count << std::endl;

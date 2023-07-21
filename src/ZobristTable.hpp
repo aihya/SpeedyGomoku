@@ -12,13 +12,14 @@ class ZobristTable {
 
             // Define the distribution, by default it goes from 0 to MAX(unsigned long long)
             // or what have you.
+
             std::uniform_int_distribution<uint64_t> distr;
             for (int i = 0; i < side_num; i++)
                 for (int j = 0; j < size; j++)
                     table[i][j] = distr(gen);
         }
-        uint64_t get(int square, char piece) const {
-            return table[square][piece];
+        uint64_t get(size_t side, size_t position) const {
+            return table[side][position];
         }
     private:
         std::vector<std::vector<uint64_t>> table;
