@@ -17,12 +17,10 @@ STATS_SURFACE = 4
 # Constants
 HEIGHT      = 800
 WIDTH       = 1400
-WHITE       = pygame.Color("#ffffff")
-BLACK       = pygame.Color("#000000")
-BOARD_COLOR = pygame.Color("#F2A71B")
-DEFAULT_BG  = pygame.Color("#EAE6E3")
-WHITE_COLOR = pygame.Color("#ffffff")
-BLACK_COLOR = pygame.Color("#000000")
+WHITE       = pygame.Color("#ffffffff")
+BLACK       = pygame.Color("#000000ff")
+BOARD_COLOR = pygame.Color("#F2A71Bff")
+DEFAULT_BG  = pygame.Color("#EAE6E3ff")
 
 # Player type
 HUMAN       = 1

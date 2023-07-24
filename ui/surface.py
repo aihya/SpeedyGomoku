@@ -18,7 +18,7 @@ class Surface:
         if is_window:
             self._surface = pygame.display.set_mode((width, height), flags=flags)
         else:
-            self._surface = pygame.Surface((width, height), flags=flags)
+            self._surface = pygame.Surface((width, height), flags=flags).convert_alpha()
 
         self._rect = self._surface.get_rect()
         self._rect.move_ip(position)

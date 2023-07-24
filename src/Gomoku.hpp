@@ -99,16 +99,16 @@ class Gomoku
         {
             ILLEGAL_SCORE          = -1,
 
-            FIVE_SCORE             = 1000001,
-            OPEN_FOUR_SCORE        = 1000000,
-            FIVE_BLOCK_SCORE       = 1000000,
-            CAPTURE_SCORE          = 200000,
-            FOUR_SCORE             = 10000,
-            OPEN_THREE_SCORE       = 1000,
-            OPEN_BLOCK_SCORE       = 1000,
-            THREE_SCORE            = 100,
-            OPEN_TWO_SCORE         = 100,
-            TWO_SCORE              = 10,
+            FIVE_SCORE             = 100001,
+            OPEN_FOUR_SCORE        = 100000,
+            FIVE_BLOCK_SCORE       = 100000,
+            CAPTURE_SCORE          = 20000,
+            FOUR_SCORE             = 1000,
+            OPEN_THREE_SCORE       = 100,
+            OPEN_BLOCK_SCORE       = 100,
+            THREE_SCORE            = 10,
+            OPEN_TWO_SCORE         = 10,
+            TWO_SCORE              = 1,
             ZERO_SCORE             = 0
         }                   t_scores;
 
@@ -390,18 +390,15 @@ class Gomoku
                                 ~Gomoku();
         void                    start_game();
     private:
-        t_coord                 iterative_depth_search(t_moveset& moveset, t_board &board, uint8_t depth, t_prunner prunner, t_piece piece);
+        t_coord                 iterative_depth_search(t_moveset& moveset, t_board &board, uint8_t depth, t_piece piece);
         t_coord                 human_move(t_player& player, t_player& opponent, t_board & board);
         t_coord                 ai_move(t_player& player, t_player& opponent, t_board & board);
         t_moveset               generate_rule_moveset(t_piece piece, t_board &board);
         t_player                get_player(t_player_type player_type, t_piece player_color, t_difficulty difficulty);
-        t_scored_move           negascout(t_moveset& moveset, t_board &board, uint8_t depth, t_prunner prunner, t_piece piece);
-        // t_sorted_updates        generate_sorted_updates(t_moveset& moveset, t_board &board, t_piece piece, uint8_t depth = 0);
         void                    generate_sorted_updates(t_moveset& moveset, t_board &board, t_sorted_updates& sorted_updates, t_piece piece);
         t_sequence              extract_winning_sequence(t_board &board, t_piece piece, t_coord start_coord);
         int64_t                 evaluate_board(t_board &board, t_piece player_color);
         int32_t                 evaluate_move(t_board &board, t_coord piece_coord, t_piece piece, t_coord direction);
-        // int64_t                 evaluate_pattern(t_board& board, t_coord start, t_piece player_color, std::set<std::pair<t_coord, t_coord>> &head_tail_set);
         int64_t                 evaluate_pattern(t_board& board, t_coord start, t_piece player_color, std::unordered_set<std::pair<t_coord, t_coord>, PairHash> &head_tail_set);
         void                    make_move(t_player& player, t_player& opponent, t_board& board);
         void                    generate_scored_update(t_board &board, t_coord move, t_piece piece, t_scored_update& scored_update);
@@ -420,4 +417,5 @@ class Gomoku
         int  distance_to_edge(t_board& board, t_coord position, t_coord direction);
 
         t_scored_move           minimax_with_memory(t_moveset& moveset, t_board &board, uint8_t depth, t_prunner prunner, t_piece piece, bool max);
+        t_scored_move           MTDF(int64_t f_value, uint8_t depth, t_board& board, t_moveset& moveset, t_piece piece, std::__1::chrono::steady_clock::time_point start);
 };

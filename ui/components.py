@@ -12,7 +12,7 @@ class Button(Surface):
     Class representing an interactive button object
     """
 
-    def __init__(self, fg: str, bg: str, content, font, disabled=False, interactive=True, *args, **kwargs):
+    def __init__(self, fg: str, bg: str, content, font, disabled=False, fit=False, interactive=True, *args, **kwargs):
 
         # Load font
         self._font = font
@@ -25,16 +25,17 @@ class Button(Surface):
         self._bg_hov.r = self.bg.r - 30 if self.bg.r >= 30 else self.bg.r
         self._bg_hov.b = self.bg.b - 30 if self.bg.b >= 30 else self.bg.b
         self._bg_hov.g = self.bg.g - 30 if self.bg.g >= 30 else self.bg.g
+        self._fit = fit
         
         if isinstance(content, str):
             self._content = self.font.render(content, True, self.fg)
         else:
             self._content = content
 
-        super().__init__(
-            self.content.get_width() + 60, 
-            self.content.get_height() + 30, 
-            *args, **kwargs)
+        _relative_to = kwargs.get('relative_to', None)
+        _width  = _relative_to.width if self.fit else self.content.get_width() + 60
+        _height = self.content.get_height() + 30
+        super().__init__(_width, _height, *args, **kwargs)
 
         self._content_rect = self._content.get_rect()
         self._content_rect.center = (int(self.width / 2), int(self.height / 2))
@@ -43,6 +44,10 @@ class Button(Surface):
         self._pressed = False
         self._disabled = disabled
         self._interactive = interactive
+
+    @property
+    def fit(self):
+        return self._fit
 
     @property
     def bg(self):
@@ -148,7 +153,7 @@ class CheckBox(Surface):
     __slots__ = ('_label', '_box', '_value', '_filler', '_checked', '_label_rect', '_hovered', '_active')
     
     def __init__(self, label, value, *args, **kwargs):
-        self._label = h3_r.render(label, True, BLACK)
+        self._label = h3_r.render(label, True, pygame.Color(0, 0, 0, 255))
         self._label_rect = self.label.get_rect()
         self._label_rect.left = 70
         self._value = value
@@ -229,8 +234,8 @@ class CheckBox(Surface):
                 self.filler.surface.fill(BOARD_COLOR)
             else:
                 self.filler.surface.fill((120, 120, 120))
-            self.surface.blit(self.filler.surface, self.filler.rect)
-        self.surface.blit(self.label, self._label_rect)
+            self.surface.blit(self.filler.surface, self.filler.rect, special_flags=pygame.BLEND_RGBA_MAX)
+        self.surface.blit(self.label, self._label_rect, special_flags=pygame.BLEND_RGBA_MAX)
 
 
 class CheckBoxs(Surface):
@@ -287,6 +292,7 @@ class CheckBoxs(Surface):
         self._anchor = value
 
     def update(self):
+        self.surface.fill(DEFAULT_BG)
         for box in self.container:
             box.update()
             if box.active and box.checked and box is not self.anchor:

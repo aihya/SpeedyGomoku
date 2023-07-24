@@ -19,8 +19,8 @@ class Setup(Surface):
         super().__init__(WIDTH-HEIGHT, HEIGHT, alpha=True, *args, **kwargs)
         self._repeat = True
 
-        self._start = Button("#000000", "#66F587", "START", fonts.h3_t, relative_to=self)
-        self._start.position = (self.width / 2 - self._start.width / 2, self.height - 100)
+        self._start = Button("#000000", "#66F587", "START", fonts.h3_t, fit=True, relative_to=self)
+        self._start.position = (0, self.height - self._start.height)
         
         # Player 1 setup surface
         self._p1_surf = Surface(300, 400, (50, 120), self, True)
@@ -108,7 +108,8 @@ class Setup(Surface):
         self._repeat = value
 
     def draw_box_1(self):
-        header = fonts.h3_r.render('Black', True, BLACK_COLOR)
+        self.surface.fill(BLACK)
+        header = fonts.h3_r.render('Black', True, BLACK)
         header_rect = header.get_rect()
         header_rect.topleft = (70, 0)
 
@@ -119,19 +120,19 @@ class Setup(Surface):
         self.p1_surf.surface.blit(self.p1_type.surface, self.p1_type.rect)
 
         # Blit mode surface
-        mode = fonts.h3_r.render('Level', True, BLACK_COLOR)
+        mode = fonts.h3_r.render('Level', True, BLACK)
         mode_rect = header.get_rect()
         mode_rect.topleft = (70, 170)
 
         self.p1_mode.update()
         self.p1_surf.surface.blit(mode, mode_rect, special_flags=pygame.BLEND_RGBA_MAX)
-        self.p1_surf.surface.blit(self.p1_mode.surface, self.p1_mode.rect)
+        self.p1_surf.surface.blit(self.p1_mode.surface, self.p1_mode.rect, special_flags=pygame.BLEND_RGBA_MAX)
 
         # Blit first player surface on the window
         self.surface.blit(self.p1_surf.surface, self.p1_surf.rect)
 
     def draw_box_2(self):
-        header = fonts.h3_r.render('White', True, BLACK_COLOR)
+        header = fonts.h3_r.render('White', True, BLACK)
         header_rect = header.get_rect()
         header_rect.topleft = (70, 0)
 
@@ -142,7 +143,7 @@ class Setup(Surface):
         self.p2_surf.surface.blit(self.p2_type.surface, self.p2_type.rect)
 
         # Blit mode surface
-        mode = fonts.h3_r.render('Level', True, BLACK_COLOR)
+        mode = fonts.h3_r.render('Level', True, BLACK)
         mode_rect = header.get_rect()
         mode_rect.topleft = (70, 170)
 
@@ -157,7 +158,7 @@ class Setup(Surface):
         self.surface.fill(WHITE)
 
         # Title
-        middle = fonts.h3_b.render('Game Setup', True, BLACK_COLOR)
+        middle = fonts.h3_b.render('Game Setup', True, BLACK)
         middle_rect = middle.get_rect()
         middle_rect.center = (int(self.width / 2), 60)
 
@@ -431,7 +432,7 @@ class Board(Surface):
 
     @staticmethod
     def draw_circle(surface, x, y, radius, color):
-        gfxdraw.aacircle(surface, x, y, radius+1, BLACK_COLOR)
+        gfxdraw.aacircle(surface, x, y, radius+1, BLACK)
         gfxdraw.aacircle(surface, x, y, radius, color)
         gfxdraw.filled_circle(surface, x, y, radius, color)
 

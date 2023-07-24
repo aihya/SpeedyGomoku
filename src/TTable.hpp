@@ -11,7 +11,7 @@ class TTable {
             UPPER_BOUND
         }              t_bound;
         typedef struct s_TTEntry {
-            int                 depth;
+            uint8_t             depth;
             std::pair<int, int> best_move;
             int64_t             score;
             int                 piece;
@@ -22,7 +22,7 @@ class TTable {
         {
             return zobrist % size;
         }
-        void add_entry(uint64_t zobrist, int depth, std::pair<int, int> best_move, int64_t value, int piece, t_bound bound) {
+        void add_entry(uint64_t zobrist, uint8_t depth, std::pair<int, int> best_move, int64_t value, int piece, t_bound bound) {
             if (table[index(zobrist)].bound != ERROR)
             {
                 if (table[index(zobrist)].depth <= depth)
