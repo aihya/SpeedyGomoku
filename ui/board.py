@@ -13,19 +13,19 @@ class Setup(Surface):
     This class represents the setup surface
     """
 
-    __slots__ = ('_repeat', '_start', '_p1', '_p1_surf', '_p1_type', '_p1_mode', '_p2', '_p2_surf', '_p2_type', '_p2_mode', '_p1', '_p2')
+    __slots__ = ('_repeat', '_start', '_p1', '_p1_surf', '_p1_type', '_p1_mode', '_p2', '_p2_surf', '_p2_type', '_p2_mode', '_p1', '_p2', '_rules', '_rules_surf')
 
     def __init__(self, *args, **kwargs):
         super().__init__(WIDTH-HEIGHT, HEIGHT, alpha=True, *args, **kwargs)
         self._repeat = True
 
-        self._start = Button("#000000", "#66F587", "START", fonts.h3_t, relative_to=self)
-        self._start.position = (self.width / 2 - self._start.width / 2, self.height - 100)
+        self._start = Button(LIGHT, GRAY_2, "START", fonts.h3_t, expand=True, relative_to=self)
+        self._start.position = (0, self.height - self._start.height)
         
         # Player 1 setup surface
         self._p1_surf = Surface(300, 400, (50, 120), self, True)
         self._p1_type = CheckBoxs(
-            {HUMAN: 'Human', COMPUTER: 'Computer'},
+            {HUMAN: 'Human', COMPUTER: 'CPU'},
             position=(0, 50),
             relative_to=self._p1_surf,
             alpha=True
@@ -40,7 +40,7 @@ class Setup(Surface):
         # Player 2 setup surface
         self._p2_surf = Surface(300, 400, (320, 120), self, True)
         self._p2_type = CheckBoxs(
-            {HUMAN: 'Human', COMPUTER: 'Computer'},
+            {HUMAN: 'Human', COMPUTER: 'CPU'},
             position=(0, 50),
             relative_to=self._p2_surf,
             alpha=True
@@ -52,8 +52,25 @@ class Setup(Surface):
             alpha=True
         )
 
+        self._rules_surf = Surface(self.width - 50, 90, (50, 500), self, True)
+        self._rules = CheckBoxs(
+            {STANDARD: 'Standard', LONG_PRO: 'Long Pro', PRO: 'Pro'},
+            position=(0, 50),
+            alignment=HORIZONTAL,
+            relative_to=self.rules_surf,
+            alpha=True
+        )
+
         self._p1 = None
         self._p2 = None
+
+    @property
+    def rules(self):
+        return self._rules
+
+    @property
+    def rules_surf(self):
+        return self._rules_surf
 
     @property
     def start(self):
@@ -108,7 +125,7 @@ class Setup(Surface):
         self._repeat = value
 
     def draw_box_1(self):
-        header = fonts.h3_r.render('Black', True, BLACK_COLOR)
+        header = fonts.h3_b.render('Black', True, LIGHT)
         header_rect = header.get_rect()
         header_rect.topleft = (70, 0)
 
@@ -118,20 +135,14 @@ class Setup(Surface):
         self.p1_type.update()
         self.p1_surf.surface.blit(self.p1_type.surface, self.p1_type.rect)
 
-        # Blit mode surface
-        mode = fonts.h3_r.render('Level', True, BLACK_COLOR)
-        mode_rect = header.get_rect()
-        mode_rect.topleft = (70, 170)
-
         self.p1_mode.update()
-        self.p1_surf.surface.blit(mode, mode_rect, special_flags=pygame.BLEND_RGBA_MAX)
         self.p1_surf.surface.blit(self.p1_mode.surface, self.p1_mode.rect)
 
         # Blit first player surface on the window
         self.surface.blit(self.p1_surf.surface, self.p1_surf.rect)
 
     def draw_box_2(self):
-        header = fonts.h3_r.render('White', True, BLACK_COLOR)
+        header = fonts.h3_b.render('White', True, LIGHT)
         header_rect = header.get_rect()
         header_rect.topleft = (70, 0)
 
@@ -141,25 +152,40 @@ class Setup(Surface):
         self.p2_type.update()
         self.p2_surf.surface.blit(self.p2_type.surface, self.p2_type.rect)
 
-        # Blit mode surface
-        mode = fonts.h3_r.render('Level', True, BLACK_COLOR)
-        mode_rect = header.get_rect()
-        mode_rect.topleft = (70, 170)
-
         self.p2_mode.update()
-        self.p2_surf.surface.blit(mode, mode_rect, special_flags=pygame.BLEND_RGBA_MAX)
         self.p2_surf.surface.blit(self.p2_mode.surface, self.p2_mode.rect)
 
         # Blit first player surface on the window
         self.surface.blit(self.p2_surf.surface, self.p2_surf.rect)
 
+    def draw_rules(self):
+        self.rules.update()
+        self.rules_surf.surface.blit(self.rules.surface, self.rules.rect)
+        self.surface.blit(self.rules_surf.surface, self.rules_surf.rect)
+
+    def draw_titles(self):
+        level = fonts.h3_b.render('Level', True, LIGHT)
+        rules = fonts.h3_b.render('Rules', True, LIGHT)
+        level_rect = level.get_rect()
+        rules_rect = rules.get_rect()
+        level_rect.center = (self.surface.get_rect().centerx, 300)
+        rules_rect.center = (self.surface.get_rect().centerx, 510)
+        self.surface.blit(level, level_rect)
+        self.surface.blit(rules, rules_rect)
+
+
     def update(self, events):
-        self.surface.fill(WHITE)
+        self.surface.fill(GRAY_1)
 
         # Title
-        middle = fonts.h3_b.render('Game Setup', True, BLACK_COLOR)
+        middle = fonts.h3_b.render('Game Setup', True, LIGHT)
         middle_rect = middle.get_rect()
         middle_rect.center = (int(self.width / 2), 60)
+
+        # VS
+        vs = fonts.h3_r.render('VS', True, LIGHT)
+        vs_rect = vs.get_rect()
+        vs_rect.center = (int(self.width / 2), 140)
 
         type_checkboxs = [*self.p1_type.container, *self.p2_type.container]
         mode_checkboxs = [*self.p1_mode.container, *self.p2_mode.container]
@@ -179,10 +205,12 @@ class Setup(Surface):
                 for box in mode_checkboxs:
                     box.check_clicked()
                     box.update()
+                for box in self.rules.container:
+                    box.check_clicked()
+                    box.update()
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 self.start.pressed = False # Just in case it's not reseted
                 return BOARD_SURFACE
-                
 
         if self.p1_type.anchor.value == 2:
             self.p1_mode.active = True
@@ -194,11 +222,14 @@ class Setup(Surface):
         else:
             self.p2_mode.active = False
 
+        self.draw_titles()
         self.draw_box_1()
         self.draw_box_2()
+        self.draw_rules()
         self.start.update()
-        self.surface.blit(self.start.surface, self.start.rect)
+        self.surface.blit(self.start.surface, self.start.rect, special_flags=pygame.BLEND_RGBA_MAX)
         self.surface.blit(middle, middle_rect)
+        self.surface.blit(vs, vs_rect)
 
         if self.start.pressed:
             self.start.pressed = False
@@ -216,18 +247,18 @@ class Stats(Surface):
         r_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/right.png'), (50, 50))
         l_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/right.png'), (50, 50))
         l_img = pygame.transform.rotate(l_img, 180)
-        rff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png'), (50, 50))
+        rff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png').convert_alpha(), (50, 50))
         lff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png'), (50, 50))
         lff_img = pygame.transform.rotate(lff_img, 180)
 
-        self._left  = Button('#ffffff', '#ffffff', l_img, None, relative_to=self)
-        self._right = Button('#ffffff', '#ffffff', r_img, None, relative_to=self)
-        self._lff   = Button('#ffffff', '#ffffff', lff_img, None, relative_to=self)
-        self._rff   = Button('#ffffff', '#ffffff', rff_img, None, relative_to=self)
-        self._left.position  = (self.width / 2 - self.left.width, self.height - 100)
-        self._right.position = (self.width / 2, self.height - 100)
-        self._lff.position   = (self.width / 2 - self.left.width * 2, self.height - 100)
-        self._rff.position   = (self.width / 2 + self.right.width, self.height - 100)
+        self._left  = Button(BLACK, GRAY_3, l_img, None, hover_color=WHITE, relative_to=self)
+        self._lff   = Button(BLACK, GRAY_3, lff_img, None, hover_color=WHITE, relative_to=self)
+        self._right = Button(BLACK, GRAY_3, r_img, None, hover_color=WHITE, relative_to=self)
+        self._rff   = Button(BLACK, GRAY_3, rff_img, None, hover_color=WHITE, relative_to=self)
+        self._left.position  = (self.width / 2 - self.left.width, self.height - self.left.height)
+        self._right.position = (self.width / 2, self.height - self.left.height)
+        self._lff.position   = (self.width / 2 - self.left.width * 2, self.height - self.left.height)
+        self._rff.position   = (self.width / 2 + self.right.width, self.height - self.left.height)
 
         self._text = {
             'black': fonts.h3_t.render('Black', True, BLACK),
@@ -319,7 +350,7 @@ class Stats(Surface):
                     self.lff.pressed = False
 
     def update(self, events):
-        self.surface.fill(WHITE)
+        self.surface.fill(GRAY_1)
         Board.draw_circle(self.surface, 50, 50, 20, BLACK)
         Board.draw_circle(self.surface, 50, 100, 20, WHITE)
         self.surface.blit(self.text['black'], (90, 32))
@@ -431,13 +462,13 @@ class Board(Surface):
 
     @staticmethod
     def draw_circle(surface, x, y, radius, color):
-        gfxdraw.aacircle(surface, x, y, radius+1, BLACK_COLOR)
+        gfxdraw.aacircle(surface, x, y, radius+1, BLACK)
         gfxdraw.aacircle(surface, x, y, radius, color)
         gfxdraw.filled_circle(surface, x, y, radius, color)
 
     def draw_board(self):
         self.surface.fill(BOARD_COLOR)
-        pygame.draw.line(self.surface, pygame.Color('#8f8f8f'), (self.width-1, 0), (self.width-1, HEIGHT), 1)
+        pygame.draw.line(self.surface, GRAY_1, (self.width-1, 0), (self.width-1, HEIGHT), 1)
         
         for i in range(0, 19):
             # Draw horizontal lines
