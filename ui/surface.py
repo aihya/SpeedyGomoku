@@ -26,7 +26,6 @@ class Surface:
         self._abs_rect = self._rect.copy()
 
         if relative_to is not None:
-            print(relative_to)
             self._abs_rect.move_ip(relative_to.abs_rect.topleft)
 
     @property
