@@ -148,26 +148,44 @@ class CheckBox(Surface):
 
     HEIGHT = 40
 
-    __slots__ = ('_label', '_box', '_value', '_filler', '_checked', '_label_rect', '_hovered', '_active')
+    __slots__ = ('_label', '_box', '_value', '_filler', '_checked', '_label_rect', '_hovered', '_active', '_alignment')
     
-    def __init__(self, label, value, *args, **kwargs):
-        self._label = h3_r.render(label, True, BLACK)
-        self._label_rect = self.label.get_rect()
-        self._label_rect.left = 70
+    def __init__(self, label, value, alignment=VERTICAL, *args, **kwargs):
+        
         self._value = value
         self._checked = False
         self._hovered = False
         self._active = True
+        self._alignment = alignment
+        print(self.alignment)
+
+        if self.alignment == VERTICAL:
+            self._label = h3_r.render(label, True, LIGHT)
+            self._label_rect = self.label.get_rect()
+            self._label_rect.left = 70
+            _height = self.HEIGHT
+            _width = self._label.get_width() + 70
+        else:
+            self._label = h6_r.render(label, True, LIGHT)
+            self._label_rect = self.label.get_rect()
+            self._label_rect.left = 50
+            self._label_rect.top = 5
+            _height = self.HEIGHT
+            _width = self._label.get_width() + 50
 
         super().__init__(
-            self._label.get_width() + 70, 
-            self.HEIGHT,
+            _width,
+            _height,
             *args,
             **kwargs
         )
 
         self._box = Surface(self.HEIGHT, self.HEIGHT, (0, 0), self)
         self._filler = Surface(self.HEIGHT-10, self.HEIGHT-10, (5, 5), self)
+
+    @property
+    def alignment(self):
+        return self._alignment
 
     @property
     def active(self):
@@ -224,6 +242,7 @@ class CheckBox(Surface):
             self.checked = True
 
     def update(self):
+        self.surface.fill(GRAY_1)
         self.surface.blit(self.box.surface, self.box.rect)
         if self.active:
             self.check_hover()
@@ -238,27 +257,37 @@ class CheckBox(Surface):
 
 class CheckBoxs(Surface):
 
-    __slots__ = ('_container', '_anchor', '_active')
+    __slots__ = ('_container', '_anchor', '_active', '_alignment')
 
-    def __init__(self, pairs: dict, *args, **kwargs):
-
+    def __init__(self, pairs: dict, alignment=VERTICAL, *args, **kwargs):
+        self._alignment = alignment
         _len    = len(pairs)
-        _height = CheckBox.HEIGHT * _len + (10 * (_len-1) if _len > 1 else 0)
-        _width  = kwargs['relative_to'].width
+
+        if self.alignment == VERTICAL:
+            _height = CheckBox.HEIGHT * _len + (10 * (_len-1) if _len > 1 else 0)
+            _width  = kwargs['relative_to'].width
+        else:
+            _height = CheckBox.HEIGHT
+            _width  = kwargs['relative_to'].width
+            step = floor(kwargs['relative_to'].width / _len)
 
         super().__init__(width=_width, height=_height, **kwargs)
 
         # List containing all checkboxs
         self._container = []
 
-        # Create instances of CheckBox and set containers' max height accordingly
         offset = 0
         for index, key in enumerate(pairs.keys()):
-            cb_position = (0, offset)
-            self._container.append(CheckBox(pairs[key], key, position=cb_position, relative_to=self, alpha=True))
-            offset += self._container[-1].height
-            if index < _len - 1:
-                offset += 10
+            if self.alignment == VERTICAL:
+                cb_pos = (0, offset)
+                self._container.append(CheckBox(pairs[key], key, position=cb_pos, alignment=alignment, relative_to=self, alpha=True))
+                offset += self._container[-1].height
+                if index < _len - 1:
+                    offset += 10
+            else:
+                cb_pos = (offset, 0)
+                self._container.append(CheckBox(pairs[key], key, position=cb_pos, alignment=alignment, relative_to=self, alpha=True))
+                offset += step
 
         # Anchor to first element of container list or set to None
         if self._container:
@@ -266,6 +295,10 @@ class CheckBoxs(Surface):
             self._anchor.checked = True
 
         self._active = True
+
+    @property
+    def alignment(self):
+        return self._alignment
 
     @property
     def active(self):
@@ -297,3 +330,4 @@ class CheckBoxs(Surface):
                 self.anchor = box
                 box.checked = True
             self.surface.blit(box.surface, box.rect)
+
