@@ -2,6 +2,7 @@ import pygame
 from surface import Surface
 from fonts import *
 from init import *
+from math import floor
 
 # type of button content
 TEXT  = 1
@@ -12,29 +13,27 @@ class Button(Surface):
     Class representing an interactive button object
     """
 
-    def __init__(self, fg: str, bg: str, content, font, disabled=False, interactive=True, *args, **kwargs):
+    def __init__(self, fg, bg, content, font, hover_color=None, disabled=False, interactive=True, expand=False, *args, **kwargs):
 
-        # Load font
         self._font = font
-
         self._bg_str = bg
         self._fg_str = fg
         self._bg = pygame.Color(bg)
         self._fg = pygame.Color(fg)
-        self._bg_hov = pygame.Color(bg)
-        self._bg_hov.r = self.bg.r - 30 if self.bg.r >= 30 else self.bg.r
-        self._bg_hov.b = self.bg.b - 30 if self.bg.b >= 30 else self.bg.b
-        self._bg_hov.g = self.bg.g - 30 if self.bg.g >= 30 else self.bg.g
-        
+        if hover_color:
+            self._bg_hov = hover_color
+        else:
+            self._bg_hov = pygame.Color(bg)
+            self._bg_hov.r = self.bg.r - 30 if self.bg.r >= 30 else self.bg.r
+            self._bg_hov.b = self.bg.b - 30 if self.bg.b >= 30 else self.bg.b
+            self._bg_hov.g = self.bg.g - 30 if self.bg.g >= 30 else self.bg.g
         if isinstance(content, str):
             self._content = self.font.render(content, True, self.fg)
         else:
             self._content = content
 
-        super().__init__(
-            self.content.get_width() + 60, 
-            self.content.get_height() + 30, 
-            *args, **kwargs)
+        _width = kwargs['relative_to'].width if expand else self.content.get_width() + 60
+        super().__init__(_width, self.content.get_height() + 30, *args, **kwargs)
 
         self._content_rect = self._content.get_rect()
         self._content_rect.center = (int(self.width / 2), int(self.height / 2))
@@ -43,6 +42,10 @@ class Button(Surface):
         self._pressed = False
         self._disabled = disabled
         self._interactive = interactive
+
+    @property
+    def expand(self):
+        return self._expand
 
     @property
     def bg(self):
