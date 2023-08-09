@@ -18,10 +18,12 @@ class TTable {
             uint64_t            hash;
             t_bound             bound;
         }               t_TTEntry;
+
         inline size_t index(uint64_t zobrist)
         {
             return zobrist % size;
         }
+
         void add_entry(uint64_t zobrist, uint8_t depth, std::pair<int, int> best_move, int64_t value, int piece, t_bound bound) {
             if (table[index(zobrist)].bound != ERROR)
             {
