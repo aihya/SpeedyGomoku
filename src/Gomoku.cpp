@@ -551,94 +551,178 @@ int32_t Gomoku::evaluate_move(t_board &board, t_coord piece_coord, t_piece piece
     return (attack_score + defense_score);
 }
 
-int64_t Gomoku::evaluate_pattern(t_board& board, t_coord start, t_piece player_color, std::set<std::pair<t_coord, t_coord>> &head_tail_set)
+// int64_t Gomoku::evaluate_pattern(t_board& board, t_coord start, t_piece player_color, std::set<std::pair<t_coord, t_coord>> &head_tail_set)
+// {
+//     bool                        tail_block;
+//     t_coord                     current_coord; 
+//     std::pair<t_coord, t_coord> head_tail;
+//     uint16_t                    head_pattern;
+//     uint16_t                    tail_pattern;
+//     uint16_t                    current_pattern;
+//     int64_t                     score;
+
+//     const std::map<uint16_t, t_scores> &attack_patterns = Gomoku::_attack_patterns.at(player_color);
+//     const std::map<uint16_t, t_scores> &defense_patterns = Gomoku::_defense_patterns.at(player_color);
+
+//     // here we can identify the pattern by just a coordinate and a dir not a pair of coord
+//     score = 0;
+//     for (const auto& dir: _directions)
+//     {
+//         current_coord    = start;
+//         head_tail.first  = current_coord - dir;
+//         head_tail.second = current_coord + dir;
+//         tail_block       = false;
+//         if (head_tail_set.count(head_tail))
+//             continue;
+//         current_pattern = board.get_piece(head_tail.first);
+//         for (int pattern_length = 0; pattern_length < 5; pattern_length++)
+//         {
+//             if (board.get_piece(current_coord) == player_color)
+//                 head_tail_set.insert(head_tail);
+//             current_pattern  <<= 2;
+//             current_pattern  |= board.get_piece(current_coord);
+//             current_coord    += dir;
+//             head_tail.first  += dir;
+//             head_tail.second += dir;
+//         }
+//         if (board.get_piece(current_coord) == GET_OPPONENT(player_color))
+//             tail_block = true;
+//         head_pattern = current_pattern;
+//         tail_pattern = ((current_pattern & FIVE_MASK) << 2) | board.get_piece(current_coord);
+//         if (tail_block)
+//         {
+//             if (attack_patterns.count(tail_pattern))
+//                 score += attack_patterns.at(tail_pattern);
+//             if (defense_patterns.count(tail_pattern))
+//                 score += .6 * defense_patterns.at(tail_pattern);
+//         }
+//         else
+//         {
+//             if (attack_patterns.count(head_pattern))
+//                 score += attack_patterns.at(head_pattern);
+//             if (defense_patterns.count(head_pattern))
+//                 score += .6 * defense_patterns.at(head_pattern);
+//         }
+//     }
+//     return score;
+// }
+
+// Constants for improved evaluation
+const int64_t POSITION_WEIGHT = 10;
+const int64_t CENTER_BONUS = 50;
+const int64_t EDGE_PENALTY = -30;
+const double DEFENSE_WEIGHT = 0.8;
+const int MAX_PATTERN_LENGTH = 6;
+
+int64_t Gomoku::evaluate_pattern(t_board& board, t_coord start, t_piece player_color, std::set<std::pair<t_coord, t_coord>>& head_tail_set)
 {
-    bool                        tail_block;
-    t_coord                     current_coord; 
-    std::pair<t_coord, t_coord> head_tail;
-    uint16_t                    head_pattern;
-    uint16_t                    tail_pattern;
-    uint16_t                    current_pattern;
-    int64_t                     score;
-
-    const std::map<uint16_t, t_scores> &attack_patterns = Gomoku::_attack_patterns.at(player_color);
-    const std::map<uint16_t, t_scores> &defense_patterns = Gomoku::_defense_patterns.at(player_color);
-
-    // here we can identify the pattern by just a coordinate and a dir not a pair of coord
-    score = 0;
-    for (const auto& dir: _directions)
+    int64_t score = 0;
+    for (const auto& dir : _directions)
     {
-        current_coord    = start;
-        head_tail.first  = current_coord - dir;
-        head_tail.second = current_coord + dir;
-        tail_block       = false;
+        t_coord current_coord = start;
+        std::pair<t_coord, t_coord> head_tail = {current_coord - dir, current_coord + dir};
         if (head_tail_set.count(head_tail))
             continue;
-        current_pattern = board.get_piece(head_tail.first);
-        for (int pattern_length = 0; pattern_length < 5; pattern_length++)
+
+        uint16_t current_pattern = 0;
+        bool head_block = (board.get_piece(head_tail.first) == GET_OPPONENT(player_color));
+        bool tail_block = false;
+
+        for (int pattern_length = 0; pattern_length < MAX_PATTERN_LENGTH; pattern_length++)
         {
             if (board.get_piece(current_coord) == player_color)
                 head_tail_set.insert(head_tail);
-            current_pattern  <<= 2;
-            current_pattern  |= board.get_piece(current_coord);
-            current_coord    += dir;
-            head_tail.first  += dir;
+            
+            current_pattern <<= 2;
+            current_pattern |= board.get_piece(current_coord);
+            
+            if (pattern_length >= 4)
+            {
+                uint16_t sub_pattern = current_pattern & ((1 << 10) - 1);
+                tail_block = (board.get_piece(current_coord + dir) == GET_OPPONENT(player_color));
+                
+                int64_t attack_score = evaluate_sub_pattern(sub_pattern, _attack_patterns.at(player_color), head_block, tail_block);
+                int64_t defense_score = evaluate_sub_pattern(sub_pattern, _defense_patterns.at(player_color), head_block, tail_block);
+                
+                score += attack_score + DEFENSE_WEIGHT * defense_score;
+            }
+            
+            current_coord += dir;
+            head_tail.first += dir;
             head_tail.second += dir;
-        }
-        if (board.get_piece(current_coord) == GET_OPPONENT(player_color))
-            tail_block = true;
-        head_pattern = current_pattern;
-        tail_pattern = ((current_pattern & FIVE_MASK) << 2) | board.get_piece(current_coord);
-        if (tail_block)
-        {
-            if (attack_patterns.count(tail_pattern))
-                score += attack_patterns.at(tail_pattern);
-            if (defense_patterns.count(tail_pattern))
-                score += .6 * defense_patterns.at(tail_pattern);
-        }
-        else
-        {
-            if (attack_patterns.count(head_pattern))
-                score += attack_patterns.at(head_pattern);
-            if (defense_patterns.count(head_pattern))
-                score += .6 * defense_patterns.at(head_pattern);
         }
     }
     return score;
 }
 
-int64_t Gomoku::evaluate_board(t_board &board, t_piece player_color, t_capture_count capture_count)
+int64_t Gomoku::evaluate_sub_pattern(uint16_t pattern, const std::map<uint16_t, t_scores>& patterns, bool head_block, bool tail_block)
 {
-    int64_t                                 score;
-    uint64_t                                line;
-    t_coord                                 piece_coord;
-    t_piece                                 current_player;
-    std::set<std::pair<t_coord, t_coord>>   head_tail_set;
-
-    score = capture_count.maximizer_count * Gomoku::CAPTURE_SCORE;
-    score -= capture_count.minimizer_count * Gomoku::CAPTURE_SCORE;
-    for (piece_coord.y = 0; piece_coord.y < board.size; piece_coord.y++)
+    int64_t score = 0;
+    if (patterns.count(pattern))
     {
-        line = board.data[piece_coord.y];
-        do {
-            if (line == 0)
-                break;
-            piece_coord.x = (__builtin_ffsll(line) - 1) >> 1;
-            line &= ~((uint64_t)(Gomoku::ERROR) << (piece_coord.x << 1));
-            current_player = board.get_piece(piece_coord);
-            if (current_player == player_color)
-                score += evaluate_pattern(board, piece_coord, current_player, head_tail_set);
-            if (current_player == GET_OPPONENT(player_color))
-                score -= evaluate_pattern(board, piece_coord, current_player, head_tail_set);
-        } while (piece_coord.x < board.size);
+        score = patterns.at(pattern);
+        if (head_block && tail_block)
+            score /= 4;
+        else if (head_block || tail_block)
+            score /= 2;
     }
-    return (score);
+    return score;
 }
+
+int64_t Gomoku::evaluate_position(t_coord pos, t_coord center, int board_size)
+{
+    int dx = std::abs(pos.x - center.x);
+    int dy = std::abs(pos.y - center.y);
+    int distance_from_center = std::max(dx, dy);
+    
+    if (distance_from_center == 0)
+        return CENTER_BONUS;
+    else if (pos.x == 0 || pos.y == 0 || pos.x == board_size - 1 || pos.y == board_size - 1)
+        return EDGE_PENALTY;
+    else
+        return POSITION_WEIGHT / distance_from_center;
+}
+
+int64_t Gomoku::evaluate_board(t_board& board, t_piece player_color, t_capture_count capture_count)
+{
+    int64_t score = 0;
+    std::set<std::pair<t_coord, t_coord>> head_tail_set;
+
+    // Evaluate captures
+    score += (capture_count.maximizer_count - capture_count.minimizer_count) * Gomoku::CAPTURE_SCORE;
+
+    // Evaluate patterns and positions
+    t_coord board_center = {board.size / 2, board.size / 2};
+    for (int y = 0; y < board.size; y++)
+    {
+        for (int x = 0; x < board.size; x++)
+        {
+            t_coord current_pos = {x, y};
+            t_piece current_piece = board.get_piece(current_pos);
+            
+            if (current_piece != Gomoku::EMPTY)
+            {
+                int64_t pattern_score = evaluate_pattern(board, current_pos, current_piece, head_tail_set);
+                int64_t position_score = evaluate_position(current_pos, board_center, board.size);
+                
+                if (current_piece == player_color)
+                    score += pattern_score + position_score;
+                else
+                    score -= pattern_score + position_score;
+            }
+        }
+    }
+
+    return score;
+}
+
 
 bool Gomoku::is_winning_move(t_board &board, t_moveset &moveset, t_piece piece, t_coord move, uint8_t capture_count)
 {
     t_sorted_updates possible_moves;
 
+    if (capture_count >= MAX_CAPTURE)
+        return (true);
     for (const auto& dir: _directions)
     {
         if (this->evaluate_move(board, move, piece, dir) >= Gomoku::FIVE_SCORE)
@@ -647,18 +731,15 @@ bool Gomoku::is_winning_move(t_board &board, t_moveset &moveset, t_piece piece, 
             for (const auto& opp_move : possible_moves)
             {
                 this->update_board(board, opp_move.updates);
-                if (this->evaluate_move(board, move, piece, dir) < Gomoku::FIVE_SCORE)
+                if (this->evaluate_move(board, move, piece, dir) >= Gomoku::FIVE_SCORE)
                 {
                     this->revert_board_update(board, opp_move.updates);
-                    return (false);
+                    return (true);
                 }
                 this->revert_board_update(board, opp_move.updates);
             }
-            return (true);
         }
     }
-    if (capture_count >= MAX_CAPTURE)
-        return (true);
     return (false);
 }
 

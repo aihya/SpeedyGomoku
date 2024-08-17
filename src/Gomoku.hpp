@@ -382,6 +382,7 @@ class Gomoku
         bool                    is_winning_move(t_board &board, t_moveset &moveset, t_piece piece, t_coord move, uint8_t capture_count);
         bool                    is_inside_square(t_board& board, t_coord piece_coord);
         char                    get_game_command();
-
+        int64_t                 evaluate_position(t_coord pos, t_coord center, int board_size);
+        int64_t                 evaluate_sub_pattern(uint16_t pattern, const std::map<uint16_t, t_scores>& patterns, bool head_block, bool tail_block);
         bool                    is_game_finished(t_board& board, t_capture_count capture_count);
 };
