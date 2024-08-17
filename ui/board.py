@@ -530,6 +530,11 @@ class Board(Surface):
                     y = self.linspace[r] + 1
                     Board.draw_circle(self.surface, x, y, 3, pygame.Color('#E83907'))
 
+                elif col == 4:
+                    x = self.linspace[c] + 1
+                    y = self.linspace[r] + 1
+                    Board.draw_circle(self.surface, x, y, 3, pygame.Color('#00ff00'))
+
         if self.states.last == self.states.current and self.states.last.suggestion:
             # Show suggestion only if we are at the last state
             color = "#ffffff99" if self.turn.turn == 2 else "#00000099"

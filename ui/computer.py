@@ -115,7 +115,7 @@ class Computer:
             }
 
         for line in buffer[s:e]:
-            move['state'].append(['.XO?'.find(c) for c in line if c in '.XO?'])
+            move['state'].append(['.XO?*'.find(c) for c in line if c in '.XO?*'])
 
         return move
 

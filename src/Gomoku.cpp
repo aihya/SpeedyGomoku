@@ -430,7 +430,7 @@ void Gomoku::print_board(t_board &board, t_piece current_piece)
                     if (this->is_move_valid(this->_board, current_move, current_piece))
                     {
                         if (this->_ai_moveset.count(current_move))
-                            std::cout << "\033[1;31m. \033[0m";
+                            std::cout << "\033[1;31m* \033[0m";
                         else
                             std::cout << ". ";
                     }
