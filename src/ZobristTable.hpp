@@ -1,27 +1,37 @@
+#pragma once
 
 #include <vector>
+#include <random>
+#include <chrono>
+#include <cstdint>
+#include <array>
 
 class ZobristTable {
-    public:
-        ZobristTable(int size, int side_num) : table(side_num, std::vector<uint64_t>(size)) {
-            std::srand(std::time(0));
-            for (int i = 0; i < side_num; i++)
-                for (int j = 0; j < size; j++)
-                    table[i][j] = rand();
+public:
+    ZobristTable(std::size_t size, std::size_t side_num) 
+        : table(side_num, std::vector<uint64_t>(size)) {
+        std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
+        std::uniform_int_distribution<uint64_t> dist;
+
+        for (auto& side : table) {
+            for (auto& hash : side) {
+                hash = dist(rng);
+            }
         }
-        uint64_t get(int square, char piece) const {
-            return table[square][piece];
-        }
-    
-        void put(int square, char piece, uint64_t hash) {
-            table[square][piece] = hash;
-        }
-        void copy(const ZobristTable& other){
-            for (int i = 0; i < table.size(); i++)
-                for (int j = 0; j < table[i].size(); j++)
-                    table[i][j] = other.get(i, j);
-        }
-    
-    private:
-        std::vector<std::vector<uint64_t>> table;
+    }
+
+    [[nodiscard]] uint64_t get(std::size_t square, unsigned char piece) const {
+        return table[square][piece];
+    }
+
+    void put(std::size_t square, unsigned char piece, uint64_t hash) {
+        table[square][piece] = hash;
+    }
+
+    void copy(const ZobristTable& other) {
+        table = other.table;
+    }
+
+private:
+    std::vector<std::vector<uint64_t>> table;
 };

@@ -544,7 +544,7 @@ int32_t Gomoku::evaluate_move(t_board &board, t_coord piece_coord, t_piece piece
         if (attack_patterns.count(current_pattern))
             attack_score = std::max(int32_t(attack_patterns.at(current_pattern)), attack_score);
         if (defense_patterns.count(current_pattern))
-            attack_score = std::max(int32_t(defense_patterns.at(current_pattern)), attack_score);
+            defense_score = std::max(int32_t(defense_patterns.at(current_pattern)), attack_score);
         piece_coord -= direction;
         current_pattern >>= 2;
     }
@@ -789,17 +789,13 @@ void Gomoku::revert_node_state(t_board &board, t_moveset &added_moves, t_moveset
 
 void Gomoku::update_ttable(t_board& board, t_scored_move& best_move, uint8_t depth, int64_t alpha, int64_t beta)
 {
-    TTable::t_TTEntry   entry;
-    TTable::t_bound     bound;
-    
-    entry = this->_ttable.get_entry(board.hash);
-    bound = TTable::EXACT;
+    TTable::Bound bound = TTable::Bound::EXACT;
     if (best_move.score <= alpha)
-        bound = TTable::UPPER_BOUND;
-    if (best_move.score >= beta)
-        bound = TTable::LOWER_BOUND;
-    if (entry.bound == TTable::ERROR || entry.depth < depth)
-        this->_ttable.add_entry(board.hash, depth, {best_move.coord.x, best_move.coord.y}, best_move.score, bound);
+        bound = TTable::Bound::UPPER_BOUND;
+    else if (best_move.score >= beta)
+        bound = TTable::Bound::LOWER_BOUND;
+
+    this->_ttable.add_entry(board.hash, depth, {best_move.coord.x, best_move.coord.y}, best_move.score, bound);
 }
 
 Gomoku::t_scored_move Gomoku::negascout(t_moveset& moveset,
