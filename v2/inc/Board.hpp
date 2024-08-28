@@ -31,6 +31,7 @@ class  Board {
         t_coord original_position(t_coord position) const;
         t_coord vertical_position(t_coord position) const;
         t_coord diagonal_position(t_coord position) const;
+        t_coord anti_diagonal_position(t_coord position) const;
         int64_t evaluate_board(t_piece player_color);
         int64_t evaluate_position(t_coord pos, t_piece color, t_board_type type);
 

@@ -12,10 +12,12 @@ const t_patterns Board::_attack_patterns = {
             {0b110101010101, FIVE_SCORE},
 
             {0b000101010100, OPEN_FOUR_SCORE},
+
             {0b110101010100, FOUR_SCORE},
             {0b100101010100, FOUR_SCORE},
             {0b000101010111, FOUR_SCORE},
             {0b000101010110, FOUR_SCORE},
+
             {0b000101010000, OPEN_THREE_SCORE},
             {0b000101010011, OPEN_THREE_SCORE},
             {0b000101010010, OPEN_THREE_SCORE},
@@ -26,24 +28,26 @@ const t_patterns Board::_attack_patterns = {
             {0b010001010100, OPEN_THREE_SCORE},
             {0b000100010100, OPEN_THREE_SCORE},
             {0b000101000100, OPEN_THREE_SCORE},
-            {0b000001010110, THREE_SCORE},
-            {0b000001010111, THREE_SCORE},
+
+            {0b000001010110, THREE_SCORE}, // TODO
+            {0b000001010111, THREE_SCORE}, // TODO
             {0b100101010000, THREE_SCORE},
             {0b110101010000, THREE_SCORE},
+
             {0b000101000000, OPEN_TWO_SCORE},
             {0b000101000010, OPEN_TWO_SCORE},
             {0b000101000011, OPEN_TWO_SCORE},
-            {0b000001010000, OPEN_TWO_SCORE},
-            {0b000001010010, OPEN_TWO_SCORE},
-            {0b000001010011, OPEN_TWO_SCORE},
-            {0b000001010000, OPEN_TWO_SCORE},
+            {0b000001010000, OPEN_TWO_SCORE}, // TODO
+            {0b000001010010, OPEN_TWO_SCORE}, // TODO
+            {0b000001010011, OPEN_TWO_SCORE}, // TODO
+            {0b000001010000, OPEN_TWO_SCORE}, // TODO
             {0b100001010000, OPEN_TWO_SCORE},
             {0b110001010000, OPEN_TWO_SCORE},
-            {0b000000010100, OPEN_TWO_SCORE},
-            {0b100000010100, OPEN_TWO_SCORE},
-            {0b110000010100, OPEN_TWO_SCORE},
-            {0b000000010111, TWO_SCORE},
-            {0b000001000110, TWO_SCORE},
+            {0b000000010100, OPEN_TWO_SCORE}, // TODO
+            {0b100000010100, OPEN_TWO_SCORE}, // TDO
+            {0b110000010100, OPEN_TWO_SCORE}, // TODO
+            {0b000000010111, TWO_SCORE}, // TODO
+            {0b000001000110, TWO_SCORE}, // TODO
             {0b100100010000, TWO_SCORE},
             {0b110101000000, TWO_SCORE},
         }
@@ -276,26 +280,22 @@ Board::Board(uint8_t size) {
     original = new uint64_t[size];
 
     std::memset(original, 0, sizeof(uint64_t) * size);
+    _evaluation_edges = {
+        {0, size},
+        {0, size}
+    };
 }
 
 Board::~Board() {
     delete[] original;
 }
 
-// int Board::diagonal_position(t_coord position) const {
-//     return (position.y + position.x) * size + position.x;
-// }
-
-// int Board::original_position(t_coord position) const {
-//     return position.y * size + position.x;
-// }
-
-// int Board::vertical_position(t_coord position) const {
-//     return position.x * size + (size - 1 - position.y);
-// }
-
 t_coord Board::diagonal_position(t_coord position) const {
     return t_coord{position.x , position.x + position.y};
+}
+
+t_coord Board::anti_diagonal_position(t_coord position) const {
+    return t_coord{position.x, position.x - position.y};
 }
 
 t_coord Board::original_position(t_coord position) const {
@@ -313,7 +313,6 @@ void Board::validate_coord(t_coord position) {
 
 t_piece Board::get_piece(t_coord piece_coord, t_board_type type) {
     t_coord pos;
-    uint8_t board_size = this->size;
     position_func position_func_d;
 
     switch (type) {
@@ -325,12 +324,14 @@ t_piece Board::get_piece(t_coord piece_coord, t_board_type type) {
             break;
         case DIAGONAL:
             pos = diagonal_position(piece_coord);
-            // std::cout << "Diagonal: " << pos.x << " " << pos.y << std::endl;
+            break;
+        case ANTI_DIAGONAL:
+            pos = anti_diagonal_position(piece_coord);
             break;
         default:
             return ERROR;
     }
-    if (pos.x < 0 || pos.x >= size || pos.y < 0 || pos.y >= board_size)
+    if (pos.x < 0 || pos.x >= size || pos.y < 0 || pos.y >= size)
         return ERROR;
     return (t_piece)((original[pos.y] >> ((pos.x % 32) * 2)) & 3);
 }
@@ -355,25 +356,19 @@ void Board::remove_piece(t_coord position) {
     set_position(position, EMPTY);
 }
 
+//  add position specific evaluation for ordering
 
 int64_t Board::evaluate_position(t_coord pos, t_piece color, t_board_type type) {
-    // uint16_t pattern = 0;
-
     uint16_t pattern = get_piece(t_coord{pos.x - 1, pos.y}, type);
-    // int shift = std::min(pos.x, (int)size - 6) << 2;
-    // pattern |= ((board[pos.y]) << shift) & 0xfff;
-    for (int i = -1; i < 5; i++) {
-        pattern = (pattern << 2);
-        t_coord new_pos = {pos.x + i, pos.y};
-        pattern |= get_piece(new_pos, type);
-    }
     
-    // std::cout << "Pattern: " << std::hex << std::bitset<12>(pattern) << std::dec << std::endl;
+    // TODO: Implement add capture score
+    // Mark Illegal move BLANK as ERROR
+
+    for (int i = 0; i < 5; i++)
+        pattern = pattern << 2 | get_piece(t_coord{pos.x + i, pos.y}, type);
+
     auto d = _attack_patterns.at(color).find(pattern);
     if (d != _attack_patterns.at(color).end()) {
-        // std::cout << "Score: " << d->second << std::endl;
-        // std::cout << "Pattern: " 
-        // std::cout << "Line: " << std::hex << std::bitset<64>(board[pos.y]) << std::dec << std::endl;
         return d->second;
     }
     return 0;
@@ -381,26 +376,26 @@ int64_t Board::evaluate_position(t_coord pos, t_piece color, t_board_type type) 
 
 int64_t Board::evaluate_board(t_piece player_color) {
     int64_t score = 0;
+    t_coord pos;
 
-    for (int y = _evaluation_edges.y.first; y < _evaluation_edges.y.second; y++) {
+    for (int y = _evaluation_edges.y.first; y < _evaluation_edges.y.first + 1; y++) {
         if (!original[y])
             continue;
         for (int x = _evaluation_edges.x.first; x < _evaluation_edges.x.second; x +=5) {
-            t_coord pos = {x, y};
-            if (y < size) {
-                score += evaluate_position(pos, player_color, ORIGINAL);
-                score += evaluate_position(pos, player_color, VERTICAL);
-                score += evaluate_position(pos, player_color, DIAGONAL);
-                score -= evaluate_position(pos, GET_OPPOSITE_PIECE(player_color), ORIGINAL);
-                score -= evaluate_position(pos, GET_OPPOSITE_PIECE(player_color), VERTICAL);
-                score -= evaluate_position(pos, GET_OPPOSITE_PIECE(player_color), DIAGONAL);
-            }
+            if ((original[y] & (1LL << (x * 2))) == 0)
+                continue;
+            pos = {x, y};
+            score += evaluate_position(pos, player_color, ORIGINAL);
+            score += evaluate_position(pos, player_color, VERTICAL);
+            score += evaluate_position(pos, player_color, DIAGONAL);
+            score -= evaluate_position(pos, GET_OPPOSITE_PIECE(player_color), ORIGINAL);
+            score -= evaluate_position(pos, GET_OPPOSITE_PIECE(player_color), VERTICAL);
+            score -= evaluate_position(pos, GET_OPPOSITE_PIECE(player_color), DIAGONAL);
         }
     }
     return score;
 }
 
-    #include <chrono>
 int main() {
 
     Board board(19);
@@ -461,6 +456,8 @@ int main() {
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration<double, std::milli>(end - start).count();
+    std::cout << board.evaluate_board(BLACK) << std::endl;
+    // Execution time: 464.538 milliseconds
     std::cout << "Execution time: " << duration << " milliseconds" << std::endl;
 
     return 0;

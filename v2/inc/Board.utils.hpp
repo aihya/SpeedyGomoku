@@ -17,7 +17,8 @@ typedef enum        e_board_type
 {
     ORIGINAL,
     VERTICAL,
-    DIAGONAL
+    DIAGONAL,
+    ANTI_DIAGONAL
 }                   t_board_type;
 
 typedef enum        e_scores
