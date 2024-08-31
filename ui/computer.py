@@ -151,7 +151,6 @@ class Computer:
             buffer = self.process.before.decode('utf-8').split('\n')
 
             if index == 3: # Suggestion
-                print('allo')
                 return index, self.extract_suggestion(buffer)
             else:
                 # Extract the move informations and store it in a dictionary

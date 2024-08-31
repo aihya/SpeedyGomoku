@@ -160,13 +160,14 @@ class CheckBox(Surface):
         print(self.alignment)
 
         if self.alignment == VERTICAL:
-            self._label = h3_r.render(label, True, LIGHT)
+            self._label = h4_r.render(label, True, LIGHT)
             self._label_rect = self.label.get_rect()
             self._label_rect.left = 70
+            self._label_rect.top = 5
             _height = self.HEIGHT
             _width = self._label.get_width() + 70
         else:
-            self._label = h6_r.render(label, True, LIGHT)
+            self._label = h4_r.render(label, True, LIGHT)
             self._label_rect = self.label.get_rect()
             self._label_rect.left = 50
             self._label_rect.top = 5

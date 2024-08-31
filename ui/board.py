@@ -6,7 +6,6 @@ from computer import Computer, Player
 from components import Button, CheckBoxs
 from state      import States, State
 import fonts
-import fonts
 
 class Setup(Surface):
     """ 
@@ -19,7 +18,7 @@ class Setup(Surface):
         super().__init__(WIDTH-HEIGHT, HEIGHT, alpha=True, *args, **kwargs)
         self._repeat = True
 
-        self._start = Button(LIGHT, GRAY_2, "START", fonts.h3_t, expand=True, relative_to=self)
+        self._start = Button(LIGHT, GRAY_2, "START", fonts.h3_b, expand=True, relative_to=self)
         self._start.position = (0, self.height - self._start.height)
         
         # Player 1 setup surface
@@ -60,6 +59,8 @@ class Setup(Surface):
             relative_to=self.rules_surf,
             alpha=True
         )
+
+        
 
         self._p1 = None
         self._p2 = None
@@ -178,14 +179,14 @@ class Setup(Surface):
         self.surface.fill(GRAY_1)
 
         # Title
-        middle = fonts.h3_b.render('Game Setup', True, LIGHT)
+        middle = fonts.h2_b.render('Game Setup', True, LIGHT)
         middle_rect = middle.get_rect()
         middle_rect.center = (int(self.width / 2), 60)
 
         # VS
-        vs = fonts.h3_r.render('VS', True, LIGHT)
-        vs_rect = vs.get_rect()
-        vs_rect.center = (int(self.width / 2), 140)
+        # vs = fonts.h3_r.render('VS', True, LIGHT)
+        # vs_rect = vs.get_rect()
+        # vs_rect.center = (int(self.width / 2), 140)
 
         type_checkboxs = [*self.p1_type.container, *self.p2_type.container]
         mode_checkboxs = [*self.p1_mode.container, *self.p2_mode.container]
@@ -229,7 +230,7 @@ class Setup(Surface):
         self.start.update()
         self.surface.blit(self.start.surface, self.start.rect, special_flags=pygame.BLEND_RGBA_MAX)
         self.surface.blit(middle, middle_rect)
-        self.surface.blit(vs, vs_rect)
+        # self.surface.blit(vs, vs_rect)
 
         if self.start.pressed:
             self.start.pressed = False
@@ -384,16 +385,17 @@ class Board(Surface):
     This class represents the board surface.
     """
 
-    __slots__ = ('_turn', '_setup', '_states', '_computer', '_repeat', '_offset', '_limit', '_step', '_linspace', '_p1', '_p2', '_finished')
+    __slots__ = ('_turn', '_setup', '_states', '_computer', '_size', '_repeat', '_offset', '_limit', '_step', '_linspace', '_p1', '_p2', '_finished')
 
-    def __init__(self, states, setup, p1, p2, computer, *args, **kwargs):
+    def __init__(self, states, setup, p1, p2, computer, size=19, *args, **kwargs):
         super().__init__(HEIGHT, HEIGHT, *args, **kwargs)
         self._setup    = setup
         self._states   = states
-        self._offset   = 40
-        self._limit    = self.height - (self.offset * 2) - 18
-        self._step     = int(self.limit / 18)
-        self._linspace = [i + self.step for i in range(0, self.width - self.offset, self.step)]
+        self._offset   = 60
+        self._size     = size
+        self._step     = int((self.height-self.offset) / self.size)
+        self._limit    = self.offset + self.step * (self.size-1)
+        self._linspace = [i for i in range(self.offset, self.limit+1, self.step)]
         self._p1       = p1
         self._p2       = p2
         self._turn     = self._p1
@@ -448,6 +450,10 @@ class Board(Surface):
     def step(self):
         return self._step
 
+    @limit.setter
+    def limit(self, value):
+        self._limit = value
+
     @property
     def linspace(self):
         return self._linspace
@@ -455,6 +461,10 @@ class Board(Surface):
     @property
     def finished(self):
         return self._finished
+    
+    @property
+    def size(self):
+        return self._size
     
     @finished.setter
     def finished(self, value):
@@ -470,93 +480,93 @@ class Board(Surface):
         self.surface.fill(BOARD_COLOR)
         pygame.draw.line(self.surface, GRAY_1, (self.width-1, 0), (self.width-1, HEIGHT), 1)
         
-        for i in range(0, 19):
-            # Draw horizontal lines
-            ys, xs = self.offset + (i * self.step), self.offset + 0
-            ye, xe = self.offset + (i * self.step), self.offset + self.limit
-            pygame.draw.line(self.surface, pygame.Color('#000000'), (xs, ys), (xe, ye), 2 if i in (0, 3, 9, 15, 18) else 1)
-
+        for i in range(0, self.size):
             # Draw vertical lines
-            xs, ys = self.offset + (i * self.step), self.offset + 0
-            xe, ye = self.offset + (i * self.step), self.offset + self.limit
-            pygame.draw.line(self.surface, pygame.Color('#000000'), (xs, ys), (xe, ye), 2 if i in (0, 3, 9, 15, 18) else 1)
+            ys, xs = self.offset + (i * self.step), self.offset
+            ye, xe = self.offset + (i * self.step), self.limit
+            pygame.draw.line(self.surface, pygame.Color('#000000'), (xs, ys), (xe, ye), 2 if i in (0, self.size - 1) else 1)
+
+            # Draw horizontal lines
+            xs, ys = self.offset + (i * self.step), self.offset
+            xe, ye = self.offset + (i * self.step), self.limit
+            pygame.draw.line(self.surface, pygame.Color('#000000'), (xs, ys), (xe, ye), 2 if i in (0, self.size - 1) else 1)
 
             x, y = -1, -1
             if self.check_hover():
                 x, y = pygame.mouse.get_pos()
-                y = math.floor((y-16) / self.step)
-                x = math.floor((x-16) / self.step)
+                y = math.floor((y - self.step / 2) / self.step)
+                x = math.floor((x - self.step / 2) / self.step)
 
             # Draw y-coords
-            font = fonts.h4_b if y == i else fonts.h4_t
-            text = font.render(f'{i}', True, BLACK)
+            font = fonts.h5_b if y == i else fonts.h5_t
+            text = font.render(f'{i+1}', True, BLACK)
             text_rect = text.get_rect()
-            text_rect.center = (self.width - 25, self.linspace[i])
+            text_rect.center = (25, self.offset + (i * self.step))
             self.surface.blit(text, text_rect)
 
             # Draw x-coords
-            font = fonts.h4_b if x == i else fonts.h4_t
+            font = fonts.h5_b if x == i else fonts.h5_t
             text = font.render(f'{"ABCDEFGHIJKLMNOPQRS"[i]}', True, BLACK)
             text_rect = text.get_rect()
-            text_rect.center = (self.linspace[i], self.width - 25)
+            text_rect.center = (self.offset + (i * self.step), 25)
             self.surface.blit(text, text_rect)
-        
 
     def draw_state(self):
+        radius = self.step // 2 - 5
         for r, row in enumerate(self.states.current.state):
             for c, col in enumerate(row):
                 if col in (1, 2):
                     color = "#ffffff" if col == 2 else "#000000"
-                    x = self.linspace[c] + 1
-                    y = self.linspace[r] + 1
-                    Board.draw_circle(self.surface, x, y, 16, pygame.Color(color))
+                    x = self.offset + c * self.step
+                    y = self.offset + r * self.step
+                    Board.draw_circle(self.surface, x, y, radius, pygame.Color(color))
 
                     counter = self.states.current.count.get((c, r))
                     if counter == None:
                         continue
                     if counter == self.states.counter:
-                        x = self.linspace[c] + 1
-                        y = self.linspace[r] + 1
-                        Board.draw_circle(self.surface, x+12, y-12, 5, (255, 255, 0))
-                        count_text = fonts.h5_b.render(f'{counter}', True, (255, 0, 0))
+                        x = self.offset + c * self.step
+                        y = self.offset + r * self.step
+                        Board.draw_circle(self.surface, x+self.step//2-10, y-self.step//2+10, 5, (255, 255, 0))
+                        count_text = fonts.h6_b.render(f'{counter}', True, (255, 0, 0))
 
-                    count_text = fonts.h5_b.render(f'{counter}', True, (0, 0, 0) if col == 2 else (255, 255, 255))
+                    font = fonts.h6_b if self.size > 15 else fonts.h5_b
+                    count_text = font.render(f'{counter}', True, (0, 0, 0) if col == 2 else (255, 255, 255))
                     count_rect = count_text.get_rect()
                     count_rect.center = (x, y)
                     self.surface.blit(count_text, count_rect)
 
                 elif col == 3:
-                    x = self.linspace[c] + 1
-                    y = self.linspace[r] + 1
+                    x = self.offset + c * self.step
+                    y = self.offset + r * self.step
                     Board.draw_circle(self.surface, x, y, 3, pygame.Color('#E83907'))
 
                 elif col == 4:
-                    x = self.linspace[c] + 1
-                    y = self.linspace[r] + 1
+                    x = self.offset + c * self.step
+                    y = self.offset + r * self.step
                     Board.draw_circle(self.surface, x, y, 3, pygame.Color('#00ff00'))
 
         if self.states.last == self.states.current and self.states.last.suggestion:
             # Show suggestion only if we are at the last state
-            color = "#ffffff99" if self.turn.turn == 2 else "#00000099"
+            color = "#ffffff88" if self.turn.turn == 2 else "#00000088"
             x = self.linspace[self.states.last.suggestion['move'][0]] + 1
             y = self.linspace[self.states.last.suggestion['move'][1]] + 1
-            Board.draw_circle(self.surface, x, y, 16, pygame.Color(color))
+            Board.draw_circle(self.surface, x, y, radius, pygame.Color(color))
 
     def check_hover(self):
         x, y = pygame.mouse.get_pos()
-        if x >= self.offset and x <= self.limit + self.offset:
-            if y >= self.offset and y <= self.limit + self.offset:
+        if x >= self.offset and x <= self.limit:
+            if y >= self.offset and y <= self.limit:
                 return True
         return False
 
     def show_hover(self):
-        radius = 16
+        radius = math.floor(self.step / 2)
         color = "#ffffff" if self.turn == self.p2 else "#000000"
         x, y = pygame.mouse.get_pos()
-        x = self.linspace[math.floor((x-radius) / self.step)]+1
-        y = self.linspace[math.floor((y-radius) / self.step)]+1
-        # if math.sqrt((x-nx)**2 + (y-ny)**2) <= 10:
-        #     x, y = nx + 1, ny + 1
+        x = self.linspace[math.floor((x-self.offset+self.step/2) / self.step)]
+        y = self.linspace[math.floor((y-self.offset+self.step/2) / self.step)]
+        print(x, y, self.linspace, len(self.linspace))
         Board.draw_circle(self.surface, x, y, radius, pygame.Color(color))
 
         # Show the current count value on the hover piece.
@@ -614,14 +624,19 @@ class Board(Surface):
 
                 if pos and self.check_hover() and self.states.index == -1:
                     # 16 is the diameter of the pieces
-                    x = math.floor((pos[0]-16) / self.step)
-                    y = math.floor((pos[1]-16) / self.step)
+                    # x = math.floor((pos[0]-16) / self.step)
+                    # y = math.floor((pos[1]-16) / self.step)
+                    x = math.floor((pos[0]-self.offset+self.step/2) / self.step)
+                    y = math.floor((pos[1]-self.offset+self.step/2) / self.step)
+                    # x = self.offset + x * self.step - self.step
+                    # y = self.offset + y * self.step - self.step
 
                     # print()
                     # if self.states.last.state[y][x] == '0':
                         # Send coords to the process and want for responce
                         # only if the position does not corresponde to an
                         # illegal move or is not already occupied.
+                    print(pos, x, y)
                     self.computer.send(f'M\n{x} {y}\n')
             else:
                 # Process the received output

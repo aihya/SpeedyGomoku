@@ -2,7 +2,6 @@ import pygame
 from surface    import Surface
 from fonts      import *
 from init       import *
-# from setup      import Setup
 from board      import Setup, Board, Game
 from final      import Final
 from state      import State
