@@ -239,7 +239,7 @@ class Setup(Surface):
 
 class Stats(Surface):
 
-    __slots__ = ('_left', '_right', '_rff', '_lff', '_states', '_board', '_text', '_restart', '_suggest')
+    __slots__ = ('_left', '_right', '_rff', '_lff', '_states', '_board', '_text', '_restart', '_suggest', '_player_header', '_versus_message')
 
     def __init__(self, states, board, *args, **kwargs):
         super().__init__(WIDTH-HEIGHT, HEIGHT, *args, **kwargs)
@@ -260,11 +260,6 @@ class Stats(Surface):
         self._right.position = (self.width / 2, self.height - self.left.height)
         self._lff.position   = (self.width / 2 - self.left.width * 2, self.height - self.left.height)
         self._rff.position   = (self.width / 2 + self.right.width, self.height - self.left.height)
-
-        self._text = {
-            'black': fonts.h3_t.render('Black', True, BLACK),
-            'white': fonts.h3_t.render('White', True, BLACK),
-        }
 
         self._states = states
         self._board = board
@@ -287,6 +282,9 @@ class Stats(Surface):
             relative_to=self)
         self._suggest.position = (self.width - self._suggest.width - 30, self._restart.width + 30)
 
+        self._player_header = fonts.h3_b.render('Players', True, WHITE)
+        self._versus_message = fonts.h3_r.render('VS', True, WHITE)
+
     @property
     def states(self):
         return self._states
@@ -294,6 +292,14 @@ class Stats(Surface):
     @property
     def board(self):
         return self._board
+
+    @property
+    def player_header(self):
+        return self._player_header
+    
+    @property
+    def versus_message(self):
+        return self._versus_message
 
     def check_hover(self):
         if self.abs_rect.collidepoint(pygame.mouse.get_pos()):
@@ -315,10 +321,6 @@ class Stats(Surface):
     @property
     def rff(self):
         return self._rff
-
-    @property
-    def text(self):
-        return self._text
 
     @property
     def restart(self):
@@ -352,21 +354,40 @@ class Stats(Surface):
 
     def update(self, events):
         self.surface.fill(GRAY_1)
-        Board.draw_circle(self.surface, 50, 50, 20, BLACK)
-        Board.draw_circle(self.surface, 50, 100, 20, WHITE)
-        self.surface.blit(self.text['black'], (90, 32))
-        self.surface.blit(self.text['white'], (90, 82))
+
         if self.board.turn.turn == 1:
-            ind_x, ind_y = 50, 50
+            ind_x, ind_y = self.width // 4, 150
         else:
-            ind_x, ind_y = 50, 100
-        Board.draw_circle(self.surface, ind_x, ind_y, 10, pygame.Color('#FFFF00'))
+            ind_x, ind_y = 3 * self.width // 4, 150
 
-        self.restart.update()
-        self.surface.blit(self.restart.surface, self.restart.rect)
+        Board.draw_circle(self.surface, ind_x, ind_y, 60, pygame.Color('#FFFF00'))
+        Board.draw_circle(self.surface, self.width // 4, 150, 50, BLACK)
+        Board.draw_circle(self.surface, 3 * self.width // 4, 150, 50, WHITE)
 
-        self.suggest.update()
-        self.surface.blit(self.suggest.surface, self.suggest.rect)
+        self.surface.blit(self.player_header, (self.width / 2 - self.player_header.get_rect()[2] / 2, 30))
+        self.surface.blit(self.versus_message, (self.width / 2 - self.versus_message.get_rect()[2] / 2, 130))
+
+        if self.states.states[-1].captures == None:
+            white_score, black_score = 0, 0
+        else:
+            black_score = self.states.states[-1].captures[0]
+            white_score = self.states.states[-1].captures[1]
+        black_score_text = fonts.h2_b.render(f'{black_score}', True, WHITE)
+        white_score_text = fonts.h2_b.render(f'{white_score}', True, BLACK)
+
+        black_score_text_rect = black_score_text.get_rect()
+        black_score_text_rect.center = (    self.width // 4, 150)
+
+        white_score_text_rect = white_score_text.get_rect()
+        white_score_text_rect.center = (3 * self.width // 4, 150)
+        self.surface.blit(black_score_text, black_score_text_rect)
+        self.surface.blit(white_score_text, white_score_text_rect)
+
+        # self.restart.update()
+        # self.surface.blit(self.restart.surface, self.restart.rect)
+
+        # self.suggest.update()
+        # self.surface.blit(self.suggest.surface, self.suggest.rect)
 
         self.left.update()
         self.right.update()
@@ -566,7 +587,7 @@ class Board(Surface):
         x, y = pygame.mouse.get_pos()
         x = self.linspace[math.floor((x-self.offset+self.step/2) / self.step)]
         y = self.linspace[math.floor((y-self.offset+self.step/2) / self.step)]
-        print(x, y, self.linspace, len(self.linspace))
+        # print(x, y, self.linspace, len(self.linspace))
         Board.draw_circle(self.surface, x, y, radius, pygame.Color(color))
 
         # Show the current count value on the hover piece.
