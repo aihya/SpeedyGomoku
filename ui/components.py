@@ -13,7 +13,7 @@ class Button(Surface):
     Class representing an interactive button object
     """
 
-    def __init__(self, fg, bg, content, font, hover_color=None, disabled=False, interactive=True, expand=False, *args, **kwargs):
+    def __init__(self, fg, bg, content, font, width=None, height=None, hover_color=None, disabled=False, interactive=True, expand=False, *args, **kwargs):
 
         self._font = font
         self._bg_str = bg
@@ -32,8 +32,12 @@ class Button(Surface):
         else:
             self._content = content
 
-        _width = kwargs['relative_to'].width if expand else self.content.get_width() + 60
-        super().__init__(_width, self.content.get_height() + 30, *args, **kwargs)
+        if width == None:
+            _width = kwargs['relative_to'].width if expand else self.content.get_width() + 60
+        else:
+            _width = width
+        _height = self.content.get_height() + 30 if height == None else height
+        super().__init__(_width, _height, *args, **kwargs)
 
         self._content_rect = self._content.get_rect()
         self._content_rect.center = (int(self.width / 2), int(self.height / 2))

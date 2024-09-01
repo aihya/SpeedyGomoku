@@ -252,10 +252,10 @@ class Stats(Surface):
         lff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png'), (50, 50))
         lff_img = pygame.transform.rotate(lff_img, 180)
 
-        self._left  = Button(BLACK, GRAY_3, l_img, None, hover_color=WHITE, relative_to=self)
-        self._lff   = Button(BLACK, GRAY_3, lff_img, None, hover_color=WHITE, relative_to=self)
-        self._right = Button(BLACK, GRAY_3, r_img, None, hover_color=WHITE, relative_to=self)
-        self._rff   = Button(BLACK, GRAY_3, rff_img, None, hover_color=WHITE, relative_to=self)
+        self._left  = Button(WHITE, GRAY_1, l_img, None, hover_color=GRAY_3, relative_to=self)
+        self._lff   = Button(WHITE, GRAY_1, lff_img, None, hover_color=GRAY_3, relative_to=self)
+        self._right = Button(WHITE, GRAY_1, r_img, None, hover_color=GRAY_3, relative_to=self)
+        self._rff   = Button(WHITE, GRAY_1, rff_img, None, hover_color=GRAY_3, relative_to=self)
         self._left.position  = (self.width / 2 - self.left.width, self.height - self.left.height)
         self._right.position = (self.width / 2, self.height - self.left.height)
         self._lff.position   = (self.width / 2 - self.left.width * 2, self.height - self.left.height)
@@ -264,23 +264,25 @@ class Stats(Surface):
         self._states = states
         self._board = board
 
+        # suggest_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/suggest.png'), (50, 50))
+        suggest_img = fonts.h3_b.render('Suggestion', True, WHITE)
+        self._suggest = Button(
+            '#000000', 
+            GRAY_2, 
+            suggest_img, 
+            None, 
+            relative_to=self)
+        self._suggest.position = (110, 3.8 * self.height // 5)
+
         restart_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/reload.png'), (50, 50))
         self._restart = Button(
             '#000000', 
             '#31E8DF', 
             restart_img, 
             None, 
+            height = self.suggest.height,
             relative_to=self)
-        self._restart.position = (self.width - self._restart.width - 30, 30)
-
-        suggest_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/suggest.png'), (50, 50))
-        self._suggest = Button(
-            '#000000', 
-            '#FFE601', 
-            suggest_img, 
-            None, 
-            relative_to=self)
-        self._suggest.position = (self.width - self._suggest.width - 30, self._restart.width + 30)
+        self._restart.position = (1.9 * self.width / 3, 3.8 * self.height // 5)
 
         self._player_header = fonts.h3_b.render('Players', True, WHITE)
         self._versus_message = fonts.h3_r.render('VS', True, WHITE)
@@ -383,11 +385,11 @@ class Stats(Surface):
         self.surface.blit(black_score_text, black_score_text_rect)
         self.surface.blit(white_score_text, white_score_text_rect)
 
-        # self.restart.update()
-        # self.surface.blit(self.restart.surface, self.restart.rect)
+        self.restart.update()
+        self.surface.blit(self.restart.surface, self.restart.rect)
 
-        # self.suggest.update()
-        # self.surface.blit(self.suggest.surface, self.suggest.rect)
+        self.suggest.update()
+        self.surface.blit(self.suggest.surface, self.suggest.rect)
 
         self.left.update()
         self.right.update()
@@ -412,7 +414,7 @@ class Board(Surface):
         super().__init__(HEIGHT, HEIGHT, *args, **kwargs)
         self._setup    = setup
         self._states   = states
-        self._offset   = 60
+        self._offset   = 50
         self._size     = size
         self._step     = int((self.height-self.offset) / self.size)
         self._limit    = self.offset + self.step * (self.size-1)
