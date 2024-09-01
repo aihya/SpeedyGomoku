@@ -28,6 +28,7 @@ class Gomoku
         size_t                                  _turn;
         t_rule                                  _rule;
         bool                                    _game_over;
+        t_updates                               _updates_queue;
     public:
 
         Board                                   _board;
@@ -42,6 +43,6 @@ class Gomoku
         t_coord                 human_move(t_player& player, t_player& opponent, Board & board);
         t_coord                 ai_move(t_player& player, t_player& opponent, Board & board);
         t_moveset               generate_rule_moveset(t_piece piece, Board &board);
-        int64_t                 negascout(t_moveset& moveset, Board& board, uint8_t depth, t_prunner prunner);
+        t_scored_coord          negascout(t_ordered_moves& moveset, Board& board, t_piece curr_piece, uint8_t depth, t_prunner prunner);
         void                    make_move(t_player& player, t_player& opponent);
 };

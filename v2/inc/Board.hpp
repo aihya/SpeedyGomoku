@@ -1,3 +1,4 @@
+#pragma once
 #include <unistd.h>
 #include <limits>
 #include <memory>   // For std::unique_ptr
@@ -28,26 +29,31 @@ class  Board {
         static constexpr uint8_t            WHITE_CAPTURE_PATTERN = ~BLACK_CAPTURE_PATTERN; // OXXO pattern for WHITE
 
     public:
-                        Board(uint8_t size);
-                        ~Board();
-        void            validate_coord(t_coord position, t_piece piece) const;
-        void            set_position(t_coord position, t_piece piece);
-        inline t_piece  get_piece(t_coord piece_coord) const;
-        inline t_piece  get_piece(uint64_t *board, t_coord piece_coord) const;
-        inline void     remove_piece(t_coord position);
-        int64_t         evaluate_board(t_piece player_color);
-        int64_t         evaluate_position(t_coord pos, t_piece color, t_coord dir, const t_scores_map &patterns);
-        void            print_board(t_piece curr_piece) const;
-        void            make_move(t_coord pos, t_piece piece);
-
+                                    Board(uint8_t size);
+                                    ~Board();
+        void                        validate_coord(t_coord position, t_piece piece) const;
+        int64_t                     evaluate_board(t_piece player_color);
+        void                        print_board(t_piece curr_piece) const;
+        size_t                      make_move(t_coord pos, t_piece piece, t_updates& updates_queue);
+        t_ordered_moves             order_moves(t_piece color);
+        void                        revert_updates(t_updates& updates, size_t count);
     private:
-        void            update_board(uint64_t *board, t_coord pos, t_piece piece);
-        bool            check_for_win(t_coord pos, t_piece color, t_coord dir) const;
-        bool            possible_capture(t_coord pos, t_piece color, t_coord dir) const;
-        uint8_t         capture_pattern(t_coord pos, t_coord dir, t_piece piece) const;
-        void            update_node(t_board_update_queue& updates_queue, const t_board_update& curr_update);
-        void            update_board(t_board_update_queue& updates_queue);
-        bool            evaluate_capture(t_coord pos, t_coord dir);
-        DualColorPotential  position_potential(t_coord pos, t_coord dir);
-        void                evaluate_position(t_coord pos);
+        inline void                 remove_piece(t_coord position);
+        inline t_piece              get_piece(uint64_t *board, t_coord piece_coord) const;
+        inline t_piece              get_piece(t_coord piece_coord) const;
+        void                        set_position(t_coord position, t_piece piece);
+        int64_t                     evaluate_position(t_coord pos, t_piece color, t_coord dir, const t_scores_map &patterns);
+        void                        update_board(uint64_t *board, t_coord pos, t_piece piece);
+        bool                        check_for_win(t_coord pos, t_piece color, t_coord dir) const;
+        bool                        possible_capture(t_coord pos, t_piece color, t_coord dir) const;
+        uint8_t                     capture_pattern(t_coord pos, t_coord dir, t_piece piece) const;
+        void                        update_node(t_updates& updates_queue, t_coord curr_pos, t_piece curr_piece);
+        bool                        evaluate_capture(t_coord pos, t_coord dir);
+        DualColorPotential          position_potential(t_coord pos, t_coord dir);
+        void                        evaluate_new_move(t_updates &updates_queue, t_coord pos);
+        void                        record_illegal_update(t_updates &updates_queue, t_coord pos, t_piece color, t_update_type type);
+        void                        record_moveset_update(t_updates &updates_queue, t_coord pos, t_piece color, int64_t score, t_update_type type);
+        void                        record_board_update(t_updates &updates_queue, t_coord pos, t_piece piece, t_update_type type);
+        void                        revert_illegal_update(t_update& update);
+        void                        revert_moveset_update(const t_update& update);
 };

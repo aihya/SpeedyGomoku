@@ -1,6 +1,345 @@
-#include "Board.patterns.cpp"
 #include <iostream>
 #include <random>
+#include "Board.hpp"
+
+const t_patterns Board::_attack_patterns = {
+    {
+        BLACK, {
+            {0b010101010100, FIVE_SCORE},
+            {0b010101010110, FIVE_SCORE},
+            {0b010101010111, FIVE_SCORE},
+            {0b000101010101, FIVE_SCORE},
+            {0b100101010101, FIVE_SCORE},
+            {0b110101010101, FIVE_SCORE},
+            {0b000101010100, OPEN_FOUR_SCORE},
+            {0b110101010100, FOUR_SCORE},
+            {0b100101010100, FOUR_SCORE},
+            {0b000101010111, FOUR_SCORE},
+            {0b000101010110, FOUR_SCORE},
+            {0b000001010110, THREE_SCORE},
+            {0b000001010111, THREE_SCORE},
+            {0b100101010000, THREE_SCORE},
+            {0b110101010000, THREE_SCORE},
+            {0b000101000000, OPEN_TWO_SCORE},
+            {0b000101000010, OPEN_TWO_SCORE},
+            {0b000101000011, OPEN_TWO_SCORE},
+            {0b000001010000, OPEN_TWO_SCORE},
+            {0b000001010010, OPEN_TWO_SCORE},
+            {0b000001010011, OPEN_TWO_SCORE},
+            {0b000001010000, OPEN_TWO_SCORE},
+            {0b100001010000, OPEN_TWO_SCORE},
+            {0b110001010000, OPEN_TWO_SCORE},
+            {0b000000010100, OPEN_TWO_SCORE},
+            {0b100000010100, OPEN_TWO_SCORE},
+            {0b110000010100, OPEN_TWO_SCORE},
+            {0b000000010111, TWO_SCORE},
+            {0b000001000110, TWO_SCORE},
+            {0b100100010000, TWO_SCORE},
+            {0b110101000000, TWO_SCORE},
+        }
+    },
+    {
+        WHITE, {
+            {0b101010101000, FIVE_SCORE},
+            {0b101010101001, FIVE_SCORE},
+            {0b101010101011, FIVE_SCORE},
+            {0b001010101010, FIVE_SCORE},
+            {0b011010101010, FIVE_SCORE},
+            {0b111010101010, FIVE_SCORE},
+            {0b001010101000, OPEN_FOUR_SCORE},
+            {0b111010101000, FOUR_SCORE},
+            {0b011010101000, FOUR_SCORE},
+            {0b001010101011, FOUR_SCORE},
+            {0b001010101001, FOUR_SCORE},
+            {0b000010101001, THREE_SCORE},
+            {0b000010101011, THREE_SCORE},
+            {0b011010100000, THREE_SCORE},
+            {0b111010100000, THREE_SCORE},
+            {0b001010000000, OPEN_TWO_SCORE},
+            {0b001010000001, OPEN_TWO_SCORE},
+            {0b001010000011, OPEN_TWO_SCORE},
+            {0b000010100000, OPEN_TWO_SCORE},
+            {0b000010100001, OPEN_TWO_SCORE},
+            {0b000010100011, OPEN_TWO_SCORE},
+            {0b000010100000, OPEN_TWO_SCORE},
+            {0b010010100000, OPEN_TWO_SCORE},
+            {0b110010100000, OPEN_TWO_SCORE},
+            {0b000000101000, OPEN_TWO_SCORE},
+            {0b010000101000, OPEN_TWO_SCORE},
+            {0b110000101000, OPEN_TWO_SCORE},
+            {0b000010001001, TWO_SCORE},
+            {0b000000101011, TWO_SCORE},
+            {0b011000100000, TWO_SCORE},
+            {0b111010000000, TWO_SCORE},
+        },
+    }
+};
+
+const t_patterns Board::_illegal_patterns
+{
+    {
+        BLACK, {
+            {0b000101010000, ILLEGAL_SCORE},
+            {0b000101010011, ILLEGAL_SCORE},
+            {0b000101010010, ILLEGAL_SCORE},
+            {0b000101010001, ILLEGAL_SCORE},
+            {0b000001010100, ILLEGAL_SCORE},
+            {0b110001010100, ILLEGAL_SCORE},
+            {0b100001010100, ILLEGAL_SCORE},
+            {0b010001010100, ILLEGAL_SCORE},
+            {0b000100010100, ILLEGAL_SCORE},
+            {0b000101000100, ILLEGAL_SCORE},
+            {0b100101100000, ILLEGAL_SCORE},
+            {0b100101100010, ILLEGAL_SCORE},
+            {0b100101100011, ILLEGAL_SCORE},
+            {0b100101100001, ILLEGAL_SCORE},
+            {0b100101101000, ILLEGAL_SCORE},
+            {0b100101101010, ILLEGAL_SCORE},
+            {0b100101101011, ILLEGAL_SCORE},
+            {0b100101101001, ILLEGAL_SCORE},
+            {0b100101101100, ILLEGAL_SCORE},
+            {0b100101101110, ILLEGAL_SCORE},
+            {0b100101101111, ILLEGAL_SCORE},
+            {0b100101101101, ILLEGAL_SCORE},
+            {0b100101100100, ILLEGAL_SCORE},
+            {0b100101100110, ILLEGAL_SCORE},
+            {0b100101100111, ILLEGAL_SCORE},
+            {0b100101100101, ILLEGAL_SCORE},
+            {0b000010010110, ILLEGAL_SCORE},
+            {0b001010010110, ILLEGAL_SCORE},
+            {0b001110010110, ILLEGAL_SCORE},
+            {0b000110010110, ILLEGAL_SCORE},
+            {0b100010010110, ILLEGAL_SCORE},
+            {0b101010010110, ILLEGAL_SCORE},
+            {0b101110010110, ILLEGAL_SCORE},
+            {0b100110010110, ILLEGAL_SCORE},
+            {0b110010010110, ILLEGAL_SCORE},
+            {0b111010010110, ILLEGAL_SCORE},
+            {0b111110010110, ILLEGAL_SCORE},
+            {0b110110010110, ILLEGAL_SCORE},
+            {0b010010010110, ILLEGAL_SCORE},
+            {0b011010010110, ILLEGAL_SCORE},
+            {0b011110010110, ILLEGAL_SCORE},
+            {0b010110010110, ILLEGAL_SCORE},
+        }
+    },
+    {
+        WHITE, {
+            { 0b001010100000, ILLEGAL_SCORE},
+            { 0b001010100011, ILLEGAL_SCORE},
+            { 0b001010100001, ILLEGAL_SCORE},
+            { 0b001010100010, ILLEGAL_SCORE},
+            { 0b000010101000, ILLEGAL_SCORE},
+            { 0b110010101000, ILLEGAL_SCORE},
+            { 0b010010101000, ILLEGAL_SCORE},
+            { 0b100010101000, ILLEGAL_SCORE},
+            { 0b001000101000, ILLEGAL_SCORE},
+            { 0b001010001000, ILLEGAL_SCORE},
+            { 0b011010010000, ILLEGAL_SCORE},
+            { 0b011010010010, ILLEGAL_SCORE},
+            { 0b011010010011, ILLEGAL_SCORE},
+            { 0b011010010001, ILLEGAL_SCORE},
+            { 0b011010011000, ILLEGAL_SCORE},
+            { 0b011010011010, ILLEGAL_SCORE},
+            { 0b011010011011, ILLEGAL_SCORE},
+            { 0b011010011001, ILLEGAL_SCORE},
+            { 0b011010011100, ILLEGAL_SCORE},
+            { 0b011010011110, ILLEGAL_SCORE},
+            { 0b011010011111, ILLEGAL_SCORE},
+            { 0b011010011101, ILLEGAL_SCORE},
+            { 0b011010010100, ILLEGAL_SCORE},
+            { 0b011010010110, ILLEGAL_SCORE},
+            { 0b011010010111, ILLEGAL_SCORE},
+            { 0b011010010101, ILLEGAL_SCORE},
+            { 0b000001101001, ILLEGAL_SCORE},
+            { 0b001001101001, ILLEGAL_SCORE},
+            { 0b001101101001, ILLEGAL_SCORE},
+            { 0b000101101001, ILLEGAL_SCORE},
+            { 0b100001101001, ILLEGAL_SCORE},
+            { 0b101001101001, ILLEGAL_SCORE},
+            { 0b101101101001, ILLEGAL_SCORE},
+            { 0b100101101001, ILLEGAL_SCORE},
+            { 0b110001101001, ILLEGAL_SCORE},
+            { 0b111001101001, ILLEGAL_SCORE},
+            { 0b111101101001, ILLEGAL_SCORE},
+            { 0b110101101001, ILLEGAL_SCORE},
+            { 0b010001101001, ILLEGAL_SCORE},
+            { 0b011001101001, ILLEGAL_SCORE},
+            { 0b011101101001, ILLEGAL_SCORE},
+            { 0b010101101001, ILLEGAL_SCORE},
+        },
+    }
+};
+
+const t_patterns Board::_capture_patterns
+{
+    {
+
+        BLACK, {
+            { 0b011010010000, CAPTURE_SCORE },
+            { 0b011010010010, CAPTURE_SCORE },
+            { 0b011010010011, CAPTURE_SCORE },
+            { 0b011010010001, CAPTURE_SCORE },
+            { 0b011010011000, CAPTURE_SCORE },
+            { 0b011010011010, CAPTURE_SCORE },
+            { 0b011010011011, CAPTURE_SCORE },
+            { 0b011010011001, CAPTURE_SCORE },
+            { 0b011010011100, CAPTURE_SCORE },
+            { 0b011010011110, CAPTURE_SCORE },
+            { 0b011010011111, CAPTURE_SCORE },
+            { 0b011010011101, CAPTURE_SCORE },
+            { 0b011010010100, CAPTURE_SCORE },
+            { 0b011010010110, CAPTURE_SCORE },
+            { 0b011010010111, CAPTURE_SCORE },
+            { 0b011010010101, CAPTURE_SCORE },
+            { 0b000001101001, CAPTURE_SCORE },
+            { 0b001001101001, CAPTURE_SCORE },
+            { 0b001101101001, CAPTURE_SCORE },
+            { 0b000101101001, CAPTURE_SCORE },
+            { 0b100001101001, CAPTURE_SCORE },
+            { 0b101001101001, CAPTURE_SCORE },
+            { 0b101101101001, CAPTURE_SCORE },
+            { 0b100101101001, CAPTURE_SCORE },
+            { 0b110001101001, CAPTURE_SCORE },
+            { 0b111001101001, CAPTURE_SCORE },
+            { 0b111101101001, CAPTURE_SCORE },
+            { 0b110101101001, CAPTURE_SCORE },
+            { 0b010001101001, CAPTURE_SCORE },
+            { 0b011001101001, CAPTURE_SCORE },
+            { 0b011101101001, CAPTURE_SCORE },
+            { 0b010101101001, CAPTURE_SCORE },
+        }
+    },
+    {
+        WHITE, {
+            { 0b100101100000, CAPTURE_SCORE },
+            { 0b100101100010, CAPTURE_SCORE },
+            { 0b100101100011, CAPTURE_SCORE },
+            { 0b100101100001, CAPTURE_SCORE },
+            { 0b100101101000, CAPTURE_SCORE },
+            { 0b100101101010, CAPTURE_SCORE },
+            { 0b100101101011, CAPTURE_SCORE },
+            { 0b100101101001, CAPTURE_SCORE },
+            { 0b100101101100, CAPTURE_SCORE },
+            { 0b100101101110, CAPTURE_SCORE },
+            { 0b100101101111, CAPTURE_SCORE },
+            { 0b100101101101, CAPTURE_SCORE },
+            { 0b100101100100, CAPTURE_SCORE },
+            { 0b100101100110, CAPTURE_SCORE },
+            { 0b100101100111, CAPTURE_SCORE },
+            { 0b100101100101, CAPTURE_SCORE },
+            { 0b000010010110, CAPTURE_SCORE },
+            { 0b001010010110, CAPTURE_SCORE },
+            { 0b001110010110, CAPTURE_SCORE },
+            { 0b000110010110, CAPTURE_SCORE },
+            { 0b100010010110, CAPTURE_SCORE },
+            { 0b101010010110, CAPTURE_SCORE },
+            { 0b101110010110, CAPTURE_SCORE },
+            { 0b100110010110, CAPTURE_SCORE },
+            { 0b110010010110, CAPTURE_SCORE },
+            { 0b111010010110, CAPTURE_SCORE },
+            { 0b111110010110, CAPTURE_SCORE },
+            { 0b110110010110, CAPTURE_SCORE },
+            { 0b010010010110, CAPTURE_SCORE },
+            { 0b011010010110, CAPTURE_SCORE },
+            { 0b011110010110, CAPTURE_SCORE },
+            { 0b010110010110, CAPTURE_SCORE },
+        },
+    }
+};
+
+const t_patterns Board::_defense_patterns = {
+    {
+        BLACK, {
+            { 0b011010101011, FIVE_BLOCK_SCORE},
+            { 0b011010101001, FIVE_BLOCK_SCORE},
+            { 0b101001101010, FIVE_BLOCK_SCORE},
+            { 0b011001101010, FIVE_BLOCK_SCORE},
+            { 0b111001101010, FIVE_BLOCK_SCORE},
+            { 0b001001101010, FIVE_BLOCK_SCORE},
+            { 0b101010011010, FIVE_BLOCK_SCORE},
+            { 0b011010011010, FIVE_BLOCK_SCORE},
+            { 0b111010011010, FIVE_BLOCK_SCORE},
+            { 0b001010011010, FIVE_BLOCK_SCORE},
+            { 0b101010100110, FIVE_BLOCK_SCORE},
+            { 0b011010100110, FIVE_BLOCK_SCORE},
+            { 0b111010100110, FIVE_BLOCK_SCORE},
+            { 0b001010100110, FIVE_BLOCK_SCORE},
+            { 0b110110101010, FIVE_BLOCK_SCORE},
+            { 0b100110101000, FIVE_BLOCK_SCORE},
+            { 0b100110101011, FIVE_BLOCK_SCORE},
+            { 0b100110101010, FIVE_BLOCK_SCORE},
+            { 0b100110101001, FIVE_BLOCK_SCORE},
+            { 0b111001101010, FIVE_BLOCK_SCORE},
+            { 0b101001101000, FIVE_BLOCK_SCORE},
+            { 0b101001101011, FIVE_BLOCK_SCORE},
+            { 0b101001101010, FIVE_BLOCK_SCORE},
+            { 0b101001101001, FIVE_BLOCK_SCORE},
+            { 0b101010011000, FIVE_BLOCK_SCORE},
+            { 0b101010011011, FIVE_BLOCK_SCORE},
+            { 0b101010011010, FIVE_BLOCK_SCORE},
+            { 0b101010011001, FIVE_BLOCK_SCORE},
+            { 0b101010100100, FIVE_BLOCK_SCORE},
+            { 0b101010100111, FIVE_BLOCK_SCORE},
+            { 0b101010100110, FIVE_BLOCK_SCORE},
+            { 0b101010100101, FIVE_BLOCK_SCORE},
+            { 0b011010100000, OPEN_BLOCK_SCORE},
+            { 0b001010100100, OPEN_BLOCK_SCORE},
+            { 0b000010101001, OPEN_BLOCK_SCORE},
+            { 0b000110101000, OPEN_BLOCK_SCORE},
+            { 0b011010100011, OPEN_BLOCK_SCORE},
+            { 0b011010100001, OPEN_BLOCK_SCORE},
+            { 0b010010101001, OPEN_BLOCK_SCORE},
+            { 0b110010101001, OPEN_BLOCK_SCORE},
+            { 0b001010011000, OPEN_BLOCK_SCORE},
+        }
+    },
+    {
+        WHITE, {
+            { 0b100101010111, FIVE_BLOCK_SCORE},
+            { 0b100101010110, FIVE_BLOCK_SCORE},
+            { 0b010110010101, FIVE_BLOCK_SCORE},
+            { 0b100110010101, FIVE_BLOCK_SCORE},
+            { 0b110110010101, FIVE_BLOCK_SCORE},
+            { 0b000110010101, FIVE_BLOCK_SCORE},
+            { 0b010101100101, FIVE_BLOCK_SCORE},
+            { 0b100101100101, FIVE_BLOCK_SCORE},
+            { 0b110101100101, FIVE_BLOCK_SCORE},
+            { 0b000101100101, FIVE_BLOCK_SCORE},
+            { 0b010101011001, FIVE_BLOCK_SCORE},
+            { 0b100101011001, FIVE_BLOCK_SCORE},
+            { 0b110101011001, FIVE_BLOCK_SCORE},
+            { 0b000101011001, FIVE_BLOCK_SCORE},
+            { 0b111001010101, FIVE_BLOCK_SCORE},
+            { 0b011001010100, FIVE_BLOCK_SCORE},
+            { 0b011001010111, FIVE_BLOCK_SCORE},
+            { 0b011001010101, FIVE_BLOCK_SCORE},
+            { 0b011001010110, FIVE_BLOCK_SCORE},
+            { 0b110110010101, FIVE_BLOCK_SCORE},
+            { 0b010110010100, FIVE_BLOCK_SCORE},
+            { 0b010110010111, FIVE_BLOCK_SCORE},
+            { 0b010110010101, FIVE_BLOCK_SCORE},
+            { 0b010110010110, FIVE_BLOCK_SCORE},
+            { 0b010101100100, FIVE_BLOCK_SCORE},
+            { 0b010101100111, FIVE_BLOCK_SCORE},
+            { 0b010101100101, FIVE_BLOCK_SCORE},
+            { 0b010101100110, FIVE_BLOCK_SCORE},
+            { 0b010101011000, FIVE_BLOCK_SCORE},
+            { 0b010101011011, FIVE_BLOCK_SCORE},
+            { 0b010101011001, FIVE_BLOCK_SCORE},
+            { 0b010101011010, FIVE_BLOCK_SCORE},
+            { 0b100101010000, OPEN_BLOCK_SCORE},
+            { 0b000101011000, OPEN_BLOCK_SCORE},
+            { 0b000001010110, OPEN_BLOCK_SCORE},
+            { 0b001001010100, OPEN_BLOCK_SCORE},
+            { 0b100101010011, OPEN_BLOCK_SCORE},
+            { 0b100101010010, OPEN_BLOCK_SCORE},
+            { 0b100001010110, OPEN_BLOCK_SCORE},
+            { 0b110001010110, OPEN_BLOCK_SCORE},
+            { 0b000101100100, OPEN_BLOCK_SCORE},
+        }
+    },
+};
 
 const std::array<t_coord, 4> Board::_directions {{
     {0, 1},
@@ -46,7 +385,7 @@ Board::~Board() {
     delete[] _illegal_boards[1];
 }
 
-inline void Board::validate_coord(t_coord position, t_piece piece) const {
+void Board::validate_coord(t_coord position, t_piece piece) const {
     if (position.x < 0 || position.x >= size || position.y < 0 || position.y >= size)
         throw std::logic_error("Position out of range");
     if ((_illegal_boards[piece - 1][position.y] >> (position.x << 1)) & 3)
@@ -78,99 +417,10 @@ void Board::set_position(t_coord position, t_piece piece) {
     update_board(board, position, piece);
 }
 
-void Board::remove_piece(t_coord position) {
+inline void Board::remove_piece(t_coord position) {
     set_position(position, EMPTY);
 }
 
-DualColorPotential Board::position_potential(t_coord pos, t_coord dir)
-{
-    DualColorPotential result = {0, 0};
-    const t_piece colors[2] = {BLACK, WHITE};
-
-    for (int color_index = 0; color_index < 2; color_index++)
-    {
-        t_piece color = colors[color_index];
-        int32_t attack_score = 0;
-        int32_t defense_score = 0;
-        int32_t capture_score = 0;
-        t_piece current_piece;
-        uint16_t current_pattern;
-        t_coord pattern_position;
-        uint8_t capture_count;
-
-        const t_scores_map &attack_patterns = Board::_attack_patterns.at(color);
-        const t_scores_map &capture_patterns = Board::_capture_patterns.at(color);
-        const t_scores_map &illegal_patterns = Board::_illegal_patterns.at(color);
-        const t_scores_map &defense_patterns = Board::_defense_patterns.at(color);
-
-        capture_count = _capture_count[color - 1];
-        current_pattern = color;
-        pattern_position = pos + dir;
-        for (int j = 0; j < 5; j++)
-        {
-            current_piece = get_piece(pos);
-            if (current_piece == EMPTY)
-                current_piece = get_piece(_illegal_boards[color_index], pattern_position);
-            current_pattern <<= 2;
-            current_pattern |= get_piece(pattern_position);
-            pattern_position += dir;
-        }
-        for (int i = 0; i < 6; i++)
-        {
-            current_piece = get_piece(pos);
-            if (current_piece == EMPTY)
-            {
-                current_piece = get_piece(_illegal_boards[color_index], pattern_position);
-                if (current_piece)
-                    break;
-            }
-            current_pattern = ((uint16_t)(current_piece) << 10 | current_pattern);
-            if (illegal_patterns.count(current_pattern))
-            {
-                if (color == BLACK)
-                    result.black_potential = ILLEGAL_SCORE;
-                else
-                    result.white_potential = ILLEGAL_SCORE;
-                return result;
-            }
-            if (capture_patterns.count(current_pattern))
-                capture_score += CAPTURE_SCORE * (capture_count + 1);
-            if (attack_patterns.count(current_pattern))
-                attack_score = std::max(int32_t(attack_patterns.at(current_pattern)), attack_score);
-            if (defense_patterns.count(current_pattern))
-                defense_score = std::max(int32_t(defense_patterns.at(current_pattern)), attack_score);
-            pos -= dir;
-            current_pattern >>= 2;
-        }
-        
-        int64_t total_score = attack_score + defense_score + capture_score;
-        if (color == BLACK)
-            result.black_potential = total_score;
-        else
-            result.white_potential = total_score;
-    }
-    
-    return result;
-}
-
-uint8_t Board::capture_pattern(t_coord pos, t_coord dir, t_piece piece) const {
-    uint8_t pattern = 0;
-    uint8_t empty_c = 0;
-    uint8_t piece_c = 0;
-
-    for (int i = 0; i < 4; ++i) {
-        t_coord check_pos = pos + dir * (i - 1);
-        t_piece curr_piece = get_piece(check_pos);
-        
-        if (curr_piece == ERROR || 
-            (curr_piece == EMPTY && (empty_c++ || get_piece(_illegal_boards[piece - 1], check_pos))) ||
-            (curr_piece == piece && piece_c++ > 1)) {
-            return 0;
-        }
-        pattern |= (curr_piece == EMPTY ? piece : curr_piece) << (i << 1);
-    }
-    return pattern;
-}
 
 bool Board::possible_capture(t_coord pos, t_piece color, t_coord dir) const {
     for (auto& curr_dir : _directions) {
@@ -249,76 +499,254 @@ bool Board::evaluate_capture(t_coord pos, t_coord dir)
     return false;
 }
 
-void Board::evaluate_position(t_coord pos) {
-    static const t_piece colors[2] = {BLACK, WHITE};
+DualColorPotential Board::position_potential(t_coord pos, t_coord dir)
+{
+    DualColorPotential result = {0, 0};
+    const t_piece colors[2] = {BLACK, WHITE};
+
+    for (int color_index = 0; color_index < 2; color_index++)
+    {
+        t_piece color = colors[color_index];
+        int32_t attack_score = 0;
+        int32_t defense_score = 0;
+        int32_t capture_score = 0;
+        int32_t illegal_score = 0;
+        t_piece current_piece;
+        uint16_t current_pattern;
+        t_coord pattern_position;
+        uint8_t capture_count;
+
+        const t_scores_map &attack_patterns = Board::_attack_patterns.at(color);
+        const t_scores_map &capture_patterns = Board::_capture_patterns.at(color);
+        const t_scores_map &illegal_patterns = Board::_illegal_patterns.at(color);
+        const t_scores_map &defense_patterns = Board::_defense_patterns.at(color);
+
+        capture_count = _capture_count[color - 1];
+        current_pattern = 0;
+        pattern_position = pos + dir;
+        for (int j = 0; j < 5; j++)
+        {
+            current_piece = get_piece(pos);
+            if (current_piece == EMPTY)
+                current_piece = get_piece(_illegal_boards[color_index], pattern_position);
+            current_pattern <<= 2;
+            current_pattern |= get_piece(pattern_position);
+            pattern_position += dir;
+        }
+        for (int i = 0; i < 6; i++)
+        {
+            current_piece = get_piece(pos);
+            if (current_piece == EMPTY)
+            {
+                current_piece = get_piece(_illegal_boards[color_index], pattern_position);
+                if (current_piece)
+                    break;
+            }
+            current_pattern = ((uint16_t)(current_piece) << 10 | current_pattern);
+            if (capture_patterns.count(current_pattern))
+                capture_score += CAPTURE_SCORE * (capture_count + 1);
+            if (attack_patterns.count(current_pattern))
+                attack_score = std::max(int32_t(attack_patterns.at(current_pattern)), attack_score);
+            if (defense_patterns.count(current_pattern))
+                defense_score = std::max(int32_t(defense_patterns.at(current_pattern)), attack_score);
+            if (illegal_patterns.count(current_pattern))
+            {
+                illegal_score = ILLEGAL_SCORE;
+                break;
+            }
+            pos -= dir;
+            current_pattern >>= 2;
+        }
+        int64_t total_score = 0;
+        if (illegal_score)
+            total_score = ILLEGAL_SCORE;
+        else
+            total_score = attack_score + defense_score + capture_score;
+        if (color == BLACK)
+            result.black_potential = total_score;
+        else
+            result.white_potential = total_score;
+    }
     
-    _moveset_positions[0][pos].score = 0;
+    return result;
+}
+
+
+uint8_t Board::capture_pattern(t_coord pos, t_coord dir, t_piece piece) const {
+    uint8_t pattern = 0;
+    uint8_t empty_c = 0;
+    uint8_t piece_c = 0;
+
+    for (int i = 0; i < 4; ++i) {
+        t_coord check_pos = pos + dir * (i - 1);
+        t_piece curr_piece = get_piece(check_pos);
+        
+        if (curr_piece == ERROR || 
+            (curr_piece == EMPTY && (empty_c++ || get_piece(_illegal_boards[piece - 1], check_pos))) ||
+            (curr_piece == piece && piece_c++ > 1)) {
+            return 0;
+        }
+        pattern |= (curr_piece == EMPTY ? piece : curr_piece) << (i << 1);
+    }
+    return pattern;
+}
+void Board::evaluate_new_move(t_updates &updates_queue, t_coord pos) {
+    static const t_piece colors[2] = {BLACK, WHITE};
+    int64_t color_score[2] = {0, 0};
+
     for (auto& dir: _directions) {
         DualColorPotential potentials = position_potential(pos, dir);
         
         for (int i = 0; i < 2; ++i) {
             t_piece color = colors[i];
             int64_t score = (color == BLACK) ? potentials.black_potential : potentials.white_potential;
-            int color_index = color - 1;
 
-            if (score == ILLEGAL_SCORE) {
-                ++_illegal_positions[color_index][pos];
-                _moveset_positions[color_index][pos].blocked = true;
-            } else {
-                --_illegal_positions[color_index][pos];
-                ++_moveset_positions[color_index][pos].count;
-                _moveset_positions[color_index][pos].score += score;
-            }
+            if (score == ILLEGAL_SCORE)
+                record_illegal_update(updates_queue, pos, color, ADD);
+            else if (_illegal_positions[color - 1][pos])
+                record_illegal_update(updates_queue, pos, color, REMOVE);
+            color_score[i] += score;
         }
     }
-    if (!_illegal_positions[0][pos]) update_board(_illegal_boards[0], pos, EMPTY);
-    if (!_illegal_positions[1][pos]) update_board(_illegal_boards[1], pos, EMPTY);
-
+    record_moveset_update(updates_queue, pos, colors[0], color_score[0], ADD);
+    record_moveset_update(updates_queue, pos, colors[1], color_score[1], ADD);
 }
-void Board::update_node(t_board_update_queue& updates_queue, const t_board_update& curr_update) {
-    t_coord pos = curr_update.pos;
-    t_piece piece = curr_update.piece;
 
+void Board::record_illegal_update(t_updates &updates_queue, t_coord pos, t_piece color, t_update_type type) {
+    if (type == ADD){
+        ++_illegal_positions[color - 1][pos];
+        if (_illegal_positions[color - 1][pos])
+            update_board(_illegal_boards[color - 1], pos, ERROR);
+    }
+    else {
+        --_illegal_positions[color - 1][pos];
+        if (!_illegal_positions[color - 1][pos])
+            update_board(_illegal_boards[color - 1], pos, EMPTY);
+    }
+    updates_queue.emplace_back(t_update{ILLEGAL, type, pos});
+}
+
+void Board::revert_illegal_update(t_update& update) {
+    if (update.piece) {
+        if (update.type == ADD){
+            --_illegal_positions[update.piece.value() - 1][update.pos];
+            if (!_illegal_positions[update.piece.value() - 1][update.pos])
+                update_board(_illegal_boards[update.piece.value() - 1], update.pos, EMPTY);
+        }
+        else{
+            ++_illegal_positions[update.piece.value() - 1][update.pos];
+            if (_illegal_positions[update.piece.value() - 1][update.pos])
+                update_board(_illegal_boards[update.piece.value() - 1], update.pos, ERROR);
+        }
+    }
+}
+
+void Board::revert_moveset_update(const t_update& update) {
+    if (update.piece && update.moveset_update[update.piece.value() - 1]) {
+        _moveset_positions[update.piece.value() - 1][update.pos] = 
+            update.moveset_update[update.piece.value() - 1]->old_moveset;
+    }
+}
+
+void Board::record_moveset_update(t_updates &updates_queue, t_coord pos, t_piece color, int64_t score, t_update_type type) {
+
+    t_scored_moveset& moveset = _moveset_positions[color - 1][pos];
+    t_scored_moveset old_moveset = moveset;
+    if (type == ADD) {
+        ++moveset.count;
+        if (score == ILLEGAL_SCORE)
+            moveset.blocked = true;
+        else
+            moveset.blocked = false;
+        moveset.score = score;
+    }
+    else {
+        --moveset.count;
+        if (moveset.count == 0)
+            moveset.blocked = true;
+    } 
+    updates_queue.emplace_back(t_update{MOVESET, type, pos, .piece=color, .moveset_update = t_moveset_update{old_moveset, moveset}});
+}
+
+void Board::record_board_update(t_updates &updates_queue, t_coord pos, t_piece piece, t_update_type type) {
+    if (type == ADD) {
+        set_position(pos, piece);
+        _capture_count[piece - 1]++;
+    }
+    else
+        remove_piece(pos);
+    updates_queue.emplace_back(t_update{BOARD, type, pos, .piece = piece});
+}
+
+void Board::update_node(t_updates& updates_queue, t_coord curr_pos, t_piece curr_piece) {
+    t_coord pos = curr_pos;
+    t_piece piece = curr_piece;
+
+    record_board_update(updates_queue, pos, piece, ADD);
     for (const auto& dir : _moveset_cells) {
         if (evaluate_capture(pos, dir)) {
             t_coord capture_pos = pos + dir;
-            for (int i = 0; i < 2; ++i) {
-                updates_queue.emplace_back(capture_pos, piece, REMOVE);
-                remove_piece(capture_pos);
+            for (int i = 0; i < 2; ++i, capture_pos += dir) {
+                record_board_update(updates_queue, capture_pos, GET_OPPOSITE_PIECE(curr_piece), REMOVE);
                 for (const auto& update_dir : _moveset_cells) {
-                    --_moveset_positions[BLACK - 1][capture_pos + update_dir].count;
-                    --_moveset_positions[WHITE - 1][capture_pos + update_dir].count;
+                    record_moveset_update(updates_queue, capture_pos + update_dir, BLACK, 0, REMOVE);
+                    record_moveset_update(updates_queue, capture_pos + update_dir, WHITE, 0, REMOVE);
                 }
-                capture_pos += dir;
+                evaluate_new_move(updates_queue, capture_pos);
             }
         }
+    }
+    for (const auto& dir : _moveset_cells){
         t_coord next_pos = pos + dir;
         if (get_piece(next_pos) == EMPTY)
-            evaluate_position(next_pos);
+            evaluate_new_move(updates_queue, next_pos);
     }
 }
 
-void Board::update_board(t_board_update_queue& updates_queue) {
-    static const t_piece colors[2] = {BLACK, WHITE};
-    for (const auto& update : updates_queue) {
-        if (update.type == ADD) {
-            set_position(update.pos, update.piece);
-            update_node(updates_queue, update);
-        }
-        else {
-            for (int i = 0; i < 2; ++i) {
-                t_piece color = colors[i];
-                _moveset_positions[i][update.pos].blocked = false;
-                evaluate_position(update.pos);
-            }
-        }
+t_ordered_moves Board::order_moves(t_piece color) {
+    t_ordered_moves moves;
+    t_moveset& moveset = _moveset_positions[color - 1];
+    if (_moveset_positions[color - 1].empty())
+    {
+        moves.push_back({0, t_coord{size >> 1, size >> 1}});
+        return moves;
     }
+    for (auto& [pos, scored_moveset] : moveset) {
+        if (scored_moveset.blocked)
+            continue;
+        moves.push_back({scored_moveset.score, pos});
+    }
+    std::sort(moves.begin(), moves.end());
+    return moves;
 }
 
-void Board::make_move(t_coord pos, t_piece piece) {
-    t_board_update_queue updates_queue;
-    updates_queue.emplace_back(pos, piece, ADD);
-    update_board(updates_queue);
+size_t Board::make_move(t_coord pos, t_piece piece, t_updates& updates_queue) {
+    size_t  queue_size = updates_queue.size();
+    update_node(updates_queue, pos, piece);
+    return updates_queue.size() - queue_size;
+}
+
+void Board::revert_updates(t_updates& updates, size_t count) {
+    while (count--){
+        t_update update = updates.back();
+        switch (update.target) {
+            case BOARD:
+                if (update.type == ADD)
+                    remove_piece(update.pos);
+                else {
+                    set_position(update.pos, update.piece.value());
+                    _capture_count[update.piece.value() - 1]--;
+                }
+                break;
+            case ILLEGAL:
+                revert_illegal_update(update);
+                break;
+            case MOVESET:
+                revert_moveset_update(update);
+                break;
+        }
+        updates.pop_back();
+    }
 }
 
 int64_t Board::evaluate_board(t_piece player_color) {
@@ -364,12 +792,45 @@ int64_t Board::evaluate_board(t_piece player_color) {
     return score;
 }
 
-void Board::print_board(t_piece curr_piece) const{
+void Board::print_board(t_piece curr_piece) const {
     for (int y = 0; y < size; y++) {
         for (int x = 0; x < size; x++) {
-            t_piece piece = t_piece(get_piece(t_coord{x, y}) | get_piece(_illegal_boards[piece - 1], t_coord{x, y}));
-            std::cout << piece << " ";
+            t_coord pos{x, y};
+            t_piece piece = t_piece((get_piece(pos)) | get_piece(_illegal_boards[curr_piece - 1], pos));
+            if (piece == EMPTY) {
+                auto it = _moveset_positions[curr_piece - 1].find(pos);
+                if (it != _moveset_positions[curr_piece - 1].end() && it->second.count > 0) {
+                    std::cout << "\033[31m" << piece << "\033[0m ";
+                } else {
+                    std::cout << piece << " ";
+                }
+            } else {
+                std::cout << piece << " ";
+            }
         }
         std::cout << std::endl;
     }
+    std::cout << "---------------------------------" << std::endl;
 }
+
+
+int main(){
+    Board board(19);
+    t_updates updates;
+    t_piece piece = BLACK;
+    t_piece opposite_piece = WHITE;
+    t_coord pos_1 = {9, 9};
+    t_coord pos_2 = {8, 9};
+    // t_coord pos_3 = {7, 9};
+    size_t count_1 = board.make_move(pos_1, piece, updates);
+    size_t count_2 = board.make_move(pos_2, piece, updates);
+    // size_t count_3 = board.make_move(pos_3, piece, updates);
+    for (auto& update : updates)
+        std::cout << update.target << " " << update.type << " " << update.pos << std::endl;
+    board.print_board(piece);
+    board.revert_updates(updates, count_2);
+    for (auto& update : updates)
+        std::cout << update.target << " " << update.type << " " << update.pos << std::endl;
+    board.print_board(piece);
+    return 0;
+};
