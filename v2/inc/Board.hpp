@@ -37,6 +37,7 @@ class  Board {
         size_t                      make_move(t_coord pos, t_piece piece, t_updates& updates_queue);
         t_ordered_moves             order_moves(t_piece color);
         void                        revert_updates(t_updates& updates, size_t count);
+        DualColorPotential          position_potential(t_updates& updates_queue, t_coord pos, t_coord dir);
     private:
         inline void                 remove_piece(t_coord position);
         inline t_piece              get_piece(uint64_t *board, t_coord piece_coord) const;
@@ -49,7 +50,6 @@ class  Board {
         uint8_t                     capture_pattern(t_coord pos, t_coord dir, t_piece piece) const;
         void                        update_node(t_updates& updates_queue, t_coord curr_pos, t_piece curr_piece);
         bool                        evaluate_capture(t_coord pos, t_coord dir);
-        DualColorPotential          position_potential(t_coord pos, t_coord dir);
         void                        evaluate_new_move(t_updates &updates_queue, t_coord pos);
         void                        record_illegal_update(t_updates &updates_queue, t_coord pos, t_piece color, t_update_type type);
         void                        record_moveset_update(t_updates &updates_queue, t_coord pos, t_piece color, int64_t score, t_update_type type);

@@ -499,7 +499,7 @@ bool Board::evaluate_capture(t_coord pos, t_coord dir)
     return false;
 }
 
-DualColorPotential Board::position_potential(t_coord pos, t_coord dir)
+DualColorPotential Board::position_potential(t_updates& updates_queue, t_coord pos, t_coord dir)
 {
     DualColorPotential result = {0, 0};
     const t_piece colors[2] = {BLACK, WHITE};
@@ -513,6 +513,7 @@ DualColorPotential Board::position_potential(t_coord pos, t_coord dir)
         int32_t illegal_score = 0;
         t_piece current_piece;
         uint16_t current_pattern;
+        uint16_t altered_pattern;
         t_coord pattern_position;
         uint8_t capture_count;
 
@@ -522,7 +523,7 @@ DualColorPotential Board::position_potential(t_coord pos, t_coord dir)
         const t_scores_map &defense_patterns = Board::_defense_patterns.at(color);
 
         capture_count = _capture_count[color - 1];
-        current_pattern = 0;
+        current_pattern = colors[color_index ];
         pattern_position = pos + dir;
         for (int j = 0; j < 5; j++)
         {
@@ -533,15 +534,10 @@ DualColorPotential Board::position_potential(t_coord pos, t_coord dir)
             current_pattern |= get_piece(pattern_position);
             pattern_position += dir;
         }
+
         for (int i = 0; i < 6; i++)
         {
             current_piece = get_piece(pos);
-            if (current_piece == EMPTY)
-            {
-                current_piece = get_piece(_illegal_boards[color_index], pattern_position);
-                if (current_piece)
-                    break;
-            }
             current_pattern = ((uint16_t)(current_piece) << 10 | current_pattern);
             if (capture_patterns.count(current_pattern))
                 capture_score += CAPTURE_SCORE * (capture_count + 1);
@@ -550,10 +546,7 @@ DualColorPotential Board::position_potential(t_coord pos, t_coord dir)
             if (defense_patterns.count(current_pattern))
                 defense_score = std::max(int32_t(defense_patterns.at(current_pattern)), attack_score);
             if (illegal_patterns.count(current_pattern))
-            {
                 illegal_score = ILLEGAL_SCORE;
-                break;
-            }
             pos -= dir;
             current_pattern >>= 2;
         }
@@ -592,22 +585,29 @@ uint8_t Board::capture_pattern(t_coord pos, t_coord dir, t_piece piece) const {
 }
 void Board::evaluate_new_move(t_updates &updates_queue, t_coord pos) {
     static const t_piece colors[2] = {BLACK, WHITE};
+    bool illegal[2] = {false, false};
     int64_t color_score[2] = {0, 0};
 
     for (auto& dir: _directions) {
-        DualColorPotential potentials = position_potential(pos, dir);
+        if (get_piece(pos + dir) != EMPTY)
+            continue;
+        DualColorPotential potentials = position_potential(updates_queue, pos, dir);
         
         for (int i = 0; i < 2; ++i) {
             t_piece color = colors[i];
             int64_t score = (color == BLACK) ? potentials.black_potential : potentials.white_potential;
 
-            if (score == ILLEGAL_SCORE)
+            if (score == ILLEGAL_SCORE){
                 record_illegal_update(updates_queue, pos, color, ADD);
-            else if (_illegal_positions[color - 1][pos])
-                record_illegal_update(updates_queue, pos, color, REMOVE);
+                illegal[i] = true;
+            }
             color_score[i] += score;
         }
     }
+    if (!illegal[0])
+        record_illegal_update(updates_queue, pos, colors[0], REMOVE);
+    if (!illegal[1])
+        record_illegal_update(updates_queue, pos, colors[1], REMOVE);
     record_moveset_update(updates_queue, pos, colors[0], color_score[0], ADD);
     record_moveset_update(updates_queue, pos, colors[1], color_score[1], ADD);
 }
@@ -714,6 +714,8 @@ t_ordered_moves Board::order_moves(t_piece color) {
     for (auto& [pos, scored_moveset] : moveset) {
         if (scored_moveset.blocked)
             continue;
+        if (!scored_moveset.count)
+            continue;
         moves.push_back({scored_moveset.score, pos});
     }
     std::sort(moves.begin(), moves.end());
@@ -800,7 +802,8 @@ void Board::print_board(t_piece curr_piece) const {
             if (piece == EMPTY) {
                 auto it = _moveset_positions[curr_piece - 1].find(pos);
                 if (it != _moveset_positions[curr_piece - 1].end() && it->second.count > 0) {
-                    std::cout << "\033[31m" << piece << "\033[0m ";
+                    // std::cout << "\033[31m" << piece << "\033[0m ";
+                    std::cout << "+ ";
                 } else {
                     std::cout << piece << " ";
                 }
@@ -814,23 +817,30 @@ void Board::print_board(t_piece curr_piece) const {
 }
 
 
-int main(){
-    Board board(19);
-    t_updates updates;
-    t_piece piece = BLACK;
-    t_piece opposite_piece = WHITE;
-    t_coord pos_1 = {9, 9};
-    t_coord pos_2 = {8, 9};
-    // t_coord pos_3 = {7, 9};
-    size_t count_1 = board.make_move(pos_1, piece, updates);
-    size_t count_2 = board.make_move(pos_2, piece, updates);
-    // size_t count_3 = board.make_move(pos_3, piece, updates);
-    for (auto& update : updates)
-        std::cout << update.target << " " << update.type << " " << update.pos << std::endl;
-    board.print_board(piece);
-    board.revert_updates(updates, count_2);
-    for (auto& update : updates)
-        std::cout << update.target << " " << update.type << " " << update.pos << std::endl;
-    board.print_board(piece);
-    return 0;
-};
+// int main(){
+//     Board board(19);
+//     t_updates updates;
+//     t_piece piece = BLACK;
+//     t_piece opposite_piece = WHITE;
+//     t_coord pos_1 = {9, 9};
+//     t_coord pos_2 = {8, 9};
+//     // t_coord pos_3 = {7, 9};
+//     size_t count_1 = board.make_move(pos_1, piece, updates);
+//     board.print_board(piece);
+
+//     size_t count_2 = board.make_move(pos_2, piece, updates);
+//     int64_t score = board.evaluate_board(piece);
+//     // std::cout << "-----------------------------" << std::endl;
+//     // std::cout << score << std::endl;
+//     // score = board.position_potential(pos_1 + t_coord{1, 0}, t_coord{1, 0}).black_potential;
+//     // std::cout << score << std::endl;
+//     // size_t count_3 = board.make_move(pos_3, piece, updates);
+//     // for (auto& update : updates)
+//     //     std::cout << update.target << " " << update.type << " " << update.pos << std::endl;
+//     // board.print_board(piece);
+//     // board.revert_updates(updates, count_2);
+//     // for (auto& update : updates)
+//     //     std::cout << update.target << " " << update.type << " " << update.pos << std::endl;
+//     board.print_board(piece);
+//     return 0;
+// };
