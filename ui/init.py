@@ -45,6 +45,14 @@ STANDARD = 1
 PRO = 2
 LONG_PRO = 3
 
+# Sizes
+SIZE_19     = 1
+SIZE_15     = 2
+SIZE_13     = 3
+SIZE_10     = 4
+SIZES       = ['19', '15', '13', '10']
+
+
 # Computer difficulty
 EASY = 1
 MEDIUM = 2

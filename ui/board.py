@@ -12,13 +12,15 @@ class Setup(Surface):
     This class represents the setup surface
     """
 
-    __slots__ = ('_repeat', '_start', '_p1', '_p1_surf', '_p1_type', '_p1_mode', '_p2', '_p2_surf', '_p2_type', '_p2_mode', '_p1', '_p2', '_rules', '_rules_surf')
+    __slots__ = ('_repeat', '_start', '_p1', '_p1_surf', '_p1_type', 
+            '_p1_mode', '_p2', '_p2_surf', '_p2_type', '_p2_mode', '_p1', '_p2', 
+            '_rules', '_rules_surf', '_sizes', '_sizes_surf')
 
     def __init__(self, *args, **kwargs):
         super().__init__(WIDTH-HEIGHT, HEIGHT, alpha=True, *args, **kwargs)
         self._repeat = True
 
-        self._start = Button(LIGHT, GRAY_2, "START", fonts.h3_b, expand=True, relative_to=self)
+        self._start = Button(LIGHT, GRAY_2, "START", fonts.h3_b, height=80, expand=True, relative_to=self)
         self._start.position = (0, self.height - self._start.height)
         
         # Player 1 setup surface
@@ -60,7 +62,14 @@ class Setup(Surface):
             alpha=True
         )
 
-        
+        self._sizes_surf = Surface(self.width - 50, 90, (50, 650), self, True)
+        self._sizes = CheckBoxs(
+            {SIZE_19: '19x19', SIZE_15: '15x15', SIZE_13: '13x13', SIZE_10:'10x10'},
+            position=(0, 0),
+            alignment=HORIZONTAL,
+            relative_to=self._sizes_surf,
+            alpha=True
+        )
 
         self._p1 = None
         self._p2 = None
@@ -72,6 +81,14 @@ class Setup(Surface):
     @property
     def rules_surf(self):
         return self._rules_surf
+
+    @property
+    def sizes(self):
+        return self._sizes
+
+    @property
+    def sizes_surf(self):
+        return self._sizes_surf
 
     @property
     def start(self):
@@ -164,6 +181,11 @@ class Setup(Surface):
         self.rules_surf.surface.blit(self.rules.surface, self.rules.rect)
         self.surface.blit(self.rules_surf.surface, self.rules_surf.rect)
 
+    def draw_sizes(self):
+        self.sizes.update()
+        self.sizes_surf.surface.blit(self.sizes.surface, self.sizes.rect)
+        self.surface.blit(self.sizes_surf.surface, self.sizes_surf.rect)
+
     def draw_titles(self):
         level = fonts.h3_b.render('Level', True, LIGHT)
         rules = fonts.h3_b.render('Rules', True, LIGHT)
@@ -173,7 +195,6 @@ class Setup(Surface):
         rules_rect.center = (self.surface.get_rect().centerx, 510)
         self.surface.blit(level, level_rect)
         self.surface.blit(rules, rules_rect)
-
 
     def update(self, events):
         self.surface.fill(GRAY_1)
@@ -209,6 +230,9 @@ class Setup(Surface):
                 for box in self.rules.container:
                     box.check_clicked()
                     box.update()
+                for box in self.sizes.container:
+                    box.check_clicked()
+                    box.update()
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 self.start.pressed = False # Just in case it's not reseted
                 return BOARD_SURFACE
@@ -227,6 +251,7 @@ class Setup(Surface):
         self.draw_box_1()
         self.draw_box_2()
         self.draw_rules()
+        self.draw_sizes()
         self.start.update()
         self.surface.blit(self.start.surface, self.start.rect, special_flags=pygame.BLEND_RGBA_MAX)
         self.surface.blit(middle, middle_rect)
@@ -239,9 +264,9 @@ class Setup(Surface):
 
 class Stats(Surface):
 
-    __slots__ = ('_left', '_right', '_rff', '_lff', '_states', '_board', '_text', '_restart', '_suggest', '_player_header', '_versus_message')
+    __slots__ = ('_left', '_right', '_rff', '_lff', '_states', '_board', '_text', '_restart', '_suggest', '_player_header', '_versus_message', '_winner')
 
-    def __init__(self, states, board, *args, **kwargs):
+    def __init__(self, states, board, winner=None, *args, **kwargs):
         super().__init__(WIDTH-HEIGHT, HEIGHT, *args, **kwargs)
         
         # Load images for left and right buttons
@@ -252,14 +277,16 @@ class Stats(Surface):
         lff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png'), (50, 50))
         lff_img = pygame.transform.rotate(lff_img, 180)
 
-        self._left  = Button(WHITE, GRAY_1, l_img, None, hover_color=GRAY_3, relative_to=self)
-        self._lff   = Button(WHITE, GRAY_1, lff_img, None, hover_color=GRAY_3, relative_to=self)
-        self._right = Button(WHITE, GRAY_1, r_img, None, hover_color=GRAY_3, relative_to=self)
-        self._rff   = Button(WHITE, GRAY_1, rff_img, None, hover_color=GRAY_3, relative_to=self)
+        self._left  = Button(WHITE, GRAY_1, l_img, None, height=80, hover_color=GRAY_3, relative_to=self)
+        self._lff   = Button(WHITE, GRAY_1, lff_img, None, height=80, hover_color=GRAY_3, relative_to=self)
+        self._right = Button(WHITE, GRAY_1, r_img, None, height=80, hover_color=GRAY_3, relative_to=self)
+        self._rff   = Button(WHITE, GRAY_1, rff_img, None, height=80, hover_color=GRAY_3, relative_to=self)
         self._left.position  = (self.width / 2 - self.left.width, self.height - self.left.height)
         self._right.position = (self.width / 2, self.height - self.left.height)
         self._lff.position   = (self.width / 2 - self.left.width * 2, self.height - self.left.height)
         self._rff.position   = (self.width / 2 + self.right.width, self.height - self.left.height)
+        self._winner = fonts.h3_b.render('Winner', True, WHITE)
+        #self._black_wins = fonts.h3_b.render('Black Wins', True, WHITE)
 
         self._states = states
         self._board = board
@@ -284,8 +311,7 @@ class Stats(Surface):
             relative_to=self)
         self._restart.position = (1.9 * self.width / 3, 3.8 * self.height // 5)
 
-        self._player_header = fonts.h3_b.render('Players', True, WHITE)
-        self._versus_message = fonts.h3_r.render('VS', True, WHITE)
+        self._versus_message = fonts.h3_b.render('VS', True, WHITE)
 
     @property
     def states(self):
@@ -295,10 +321,6 @@ class Stats(Surface):
     def board(self):
         return self._board
 
-    @property
-    def player_header(self):
-        return self._player_header
-    
     @property
     def versus_message(self):
         return self._versus_message
@@ -332,6 +354,10 @@ class Stats(Surface):
     def suggest(self):
         return self._suggest
 
+    @property
+    def winner(self):
+        return self._winner
+
     def update_current_state(self, events):
         for event in events:
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
@@ -357,17 +383,19 @@ class Stats(Surface):
     def update(self, events):
         self.surface.fill(GRAY_1)
 
+        winner_rect = self.winner.get_rect()
+        winner_rect.center = (3 * self.width // 4, 230)
+        self.surface.blit(self.winner, winner_rect)
         if self.board.turn.turn == 1:
-            ind_x, ind_y = self.width // 4, 150
+            ind_x, ind_y = self.width // 4, 80
         else:
-            ind_x, ind_y = 3 * self.width // 4, 150
+            ind_x, ind_y = 3 * self.width // 4, 80
 
         Board.draw_circle(self.surface, ind_x, ind_y, 60, pygame.Color('#FFFF00'))
-        Board.draw_circle(self.surface, self.width // 4, 150, 50, BLACK)
-        Board.draw_circle(self.surface, 3 * self.width // 4, 150, 50, WHITE)
+        Board.draw_circle(self.surface, self.width // 4, 80, 50, BLACK)
+        Board.draw_circle(self.surface, 3 * self.width // 4, 80, 50, WHITE)
 
-        self.surface.blit(self.player_header, (self.width / 2 - self.player_header.get_rect()[2] / 2, 30))
-        self.surface.blit(self.versus_message, (self.width / 2 - self.versus_message.get_rect()[2] / 2, 130))
+        self.surface.blit(self.versus_message, (self.width / 2 - self.versus_message.get_rect()[2] / 2, 65))
 
         if self.states.states[-1].captures == None:
             white_score, black_score = 0, 0
@@ -378,10 +406,10 @@ class Stats(Surface):
         white_score_text = fonts.h2_b.render(f'{white_score}', True, BLACK)
 
         black_score_text_rect = black_score_text.get_rect()
-        black_score_text_rect.center = (    self.width // 4, 150)
+        black_score_text_rect.center = (    self.width // 4, 80)
 
         white_score_text_rect = white_score_text.get_rect()
-        white_score_text_rect.center = (3 * self.width // 4, 150)
+        white_score_text_rect.center = (3 * self.width // 4, 80)
         self.surface.blit(black_score_text, black_score_text_rect)
         self.surface.blit(white_score_text, white_score_text_rect)
 
@@ -410,7 +438,7 @@ class Board(Surface):
 
     __slots__ = ('_turn', '_setup', '_states', '_computer', '_size', '_repeat', '_offset', '_limit', '_step', '_linspace', '_p1', '_p2', '_finished')
 
-    def __init__(self, states, setup, p1, p2, computer, size=19, *args, **kwargs):
+    def __init__(self, states, setup, p1, p2, computer, size=15, *args, **kwargs):
         super().__init__(HEIGHT, HEIGHT, *args, **kwargs)
         self._setup    = setup
         self._states   = states
@@ -517,18 +545,18 @@ class Board(Surface):
             x, y = -1, -1
             if self.check_hover():
                 x, y = pygame.mouse.get_pos()
-                y = math.floor((y - self.step / 2) / self.step)
-                x = math.floor((x - self.step / 2) / self.step)
+                x = self.linspace[math.floor((x-self.offset+self.step/2) / self.step)]
+                y = self.linspace[math.floor((y-self.offset+self.step/2) / self.step)]
 
             # Draw y-coords
-            font = fonts.h5_b if y == i else fonts.h5_t
+            font = fonts.h5_b if y == (i * self.step) + self.offset else fonts.h5_t
             text = font.render(f'{i+1}', True, BLACK)
             text_rect = text.get_rect()
             text_rect.center = (25, self.offset + (i * self.step))
             self.surface.blit(text, text_rect)
 
             # Draw x-coords
-            font = fonts.h5_b if x == i else fonts.h5_t
+            font = fonts.h5_b if x == (i * self.step) + self.offset else fonts.h5_t
             text = font.render(f'{"ABCDEFGHIJKLMNOPQRS"[i]}', True, BLACK)
             text_rect = text.get_rect()
             text_rect.center = (self.offset + (i * self.step), 25)
@@ -589,7 +617,6 @@ class Board(Surface):
         x, y = pygame.mouse.get_pos()
         x = self.linspace[math.floor((x-self.offset+self.step/2) / self.step)]
         y = self.linspace[math.floor((y-self.offset+self.step/2) / self.step)]
-        # print(x, y, self.linspace, len(self.linspace))
         Board.draw_circle(self.surface, x, y, radius, pygame.Color(color))
 
         # Show the current count value on the hover piece.
@@ -630,6 +657,7 @@ class Board(Surface):
 
         # Not used yet
         if self.finished:
+            print('----------------------------------')
             return
 
         # Human turn
@@ -678,6 +706,7 @@ class Board(Surface):
                         self.states.add(State(**resp[1]))
                         print(f'Player {resp[0]} wins!')
                         self.finished = True
+                        self.winner = resp[0]
 
                     elif isinstance(resp, tuple) and resp[0] == 3:
                         self.states.last.suggestion = resp[1]
@@ -788,8 +817,10 @@ class Game:
         p1_diff = MODES[self.setup.p1_mode.anchor.value - 1]
         p2_type = TYPES[self.setup.p2_type.anchor.value - 1]
         p2_diff = MODES[self.setup.p2_mode.anchor.value - 1]
+        size    = SIZES[self.setup.sizes.anchor.value - 1]
 
         args = [
+            f'{SIZES[self.setup.sizes.anchor.value - 1]}',
             f'--p1_type={p1_type}', f'--p1_diff={p1_diff}',
             f'--p2_type={p2_type}', f'--p2_diff={p2_diff}'
         ]
@@ -798,7 +829,7 @@ class Game:
         self.p2 = Player(self.setup.p2_type.anchor.value, 2)
 
         self.computer = Computer(*args)
-        self.board = Board(self.states, self.setup, self.p1, self.p2, self.computer)
+        self.board = Board(self.states, self.setup, self.p1, self.p2, self.computer, size=int(size))
         self.stats = Stats(self.states, self.board, relative_to=self.window, position=(HEIGHT, 0))
 
     def loop(self):

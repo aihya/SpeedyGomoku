@@ -87,6 +87,7 @@ class Computer:
         return
 
     def extract_suggestion(self, buffer):
+        print('received:', buffer)
         suggestion = {
             'time': float(buffer[0]),
             'move': tuple(int(c) for c in buffer[1].split())
@@ -150,6 +151,7 @@ class Computer:
             # Read the content sent from the subprocess
             buffer = self.process.before.decode('utf-8').split('\n')
 
+            print('Direct buffer:', buffer)
             if index == 3: # Suggestion
                 return index, self.extract_suggestion(buffer)
             else:
