@@ -466,8 +466,8 @@ Gomoku::t_player Gomoku::get_player(t_player_type player_type,
 Gomoku::Gomoku(uint8_t board_size, t_difficulty first_difficulty,
     t_difficulty second_difficulty, t_player_type first_player_type, t_player_type second_player_type, t_rule rule): _board(board_size)
 {
-    if (board_size != 15 && board_size != 19)
-        throw std::invalid_argument("Board size must be between 15 or 19");
+	//if (board_size != 15 && board_size != 19)
+	//    throw std::invalid_argument("Board size must be between 15 or 19");
     this->_first_player  = get_player(first_player_type, Gomoku::BLACK, first_difficulty);
     this->_second_player = get_player(second_player_type, Gomoku::WHITE, second_difficulty);
     this->_rule = rule;
@@ -986,6 +986,7 @@ Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent, t_board& b
 Gomoku::t_coord Gomoku::human_move(t_player& player, t_player &opponent, t_board& board)
 {
     t_coord coord;
+	t_coord suggestion;
 
     for (;;)
     {
@@ -996,9 +997,16 @@ Gomoku::t_coord Gomoku::human_move(t_player& player, t_player &opponent, t_board
             switch (this->get_game_command())
             {
                 case 'S':
-                    PRINT_COORD(this->ai_move(player, opponent, board));
+					{
+    				auto start = std::chrono::steady_clock::now();
+    				suggestion  = this->ai_move(player, opponent, board);
+    				auto end = std::chrono::steady_clock::now();
+    				double time = std::chrono::duration<double, std::milli>(end - start).count(); 
+    				std::cout << time << std::endl;
+                    PRINT_COORD(suggestion);
                     std::cout << "END SUGGESTION" << std::endl;
                     break;
+					}
                 case 'M':
                     std::cin >> coord.x >> coord.y;
                     if (this->is_move_valid(board, coord, player.piece))
@@ -1125,13 +1133,16 @@ int main(int argc, char **argv)
     Gomoku::t_player_type p2_type;
     Gomoku::t_difficulty p1_diff;
     Gomoku::t_difficulty p2_diff;
+	uint16_t size;
 
     p1_type = Gomoku::HUMAN;
     p2_type = Gomoku::HUMAN;
     p1_diff = Gomoku::EASY;
     p2_diff = Gomoku::EASY;
 
-    for (int i = 1; i < argc; i++)
+	size = std::atoi(argv[1]);
+
+    for (int i = 2; i < argc; i++)
     {
         // Check player type
         if (!strcmp(argv[i], "--p1_type=human"))
@@ -1164,7 +1175,7 @@ int main(int argc, char **argv)
         }
     }
 
-    Gomoku game(19, p1_diff, p2_diff, p1_type, p2_type, Gomoku::STANDARD);
+    Gomoku game(size, p1_diff, p2_diff, p1_type, p2_type, Gomoku::STANDARD);
 
     game.start_game();
 
