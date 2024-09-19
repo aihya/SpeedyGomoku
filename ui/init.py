@@ -4,9 +4,11 @@ from surface import Surface
 # Clock tick: 30 ticks
 CLOCK = pygame.time.Clock()
 
+
 # Quit
 def quit():
     return Surface.QUIT
+
 
 # Current surface
 SETUP_SURFACE = 1
@@ -15,39 +17,39 @@ FINAL_SURFACE = 3
 STATS_SURFACE = 4
 
 # Dimentions
-HEIGHT      = 800
-WIDTH       = 1400
+HEIGHT = 800
+WIDTH = 1400
 
 # Colors
 GRAY_1 = pygame.Color("#252525")
 GRAY_2 = pygame.Color("#323232")
 GRAY_3 = pygame.Color("#4B4B4B")
-LIGHT  = pygame.Color("#E0E0E0")
+LIGHT = pygame.Color("#E0E0E0")
 ACCENT = pygame.Color("#E43F5A")
-WHITE  = pygame.Color("#ffffff")
-BLACK  = pygame.Color("#000000")
+WHITE = pygame.Color("#ffffff")
+BLACK = pygame.Color("#000000")
 BOARD_COLOR = pygame.Color("#F2A71B")
-DEFAULT_BG  = pygame.Color("#EAE6E3")
+DEFAULT_BG = pygame.Color("#EAE6E3")
 
 # Checkbox alignment
-VERTICAL    = 1
-HORIZONTAL  = 2
+VERTICAL = 1
+HORIZONTAL = 2
 
 # Player type
-HUMAN       = 1
-COMPUTER    = 2
-TYPES       = ['human', 'ai']
+HUMAN = 1
+COMPUTER = 2
+TYPES = ["human", "ai"]
 
 # Rules
-STANDARD    = 1
-PRO         = 2
-LONG_PRO    = 3
+STANDARD = 1
+PRO = 2
+LONG_PRO = 3
 
 # Computer difficulty
-EASY        = 1
-MEDIUM      = 2
-HARD        = 3
-MODES       = ['easy', 'medium', 'hard']
+EASY = 1
+MEDIUM = 2
+HARD = 3
+MODES = ["easy", "medium", "hard"]
 
 # Path to the executable
-EXE_PATH = '../src/a.out'
+EXE_PATH = "../a.out"
