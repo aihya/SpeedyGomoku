@@ -371,7 +371,7 @@ Board::Board(uint8_t size) {
     std::memset(board, 0, sizeof(uint64_t) * size);
     std::memset(_illegal_boards[0], 0, sizeof(uint64_t) * size);
     std::memset(_illegal_boards[1], 0, sizeof(uint64_t) * size);
-    std::memset(_capture_count, 0, sizeof(uint8_t) * 2);
+    std::memset(_capture_count, 0, sizeof(int) * 2);
 
     _evaluation_edges = {
         {0, size - 1},
@@ -629,29 +629,21 @@ void Board::record_illegal_update(t_updates &updates_queue, t_coord pos, t_piece
 void Board::revert_illegal_update(t_update& update) {
     if (update.piece) {
         if (update.type == ADD){
-            --_illegal_positions[update.piece.value() - 1][update.pos];
-            if (!_illegal_positions[update.piece.value() - 1][update.pos])
-                update_board(_illegal_boards[update.piece.value() - 1], update.pos, EMPTY);
+            --_illegal_positions[update.piece - 1][update.pos];
+            if (!_illegal_positions[update.piece - 1][update.pos])
+                update_board(_illegal_boards[update.piece - 1], update.pos, EMPTY);
         }
         else{
-            ++_illegal_positions[update.piece.value() - 1][update.pos];
-            if (_illegal_positions[update.piece.value() - 1][update.pos])
-                update_board(_illegal_boards[update.piece.value() - 1], update.pos, ERROR);
+            ++_illegal_positions[update.piece - 1][update.pos];
+            if (_illegal_positions[update.piece - 1][update.pos])
+                update_board(_illegal_boards[update.piece - 1], update.pos, ERROR);
         }
-    }
-}
-
-void Board::revert_moveset_update(const t_update& update) {
-    if (update.piece && update.moveset_update[update.piece.value() - 1]) {
-        _moveset_positions[update.piece.value() - 1][update.pos] = 
-            update.moveset_update[update.piece.value() - 1]->old_moveset;
     }
 }
 
 void Board::record_moveset_update(t_updates &updates_queue, t_coord pos, t_piece color, int64_t score, t_update_type type) {
-
     t_scored_moveset& moveset = _moveset_positions[color - 1][pos];
-    t_scored_moveset old_moveset = moveset;
+    t_scored_moveset old_moveset = moveset;  // Storing the old state
     if (type == ADD) {
         ++moveset.count;
         if (score == ILLEGAL_SCORE)
@@ -662,19 +654,36 @@ void Board::record_moveset_update(t_updates &updates_queue, t_coord pos, t_piece
     }
     else {
         --moveset.count;
-        if (moveset.count == 0)
-            moveset.blocked = true;
     } 
     updates_queue.emplace_back(t_update{MOVESET, type, pos, .piece=color, .moveset_update = t_moveset_update{old_moveset, moveset}});
 }
 
+void Board::revert_moveset_update(const t_update& update) {
+    if (update.piece == BLACK || update.piece == WHITE) {
+        t_scored_moveset& current_moveset = _moveset_positions[update.piece - 1][update.pos];
+        const t_scored_moveset& old_moveset = update.moveset_update[update.piece - 1].old_moveset;
+
+        if (update.type == ADD)
+            --current_moveset.count;
+        else
+            ++current_moveset.count;
+
+        current_moveset.blocked = old_moveset.blocked;
+        current_moveset.score = old_moveset.score;
+
+        if (current_moveset.count == 0)
+            _moveset_positions[update.piece - 1].erase(update.pos);
+    }
+}
+
 void Board::record_board_update(t_updates &updates_queue, t_coord pos, t_piece piece, t_update_type type) {
-    if (type == ADD) {
+    if (type == ADD)
         set_position(pos, piece);
+    else
+    {
+        remove_piece(pos);
         _capture_count[piece - 1]++;
     }
-    else
-        remove_piece(pos);
     updates_queue.emplace_back(t_update{BOARD, type, pos, .piece = piece});
 }
 
@@ -714,6 +723,8 @@ t_ordered_moves Board::order_moves(t_piece color) {
     for (auto& [pos, scored_moveset] : moveset) {
         if (scored_moveset.blocked)
             continue;
+        if (get_piece(pos) != EMPTY)
+            continue;
         if (!scored_moveset.count)
             continue;
         moves.push_back({scored_moveset.score, pos});
@@ -736,8 +747,8 @@ void Board::revert_updates(t_updates& updates, size_t count) {
                 if (update.type == ADD)
                     remove_piece(update.pos);
                 else {
-                    set_position(update.pos, update.piece.value());
-                    _capture_count[update.piece.value() - 1]--;
+                    set_position(update.pos, update.piece);
+                    _capture_count[update.piece - 1]--;
                 }
                 break;
             case ILLEGAL:
@@ -757,9 +768,9 @@ int64_t Board::evaluate_board(t_piece player_color) {
     const t_scores_map& op_att_patterns = Board::_attack_patterns.at(GET_OPPOSITE_PIECE(player_color));
     const t_piece       opposite_color = GET_OPPOSITE_PIECE(player_color);
 
-    if (_capture_count[player_color - 1] == 5)
+    if (_capture_count[player_color - 1] >= 5)
         return WIN_SCORE;
-    if (_capture_count[opposite_color - 1] == 5)
+    if (_capture_count[opposite_color - 1] >= 5)
         return -WIN_SCORE;
     for (int y = _evaluation_edges.y.first; y <= _evaluation_edges.y.second; ++y) {
         uint64_t row = board[y];
@@ -801,7 +812,7 @@ void Board::print_board(t_piece curr_piece) const {
             t_piece piece = t_piece((get_piece(pos)) | get_piece(_illegal_boards[curr_piece - 1], pos));
             if (piece == EMPTY) {
                 auto it = _moveset_positions[curr_piece - 1].find(pos);
-                if (it != _moveset_positions[curr_piece - 1].end() && it->second.count > 0) {
+                if (it != _moveset_positions[curr_piece - 1].end() && it->second.count) {
                     // std::cout << "\033[31m" << piece << "\033[0m ";
                     std::cout << "+ ";
                 } else {

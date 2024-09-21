@@ -16,7 +16,7 @@ class  Board {
 
     private:
         uint64_t*                           _illegal_boards[2] = {nullptr};
-        uint8_t                             _capture_count[2];
+        int                                 _capture_count[2];
         t_moves                             _illegal_positions[2];
         t_moveset                           _moveset_positions[2];
         t_evaluation_edges                  _evaluation_edges;

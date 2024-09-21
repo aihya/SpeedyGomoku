@@ -199,8 +199,8 @@ typedef struct  s_update {
     t_update_target                 target;
     t_update_type                   type;
     t_coord                         pos;
-    std::optional<t_piece>          piece;
-    std::optional<t_moveset_update> moveset_update[2];
+    t_piece                         piece;
+    t_moveset_update                moveset_update[2];
 }               t_update;
 
 
