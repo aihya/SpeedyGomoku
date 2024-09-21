@@ -1,3 +1,5 @@
+from surface import Surface
+from init import *
 class State:
     """
     This class represents a board state read from the game logic.
@@ -118,3 +120,18 @@ class States:
         state.count = self.last.count.copy()
         state.count[state.move] = self.counter
         self.states.append(state)
+
+class HistoryTable(Surface):
+
+    __slots__ = ('_states',)
+
+    def __init__(self, states, width, height, *args, **kwargs):
+        super().__init__(width, height, relative_to=kwargs['relative_to'])
+        self._states = states
+
+    @property
+    def states(self):
+        return self._states
+
+    def update(self):
+        self.surface.fill(GRAY_2)

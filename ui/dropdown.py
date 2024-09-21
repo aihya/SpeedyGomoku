@@ -3,7 +3,7 @@ from pygame.locals import *
 import math
 
 # Initialize Pygame
-pygame.init()
+# pygame.init()
 
 
 class Dropdown:
@@ -128,6 +128,7 @@ class Dropdown:
             screen.blit(self.disabled_overlay, (self.x, self.y))
 
     def draw_options(self, screen):
+        # print('drawing options')
         if self.is_open and not self.disabled:
             option_height = self.height * self.animation_progress
             for i, option in enumerate(self.options):
@@ -161,10 +162,11 @@ class Dropdown:
     def handle_event(self, event):
         if self.disabled:
             return
-
-        if event.type == MOUSEBUTTONDOWN:
+        if event.type == pygame.MOUSEBUTTONDOWN:
             dropdown_rect = pygame.Rect(self.x, self.y, self.width, self.height)
+            print(dropdown_rect, event.pos)
             if dropdown_rect.collidepoint(event.pos):
+                print(event)
                 self.is_open = not self.is_open
                 self.is_collapsed = not self.is_open
             elif self.is_open:
@@ -184,7 +186,7 @@ class Dropdown:
                 self.is_open = False
                 self.is_collapsed = True
                 self.animation_progress = 0
-        elif event.type == MOUSEMOTION:
+        elif event.type == pygame.MOUSEMOTION:
             if self.is_open:
                 for i, option in enumerate(self.options):
                     option_rect = pygame.Rect(
@@ -206,9 +208,9 @@ class Dropdown:
             return
 
         if self.is_open and self.animation_progress < 1:
-            self.animation_progress = min(1, self.animation_progress + 0.1)
+            self.animation_progress = min(1, self.animation_progress + 0.05)
         elif not self.is_open and self.animation_progress > 0:
-            self.animation_progress = max(0, self.animation_progress - 0.1)
+            self.animation_progress = max(0, self.animation_progress - 0.05)
 
         target_angle = math.pi if self.is_open else 0
         self.triangle_angle += (target_angle - self.triangle_angle) * 0.2
@@ -221,8 +223,8 @@ class Dropdown:
 
 
 # Example usage
-screen = pygame.display.set_mode((400, 300))
-clock = pygame.time.Clock()
+# screen = pygame.display.set_mode((400, 300))
+# clock = pygame.time.Clock()
 
 # Custom colors (optional)
 custom_colors = {
@@ -232,54 +234,54 @@ custom_colors = {
     "label": (100, 100, 100),  # Medium gray (label color)
 }
 
-dropdown1 = Dropdown(
-    50,
-    50,
-    200,
-    40,
-    ["Option 1", "Option 2", "Option 3"],
-    label="Choose an option",
-    colors=custom_colors,
-)
-dropdown2 = Dropdown(
-    50,
-    150,
-    200,
-    40,
-    ["A", "B", "C"],
-    label="Another dropdown",
-    colors=custom_colors,
-    disabled=True,
-)
+# dropdown1 = Dropdown(
+#     50,
+#     50,
+#     200,
+#     40,
+#     ["Option 1", "Option 2", "Option 3"],
+#     label="Choose an option",
+#     colors=custom_colors,
+# )
+# dropdown2 = Dropdown(
+#     50,
+#     150,
+#     200,
+#     40,
+#     ["A", "B", "C"],
+#     label="Another dropdown",
+#     colors=custom_colors,
+#     disabled=True,
+# )
 
-# Example button (to demonstrate z-index)
-button_rect = pygame.Rect(100, 100, 100, 50)
+# # Example button (to demonstrate z-index)
+# button_rect = pygame.Rect(100, 100, 100, 50)
 
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            running = False
-        dropdown1.handle_event(event)
-        dropdown2.handle_event(event)
+# running = True
+# while running:
+#     for event in pygame.event.get():
+#         if event.type == QUIT:
+#             running = False
+#         dropdown1.handle_event(event)
+#         dropdown2.handle_event(event)
 
-    dropdown1.update()
-    dropdown2.update()
+#     dropdown1.update()
+#     dropdown2.update()
 
-    screen.fill((240, 240, 240))  # Set global background color
+#     screen.fill((240, 240, 240))  # Set global background color
 
-    # Draw main parts of dropdowns
-    dropdown1.draw_main(screen)
-    dropdown2.draw_main(screen)
+#     # Draw main parts of dropdowns
+#     dropdown1.draw_main(screen)
+#     dropdown2.draw_main(screen)
 
-    # Draw example button
-    pygame.draw.rect(screen, (255, 0, 0), button_rect)
+#     # Draw example button
+#     pygame.draw.rect(screen, (255, 0, 0), button_rect)
 
-    # Draw dropdown options last to ensure they're on top
-    dropdown1.draw_options(screen)
-    dropdown2.draw_options(screen)
+#     # Draw dropdown options last to ensure they're on top
+#     dropdown1.draw_options(screen)
+#     dropdown2.draw_options(screen)
 
-    pygame.display.flip()
-    clock.tick(60)
+#     pygame.display.flip()
+#     clock.tick(60)
 
-pygame.quit()
+# pygame.quit()

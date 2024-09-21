@@ -3,8 +3,9 @@ from pygame import gfxdraw
 from surface import Surface
 from init import *
 from computer import Computer, Player
-from components import Button, CheckBoxs
-from state      import States, State
+from components import Button, CheckBoxs, DropDown, custom_colors
+from state import States, State, HistoryTable
+# from dropdown import Dropdown, custom_colors
 import fonts
 
 class Setup(Surface):
@@ -14,7 +15,7 @@ class Setup(Surface):
 
     __slots__ = ('_repeat', '_start', '_p1', '_p1_surf', '_p1_type', 
             '_p1_mode', '_p2', '_p2_surf', '_p2_type', '_p2_mode', '_p1', '_p2', 
-            '_rules', '_rules_surf', '_sizes', '_sizes_surf')
+            '_rules', '_rules_surf', '_sizes', '_sizes_surf', '_sizes_dropdown')
 
     def __init__(self, *args, **kwargs):
         super().__init__(WIDTH-HEIGHT, HEIGHT, alpha=True, *args, **kwargs)
@@ -73,6 +74,15 @@ class Setup(Surface):
 
         self._p1 = None
         self._p2 = None
+        # self._sizes_dropdown = DropDown(50, 600, 300, 50, 
+        #                                ["19x19", "15x15", "13x13", "10x10"],
+        #                                colors=custom_colors,
+        #                                disabled=False,
+        #                                relative_to=self)
+
+    # @property
+    # def sizes_dropdown(self):
+    #     return self._sizes_dropdown
 
     @property
     def rules(self):
@@ -204,11 +214,6 @@ class Setup(Surface):
         middle_rect = middle.get_rect()
         middle_rect.center = (int(self.width / 2), 60)
 
-        # VS
-        # vs = fonts.h3_r.render('VS', True, LIGHT)
-        # vs_rect = vs.get_rect()
-        # vs_rect.center = (int(self.width / 2), 140)
-
         type_checkboxs = [*self.p1_type.container, *self.p2_type.container]
         mode_checkboxs = [*self.p1_mode.container, *self.p2_mode.container]
 
@@ -216,10 +221,13 @@ class Setup(Surface):
             if event.type == pygame.QUIT:
                 exit(0)
 
+            # self.sizes_dropdown.handle_event(event)
+            
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 if self.start.clicked():
                     self.start.pressed = False
                     return BOARD_SURFACE
+
 
                 for box in type_checkboxs:
                     box.check_clicked()
@@ -255,8 +263,9 @@ class Setup(Surface):
         self.start.update()
         self.surface.blit(self.start.surface, self.start.rect, special_flags=pygame.BLEND_RGBA_MAX)
         self.surface.blit(middle, middle_rect)
-        # self.surface.blit(vs, vs_rect)
-
+        # self.sizes_dropdown.update()
+        # self.sizes_dropdown.draw_main(self.surface)
+        # self.sizes_dropdown.draw_options(self.surface)
         if self.start.pressed:
             self.start.pressed = False
             return BOARD_SURFACE
@@ -264,23 +273,23 @@ class Setup(Surface):
 
 class Stats(Surface):
 
-    __slots__ = ('_left', '_right', '_rff', '_lff', '_states', '_board', '_text', '_restart', '_suggest', '_player_header', '_versus_message', '_winner')
+    __slots__ = ('_left', '_right', '_rff', '_lff', '_states', '_board', '_text', '_restart', '_suggest', '_player_header', '_versus_message', '_winner', '_history')
 
     def __init__(self, states, board, winner=None, *args, **kwargs):
         super().__init__(WIDTH-HEIGHT, HEIGHT, *args, **kwargs)
         
         # Load images for left and right buttons
-        r_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/right.png'), (50, 50))
-        l_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/right.png'), (50, 50))
+        r_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/right.png'), (40, 40))
+        l_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/right.png'), (40, 40))
         l_img = pygame.transform.rotate(l_img, 180)
-        rff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png').convert_alpha(), (50, 50))
-        lff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png'), (50, 50))
+        rff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png').convert_alpha(), (40, 40))
+        lff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png'), (40, 40))
         lff_img = pygame.transform.rotate(lff_img, 180)
 
-        self._left  = Button(WHITE, GRAY_1, l_img, None, height=80, hover_color=GRAY_3, relative_to=self)
-        self._lff   = Button(WHITE, GRAY_1, lff_img, None, height=80, hover_color=GRAY_3, relative_to=self)
-        self._right = Button(WHITE, GRAY_1, r_img, None, height=80, hover_color=GRAY_3, relative_to=self)
-        self._rff   = Button(WHITE, GRAY_1, rff_img, None, height=80, hover_color=GRAY_3, relative_to=self)
+        self._left  = Button(WHITE, GRAY_1, l_img, None, height=60, hover_color=GRAY_3, relative_to=self)
+        self._lff   = Button(WHITE, GRAY_1, lff_img, None, height=60, hover_color=GRAY_3, relative_to=self)
+        self._right = Button(WHITE, GRAY_1, r_img, None, height=60, hover_color=GRAY_3, relative_to=self)
+        self._rff   = Button(WHITE, GRAY_1, rff_img, None, height=60, hover_color=GRAY_3, relative_to=self)
         self._left.position  = (self.width / 2 - self.left.width, self.height - self.left.height)
         self._right.position = (self.width / 2, self.height - self.left.height)
         self._lff.position   = (self.width / 2 - self.left.width * 2, self.height - self.left.height)
@@ -310,8 +319,14 @@ class Stats(Surface):
             height = self.suggest.height,
             relative_to=self)
         self._restart.position = (1.9 * self.width / 3, 3.8 * self.height // 5)
-
         self._versus_message = fonts.h3_b.render('VS', True, WHITE)
+
+        self._history = HistoryTable(self.states, self.width, 400, relative_to=self)
+        self._history.position = (0, 300)
+
+    @property
+    def history(self):
+        return self._history
 
     @property
     def states(self):
@@ -427,6 +442,9 @@ class Stats(Surface):
         self.surface.blit(self.right.surface, self.right.rect)
         self.surface.blit(self.lff.surface, self.lff.rect)
         self.surface.blit(self.rff.surface, self.rff.rect)
+
+        self.history.update()
+        self.surface.blit(self.history.surface, self.history.rect)
 
         self.update_current_state(events)
 
