@@ -29,6 +29,7 @@ class Gomoku
         t_rule                                  _rule;
         bool                                    _game_over;
         t_updates                               _updates_queue;
+        static const t_coord                    _invalid_coord;
     public:
 
         Board                                   _board;

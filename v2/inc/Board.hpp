@@ -13,10 +13,10 @@ class  Board {
         uint8_t                             size;
         const static std::array<t_coord, 4> _directions;
         const static std::vector<t_coord>   _moveset_cells;
+        int                                 _capture_count[2];
 
     private:
         uint64_t*                           _illegal_boards[2] = {nullptr};
-        int                                 _capture_count[2];
         t_moves                             _illegal_positions[2];
         t_moveset                           _moveset_positions[2];
         t_evaluation_edges                  _evaluation_edges;
@@ -32,7 +32,7 @@ class  Board {
                                     Board(uint8_t size);
                                     ~Board();
         void                        validate_coord(t_coord position, t_piece piece) const;
-        int64_t                     evaluate_board(t_piece player_color);
+        int64_t                     evaluate_board(t_piece player_color) const;
         void                        print_board(t_piece curr_piece) const;
         size_t                      make_move(t_coord pos, t_piece piece, t_updates& updates_queue);
         t_ordered_moves             order_moves(t_piece color);
@@ -43,7 +43,7 @@ class  Board {
         inline t_piece              get_piece(uint64_t *board, t_coord piece_coord) const;
         inline t_piece              get_piece(t_coord piece_coord) const;
         void                        set_position(t_coord position, t_piece piece);
-        int64_t                     evaluate_position(t_coord pos, t_piece color, t_coord dir, const t_scores_map &patterns);
+        int64_t                     evaluate_position(t_coord pos, t_piece color, t_coord dir, const t_scores_map &patterns) const;
         void                        update_board(uint64_t *board, t_coord pos, t_piece piece);
         bool                        check_for_win(t_coord pos, t_piece color, t_coord dir) const;
         bool                        possible_capture(t_coord pos, t_piece color, t_coord dir) const;

@@ -175,7 +175,9 @@ typedef struct s_scored_coord {
     bool operator < (const s_scored_coord& rhs) const {
         return (this->score < rhs.score);
     }
-    
+    bool operator > (const s_scored_coord& rhs) const {
+        return (this->score > rhs.score);
+    }
     // add operator -  to multiply score by -1
     s_scored_coord operator-() const {
         return s_scored_coord{-this->score, this->coord};
@@ -195,12 +197,18 @@ typedef struct  s_board_update {
     t_piece     piece;
 }               t_board_update;
 
+struct t_illegal_update {
+    uint16_t old_count;
+    bool was_error;
+};
+
 typedef struct  s_update {
     t_update_target                 target;
     t_update_type                   type;
     t_coord                         pos;
     t_piece                         piece;
     t_moveset_update                moveset_update[2];
+    t_illegal_update                illegal_update;
 }               t_update;
 
 
@@ -208,6 +216,7 @@ struct DualColorPotential {
     int64_t black_potential;
     int64_t white_potential;
 };
+
 
 typedef std::unordered_map<t_coord, uint16_t, coord_hash>           t_moves;
 typedef std::unordered_map<t_coord, s_scored_moveset, coord_hash>   t_moveset;
