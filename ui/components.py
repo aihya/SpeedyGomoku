@@ -1,4 +1,5 @@
 import pygame
+from pygame import gfxdraw
 from surface import Surface
 from fonts import *
 from init import *
@@ -7,6 +8,11 @@ import math
 # type of button content
 TEXT  = 1
 IMAGE = 2
+
+def draw_circle(surface, x, y, radius, color):
+    gfxdraw.aacircle(surface, x, y, radius+1, BLACK)
+    gfxdraw.aacircle(surface, x, y, radius, color)
+    gfxdraw.filled_circle(surface, x, y, radius, color)
 
 class Button(Surface):
     """

@@ -1,9 +1,8 @@
 import math
-from pygame import gfxdraw
 from surface import Surface
 from init import *
 from computer import Computer, Player
-from components import Button, CheckBoxs, DropDown, custom_colors
+from components import Button, CheckBoxs, DropDown, custom_colors, draw_circle
 from state import States, State, HistoryTable
 # from dropdown import Dropdown, custom_colors
 import fonts
@@ -21,53 +20,51 @@ class Setup(Surface):
         super().__init__(WIDTH-HEIGHT, HEIGHT, alpha=True, *args, **kwargs)
         self._repeat = True
 
-        self._start = Button(LIGHT, GRAY_2, "START", fonts.h3_b, height=80, expand=True, relative_to=self)
+        self._start = Button(LIGHT, GRAY_2, "START", fonts.h4_b, height=50, expand=True, relative_to=self)
         self._start.position = (0, self.height - self._start.height)
         
         # Player 1 setup surface
-        self._p1_surf = Surface(300, 400, (50, 120), self, True)
+        self._p1_surf = Surface(300, 400, (50, 70), self, True)
         self._p1_type = CheckBoxs(
             {HUMAN: 'Human', COMPUTER: 'CPU'},
-            position=(0, 50),
+            position=(0, 40),
             relative_to=self._p1_surf,
             alpha=True
         )
         self._p1_mode = CheckBoxs( 
             {EASY: 'Easy', MEDIUM: 'Medium', HARD: 'Hard'},
-            position=(0, self._p1_type.height + 130),
+            position=(0, self._p1_type.height + 110),
             relative_to=self._p1_surf,
             alpha=True
         )
 
         # Player 2 setup surface
-        self._p2_surf = Surface(300, 400, (320, 120), self, True)
+        self._p2_surf = Surface(300, 400, (320, 70), self, True)
         self._p2_type = CheckBoxs(
             {HUMAN: 'Human', COMPUTER: 'CPU'},
-            position=(0, 50),
+            position=(0, 40),
             relative_to=self._p2_surf,
             alpha=True
         )
         self._p2_mode = CheckBoxs(
             {EASY: 'Easy', MEDIUM: 'Medium', HARD: 'Hard'},
-            position=(0, self._p2_type.height + 130),
+            position=(0, self._p2_type.height + 110),
             relative_to=self._p2_surf,
             alpha=True
         )
 
-        self._rules_surf = Surface(self.width - 50, 90, (50, 500), self, True)
+        self._rules_surf = Surface(self.width - 50, 190, (50, 480), self, True)
         self._rules = CheckBoxs(
             {STANDARD: 'Standard', LONG_PRO: 'Long Pro', PRO: 'Pro'},
-            position=(0, 50),
-            alignment=HORIZONTAL,
+            position=(0, 0),
             relative_to=self.rules_surf,
             alpha=True
         )
 
-        self._sizes_surf = Surface(self.width - 50, 90, (50, 650), self, True)
+        self._sizes_surf = Surface(self.width - 50, 190, (320, 480), self, True)
         self._sizes = CheckBoxs(
-            {SIZE_19: '19x19', SIZE_15: '15x15', SIZE_13: '13x13', SIZE_10:'10x10'},
+            {SIZE_19: '19x19', SIZE_15: '15x15', SIZE_13: '13x13'},
             position=(0, 0),
-            alignment=HORIZONTAL,
             relative_to=self._sizes_surf,
             alpha=True
         )
@@ -153,9 +150,9 @@ class Setup(Surface):
         self._repeat = value
 
     def draw_box_1(self):
-        header = fonts.h3_b.render('Black', True, LIGHT)
+        header = fonts.h4_b.render('Black', True, LIGHT)
         header_rect = header.get_rect()
-        header_rect.topleft = (70, 0)
+        header_rect.topleft = (0, 0)
 
         self.p1_surf.surface.blit(header, header_rect, special_flags=pygame.BLEND_RGBA_MAX)
 
@@ -170,9 +167,9 @@ class Setup(Surface):
         self.surface.blit(self.p1_surf.surface, self.p1_surf.rect)
 
     def draw_box_2(self):
-        header = fonts.h3_b.render('White', True, LIGHT)
+        header = fonts.h4_b.render('White', True, LIGHT)
         header_rect = header.get_rect()
-        header_rect.topleft = (70, 0)
+        header_rect.topleft = (0, 0)
 
         self.p2_surf.surface.blit(header, header_rect, special_flags=pygame.BLEND_RGBA_MAX)
 
@@ -197,22 +194,34 @@ class Setup(Surface):
         self.surface.blit(self.sizes_surf.surface, self.sizes_surf.rect)
 
     def draw_titles(self):
-        level = fonts.h3_b.render('Level', True, LIGHT)
-        rules = fonts.h3_b.render('Rules', True, LIGHT)
-        level_rect = level.get_rect()
+        black_level = fonts.h4_b.render('Black Level', True, LIGHT)
+        white_level = fonts.h4_b.render('White Level', True, LIGHT)
+
+        black_level_rect = black_level.get_rect()
+        white_level_rect = white_level.get_rect()
+        black_level_rect.topleft = (50, 220)
+        white_level_rect.topleft = (320, 220)
+
+        rules = fonts.h4_b.render('Game Rules', True, LIGHT)
         rules_rect = rules.get_rect()
-        level_rect.center = (self.surface.get_rect().centerx, 300)
-        rules_rect.center = (self.surface.get_rect().centerx, 510)
-        self.surface.blit(level, level_rect)
+        rules_rect.topleft = (50, 430)
+
+        sizes = fonts.h4_b.render('Board Size', True, LIGHT)
+        sizes_rect = rules.get_rect()
+        sizes_rect.topleft = (320, 430)
+
+        self.surface.blit(black_level, black_level_rect)
+        self.surface.blit(white_level, white_level_rect)
         self.surface.blit(rules, rules_rect)
+        self.surface.blit(sizes, sizes_rect)
 
     def update(self, events):
         self.surface.fill(GRAY_1)
 
         # Title
-        middle = fonts.h2_b.render('Game Setup', True, LIGHT)
+        middle = fonts.h3_b.render('Game Setup', True, LIGHT)
         middle_rect = middle.get_rect()
-        middle_rect.center = (int(self.width / 2), 60)
+        middle_rect.center = (int(self.width / 2), 30)
 
         type_checkboxs = [*self.p1_type.container, *self.p2_type.container]
         mode_checkboxs = [*self.p1_mode.container, *self.p2_mode.container]
@@ -227,8 +236,6 @@ class Setup(Surface):
                 if self.start.clicked():
                     self.start.pressed = False
                     return BOARD_SURFACE
-
-
                 for box in type_checkboxs:
                     box.check_clicked()
                     box.update()
@@ -273,56 +280,57 @@ class Setup(Surface):
 
 class Stats(Surface):
 
-    __slots__ = ('_left', '_right', '_rff', '_lff', '_states', '_board', '_text', '_restart', '_suggest', '_player_header', '_versus_message', '_winner', '_history')
+    __slots__ = ('_left', '_right', '_rff', '_lff', '_states', '_board', '_text', '_restart', '_suggest', '_player_header', '_versus_message', '_winner', '_history', '_history_title')
 
     def __init__(self, states, board, winner=None, *args, **kwargs):
         super().__init__(WIDTH-HEIGHT, HEIGHT, *args, **kwargs)
-        
+
+        suggest_text = fonts.h5_b.render('Suggestion', True, BLACK)
+        self._suggest = Button(
+            '#000000', 
+            '#FFBC24', 
+            suggest_text, 
+            None, 
+            height=50,
+            relative_to=self)
+        self._suggest.position = (0, self.height-self.suggest.height)
+
+        restart_text = fonts.h5_b.render('Restart', True, BLACK)
+        self._restart = Button(
+            '#000000', 
+            '#008CDB', 
+            restart_text, 
+            None, 
+            width = self.suggest.width,
+            height = 50,
+            relative_to=self)
+        self._restart.position = (self.width-self.restart.width, self.height-self.restart.height)
+
         # Load images for left and right buttons
-        r_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/right.png'), (40, 40))
-        l_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/right.png'), (40, 40))
+        r_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/right.png'), (30, 30))
+        l_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/right.png'), (30, 30))
         l_img = pygame.transform.rotate(l_img, 180)
-        rff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png').convert_alpha(), (40, 40))
-        lff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png'), (40, 40))
+        rff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png').convert_alpha(), (30, 30))
+        lff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png'), (30, 30))
         lff_img = pygame.transform.rotate(lff_img, 180)
 
-        self._left  = Button(WHITE, GRAY_1, l_img, None, height=60, hover_color=GRAY_3, relative_to=self)
-        self._lff   = Button(WHITE, GRAY_1, lff_img, None, height=60, hover_color=GRAY_3, relative_to=self)
-        self._right = Button(WHITE, GRAY_1, r_img, None, height=60, hover_color=GRAY_3, relative_to=self)
-        self._rff   = Button(WHITE, GRAY_1, rff_img, None, height=60, hover_color=GRAY_3, relative_to=self)
+        self._left  = Button(WHITE, GRAY_1, l_img, None, width=65, height=50, hover_color=GRAY_3, relative_to=self)
+        self._right = Button(WHITE, GRAY_1, r_img, None, width=65, height=50, hover_color=GRAY_3, relative_to=self)
+        self._lff   = Button(WHITE, GRAY_1, lff_img, None, width=65, height=50, hover_color=GRAY_3, relative_to=self)
+        self._rff   = Button(WHITE, GRAY_1, rff_img, None, width=65, height=50, hover_color=GRAY_3, relative_to=self)
         self._left.position  = (self.width / 2 - self.left.width, self.height - self.left.height)
         self._right.position = (self.width / 2, self.height - self.left.height)
-        self._lff.position   = (self.width / 2 - self.left.width * 2, self.height - self.left.height)
-        self._rff.position   = (self.width / 2 + self.right.width, self.height - self.left.height)
-        self._winner = fonts.h3_b.render('Winner', True, WHITE)
-        #self._black_wins = fonts.h3_b.render('Black Wins', True, WHITE)
+        self._lff.position   = (self.suggest.width, self.height - self.left.height)
+        self._rff.position   = (self.restart.position[0]-self.rff.width, self.height - self.left.height)
 
         self._states = states
         self._board = board
 
-        # suggest_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/suggest.png'), (50, 50))
-        suggest_img = fonts.h3_b.render('Suggestion', True, WHITE)
-        self._suggest = Button(
-            '#000000', 
-            GRAY_2, 
-            suggest_img, 
-            None, 
-            relative_to=self)
-        self._suggest.position = (110, 3.8 * self.height // 5)
-
-        restart_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/reload.png'), (50, 50))
-        self._restart = Button(
-            '#000000', 
-            '#31E8DF', 
-            restart_img, 
-            None, 
-            height = self.suggest.height,
-            relative_to=self)
-        self._restart.position = (1.9 * self.width / 3, 3.8 * self.height // 5)
         self._versus_message = fonts.h3_b.render('VS', True, WHITE)
+        self._history_title  = fonts.h4_b.render('History', True, pygame.Color("#DFDFDF"))
 
-        self._history = HistoryTable(self.states, self.width, 400, relative_to=self)
-        self._history.position = (0, 300)
+        self._history = HistoryTable(self.states, self.width, 560, relative_to=self)
+        self._history.position = (0, 190)
 
     @property
     def history(self):
@@ -370,8 +378,8 @@ class Stats(Surface):
         return self._suggest
 
     @property
-    def winner(self):
-        return self._winner
+    def history_title(self):
+        return self._history_title
 
     def update_current_state(self, events):
         for event in events:
@@ -398,17 +406,18 @@ class Stats(Surface):
     def update(self, events):
         self.surface.fill(GRAY_1)
 
-        winner_rect = self.winner.get_rect()
-        winner_rect.center = (3 * self.width // 4, 230)
-        self.surface.blit(self.winner, winner_rect)
+        history_rect = self.history_title.get_rect()
+        history_rect.center = (self.width // 2, 160)
+        self.surface.blit(self.history_title, history_rect)
+
         if self.board.turn.turn == 1:
             ind_x, ind_y = self.width // 4, 80
         else:
             ind_x, ind_y = 3 * self.width // 4, 80
 
-        Board.draw_circle(self.surface, ind_x, ind_y, 60, pygame.Color('#FFFF00'))
-        Board.draw_circle(self.surface, self.width // 4, 80, 50, BLACK)
-        Board.draw_circle(self.surface, 3 * self.width // 4, 80, 50, WHITE)
+        draw_circle(self.surface, ind_x, ind_y, 60, pygame.Color('#0B64C1'))
+        draw_circle(self.surface, self.width // 4, 80, 50, BLACK)
+        draw_circle(self.surface, 3 * self.width // 4, 80, 50, pygame.Color("#DFDFDF"))
 
         self.surface.blit(self.versus_message, (self.width / 2 - self.versus_message.get_rect()[2] / 2, 65))
 
@@ -443,7 +452,7 @@ class Stats(Surface):
         self.surface.blit(self.lff.surface, self.lff.rect)
         self.surface.blit(self.rff.surface, self.rff.rect)
 
-        self.history.update()
+        self.history.update(events)
         self.surface.blit(self.history.surface, self.history.rect)
 
         self.update_current_state(events)
@@ -539,12 +548,6 @@ class Board(Surface):
     def finished(self, value):
         self._finished = value
 
-    @staticmethod
-    def draw_circle(surface, x, y, radius, color):
-        gfxdraw.aacircle(surface, x, y, radius+1, BLACK)
-        gfxdraw.aacircle(surface, x, y, radius, color)
-        gfxdraw.filled_circle(surface, x, y, radius, color)
-
     def draw_board(self):
         self.surface.fill(BOARD_COLOR)
         pygame.draw.line(self.surface, GRAY_1, (self.width-1, 0), (self.width-1, HEIGHT), 1)
@@ -588,7 +591,7 @@ class Board(Surface):
                     color = "#ffffff" if col == 2 else "#000000"
                     x = self.offset + c * self.step
                     y = self.offset + r * self.step
-                    Board.draw_circle(self.surface, x, y, radius, pygame.Color(color))
+                    draw_circle(self.surface, x, y, radius, pygame.Color(color))
 
                     counter = self.states.current.count.get((c, r))
                     if counter == None:
@@ -596,7 +599,7 @@ class Board(Surface):
                     if counter == self.states.counter:
                         x = self.offset + c * self.step
                         y = self.offset + r * self.step
-                        Board.draw_circle(self.surface, x+self.step//2-10, y-self.step//2+10, 5, (255, 255, 0))
+                        draw_circle(self.surface, x+self.step//2-10, y-self.step//2+10, 5, (255, 255, 0))
                         count_text = fonts.h6_b.render(f'{counter}', True, (255, 0, 0))
 
                     font = fonts.h6_b if self.size > 15 else fonts.h5_b
@@ -608,19 +611,19 @@ class Board(Surface):
                 elif col == 3:
                     x = self.offset + c * self.step
                     y = self.offset + r * self.step
-                    Board.draw_circle(self.surface, x, y, 3, pygame.Color('#E83907'))
+                    draw_circle(self.surface, x, y, 3, pygame.Color('#E83907'))
 
                 elif col == 4:
                     x = self.offset + c * self.step
                     y = self.offset + r * self.step
-                    Board.draw_circle(self.surface, x, y, 3, pygame.Color('#00ff00'))
+                    draw_circle(self.surface, x, y, 3, pygame.Color('#00ff00'))
 
         if self.states.last == self.states.current and self.states.last.suggestion:
             # Show suggestion only if we are at the last state
             color = "#ffffff88" if self.turn.turn == 2 else "#00000088"
             x = self.linspace[self.states.last.suggestion['move'][0]] + 1
             y = self.linspace[self.states.last.suggestion['move'][1]] + 1
-            Board.draw_circle(self.surface, x, y, radius, pygame.Color(color))
+            draw_circle(self.surface, x, y, radius, pygame.Color(color))
 
     def check_hover(self):
         x, y = pygame.mouse.get_pos()
@@ -635,7 +638,7 @@ class Board(Surface):
         x, y = pygame.mouse.get_pos()
         x = self.linspace[math.floor((x-self.offset+self.step/2) / self.step)]
         y = self.linspace[math.floor((y-self.offset+self.step/2) / self.step)]
-        Board.draw_circle(self.surface, x, y, radius, pygame.Color(color))
+        draw_circle(self.surface, x, y, radius, pygame.Color(color))
 
         # Show the current count value on the hover piece.
         if self.turn.player == HUMAN:
