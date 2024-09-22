@@ -35,7 +35,7 @@ void Gomoku::make_move(t_player& player, t_player& opponent)
     if (current_move == Gomoku::_invalid_coord)
         PRINT_PLAYER_FORFEIT(player.piece);
     std::cout << 0.0 << std::endl;
-    std::cout << current_move << std::endl;
+    std::cout << current_move;
     std::cout << this->_board._capture_count[0] << " " << this->_board._capture_count[1] << std::endl;
     this->_board.print_board(player.piece);
     score = this->_board.evaluate_board(player.piece);

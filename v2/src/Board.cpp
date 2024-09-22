@@ -645,7 +645,7 @@ void Board::revert_illegal_update(t_update& update) {
 
 void Board::record_moveset_update(t_updates &updates_queue, t_coord pos, t_piece color, int64_t score, t_update_type type) {
     t_scored_moveset& moveset = _moveset_positions[color - 1][pos];
-    t_scored_moveset old_moveset = moveset;  // Storing the old state
+    t_scored_moveset old_moveset = moveset;
     if (type == ADD) {
         ++moveset.count;
         if (score == ILLEGAL_SCORE)
@@ -816,10 +816,10 @@ void Board::print_board(t_piece curr_piece) const {
                 auto it = _moveset_positions[curr_piece - 1].find(pos);
                 if (it != _moveset_positions[curr_piece - 1].end() && it->second.count) {
                     // std::cout << "\033[31m" << piece << "\033[0m ";
-                    std::cout << "+ ";
+                    std::cout << "* ";
                 } else {
                     if (get_piece(_illegal_boards[curr_piece - 1], pos))
-                        std::cout << "* ";
+                        std::cout << "? ";
                     else
                         std::cout << ". ";
                 }
@@ -830,8 +830,7 @@ void Board::print_board(t_piece curr_piece) const {
         std::cout << std::endl;
     }
     // print the score of the board
-    std::cout << evaluate_board(curr_piece) << std::endl;
-    std::cout << "---------------------------------" << std::endl;
+    // std::cout << evaluate_board(curr_piece) << std::endl;
 }
 
 
