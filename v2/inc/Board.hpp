@@ -5,6 +5,8 @@
 #include <cstring>
 #include <stdexcept>
 #include "Board.utils.hpp"
+#include <algorithm>
+#include <unordered_map>
 
 class  Board {
 

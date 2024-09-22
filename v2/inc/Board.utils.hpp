@@ -8,6 +8,8 @@
 #include <deque>
 #include <map>
 #include <set>
+#include <algorithm>
+#include <unordered_map>
 
 typedef enum        e_piece
 {
