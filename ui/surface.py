@@ -61,3 +61,6 @@ class Surface:
     @property
     def relative_to(self):
         return self._relative_to
+    
+    def check_hover(self):
+        return self.abs_rect.collidepoint(pygame.mouse.get_pos())

@@ -348,11 +348,6 @@ class Stats(Surface):
     def versus_message(self):
         return self._versus_message
 
-    def check_hover(self):
-        if self.abs_rect.collidepoint(pygame.mouse.get_pos()):
-            return True
-        return False
-
     @property
     def left(self):
         return self._left
@@ -382,24 +377,30 @@ class Stats(Surface):
         return self._history_title
 
     def update_current_state(self, events):
+        if self.history.selected_slot:
+            self.states.index = self.history.selected_slot + 1
         for event in events:
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 if self.left.clicked():
+                    self.history.selected_slot = None
                     if self.states.index > 0:
                         self.states.index -= 1
                     elif self.states.index == -1:
                         self.states.index = self.states.counter - 1
                     self.left.pressed = False
                 elif self.right.clicked():
+                    self.history.selected_slot = None
                     if self.states.index < self.states.counter and self.states.index != -1:
                         self.states.index += 1
                         if self.states.index == self.states.counter:
                             self.states.index = -1
                     self.right.pressed = False
                 elif self.rff.clicked():
+                    self.history.selected_slot = None
                     self.states.index = -1
                     self.rff.pressed = False
                 elif self.lff.clicked():
+                    self.history.selected_slot = None
                     self.states.index = 0
                     self.lff.pressed = False
 

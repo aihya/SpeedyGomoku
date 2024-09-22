@@ -130,7 +130,7 @@ class States:
 
 class HistoryTable(Surface):
 
-    __slots__ = ('_states', '_slots', '_slot_height', '_num_slots', '_from', '_to')
+    __slots__ = ('_states', '_slots', '_slot_height', '_num_slots', '_current', '_start', '_stop', '_selected_slot')
 
     def __init__(self, states, width, height, *args, **kwargs):
         super().__init__(width, height, relative_to=kwargs['relative_to'])
@@ -138,10 +138,20 @@ class HistoryTable(Surface):
         self._slot_height = self.height // 20
         self._slots = []
         self._num_slots = 0
-        self._from = 0
-        self._to = -1
+        self._current = 0
+        self._start = None
+        self._stop = None
+        self._selected_slot = None
         self.update_slots()
+
+    @property
+    def selected_slot(self):
+        return self._selected_slot
     
+    @selected_slot.setter
+    def selected_slot(self, slot):
+        self._selected_slot = slot
+
     @property
     def states(self):
         return self._states
@@ -162,9 +172,32 @@ class HistoryTable(Surface):
     def num_slots(self, value):
         self._num_slots = value
 
+    @property
+    def current(self):
+        return self._current
+
+    @current.setter
+    def current(self, value):
+        self._current = value
+
+    @property
+    def start(self):
+        return self._start
+
+    @start.setter
+    def start(self, value):
+        self._start = value
+    
+    @property
+    def stop(self):
+        return self._stop
+
+    @stop.setter
+    def stop(self, value):
+        self._stop = value
+
     def update_slots(self):
         if self.states.counter != self.num_slots:
-            # for i, state in enumerate(self.states.states[]):
             state = self.states.states[-1]
             slot = Surface(self.width, self.slot_height, relative_to=self)
             slot.surface.fill(GRAY_2 if state.color == 2 else GRAY_3)
@@ -180,7 +213,7 @@ class HistoryTable(Surface):
             time_rect.centery = self.slot_height // 2
 
             coords = fonts.h5_t.render(
-                f'{"ABCDEFGHJIKLMNOPQRST"[state.move[0]]} - {state.move[1]+1}', True, WHITE)
+                f'{"ABCDEFGHIJKLMNOPQRST"[state.move[0]]} - {state.move[1]+1}', True, WHITE)
             coords_rect = coords.get_rect()
             coords_rect.left = 120
             coords_rect.centery = self.slot_height // 2
@@ -194,13 +227,42 @@ class HistoryTable(Surface):
 
     def update(self, events):
         self.surface.fill(GRAY_1)
+
+        button_down_pos = None
         for event in events:
-            if event.type == pygame.MOUSEWHEEL:
-                print(event.x, event.y)
+            if event.type == pygame.MOUSEWHEEL and self.check_hover():
+                if event.y == -1 and self.current < self.num_slots - 20:
+                    self.current += 1
+                elif event.y == 1 and self.current > 0:
+                    self.current -= 1
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                button_down_pos = pygame.mouse.get_pos()
 
         self.update_slots()
-        for i, slot in enumerate(self.slots[-20:]):
+        if self.num_slots > 20 and self.current < self.num_slots - 20:
+            start = self.current
+            stop = self.current + 20
+        else:
+            start = -20
+            stop = None
+
+        for i, slot in enumerate(self.slots[start:stop]):
+            x, y = self.abs_rect.topleft
             slot_rect = slot.surface.get_rect()
             slot_rect.topleft = (0, i * self.slot_height)
-            self.surface.blit(slot.surface, slot_rect)
-            
+            coll_rect = slot_rect.copy()
+            coll_rect.topleft = (x, y + i * self.slot_height)
+            if button_down_pos and coll_rect.collidepoint(button_down_pos):
+                if start == -20:
+                    if self.num_slots > 20:
+                        self.selected_slot = self.num_slots - 20 + i
+                    else:
+                        self.selected_slot = i
+                else:
+                    self.selected_slot = start + i
+            if coll_rect.collidepoint(pygame.mouse.get_pos()):
+                replicate = slot.surface.copy()
+                draw_circle(replicate, self.width - 15, self.slot_height // 2, 4, pygame.Color('#FFFF00'))
+                self.surface.blit(replicate, slot_rect)
+            else:
+                self.surface.blit(slot.surface, slot_rect)

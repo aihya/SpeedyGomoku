@@ -130,7 +130,7 @@ class Button(Surface):
         return self._interactive
 
     def set_hover(self):
-        if self.abs_rect.collidepoint(pygame.mouse.get_pos()):
+        if self.check_hover():
             self.bg = pygame.Color(self.bg_str) if self.pressed else self._bg_hov
         else:
             self.bg = pygame.Color(self.bg_str)
@@ -138,7 +138,7 @@ class Button(Surface):
     def clicked(self):
         if self.disabled:
             return False
-        if self.abs_rect.collidepoint(pygame.mouse.get_pos()):
+        if self.check_hover():
             if self.interactive:
                 self.bg = pygame.Color(self.bg_str) if self.pressed else self._bg_hov
                 self.pressed = not self.pressed
