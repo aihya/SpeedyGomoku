@@ -14,7 +14,7 @@ $(EXECUTABLE): $(SRC_DIR)/Gomoku.cpp
 # Run visualizer
 .PHONY: launch
 launch: $(EXECUTABLE)
-	python3 $(UI_DIR)/visualizer.py   # <--- Make sure this line is indented with a tab
+	python3.10 $(UI_DIR)/visualizer.py   # <--- Make sure this line is indented with a tab
 
 # Clean rule
 .PHONY: clean
