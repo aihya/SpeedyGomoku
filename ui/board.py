@@ -92,15 +92,6 @@ class Setup(Surface):
 
         self._p1 = None
         self._p2 = None
-        # self._sizes_dropdown = DropDown(50, 600, 300, 50,
-        #                                ["19x19", "15x15", "13x13", "10x10"],
-        #                                colors=custom_colors,
-        #                                disabled=False,
-        #                                relative_to=self)
-
-    # @property
-    # def sizes_dropdown(self):
-    #     return self._sizes_dropdown
 
     @property
     def rules(self):
@@ -255,8 +246,6 @@ class Setup(Surface):
             if event.type == pygame.QUIT:
                 exit(0)
 
-            # self.sizes_dropdown.handle_event(event)
-
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 if self.start.clicked():
                     self.start.pressed = False
@@ -297,9 +286,6 @@ class Setup(Surface):
             self.start.surface, self.start.rect, special_flags=pygame.BLEND_RGBA_MAX
         )
         self.surface.blit(middle, middle_rect)
-        # self.sizes_dropdown.update()
-        # self.sizes_dropdown.draw_main(self.surface)
-        # self.sizes_dropdown.draw_options(self.surface)
         if self.start.pressed:
             self.start.pressed = False
             return BOARD_SURFACE
