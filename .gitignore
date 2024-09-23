@@ -1,7 +1,6 @@
 .venv
 .vscode
 ui/__pycache__
-gomoku.cpp
 test.cpp
 gomoku
 a.out

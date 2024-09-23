@@ -784,63 +784,116 @@ int64_t Gomoku::evaluate_position(t_board&board, t_coord pos, t_piece color, t_c
     }
     auto it = patterns.find(pattern & 0xFFF);
     t_scores score = (it != patterns.end()) ? it->second : static_cast<t_scores>(0);
-    if (score == FIVE_SCORE ){
+    if (score == FIVE_SCORE){
         if (check_for_win(board, pos, color, dir))
             return WIN_SCORE;
     }
     return (it != patterns.end()) ? it->second : 0;
 }
 
-int64_t Gomoku::evaluate_board(t_board&board, t_piece player_color, t_capture_count capture_count) {
-    int64_t             score = 0;
+// int64_t Gomoku::evaluate_board(t_board&board, t_piece player_color, t_capture_count capture_count) {
+//     int64_t             score = 0;
+//     const t_scores_map& p_att_patterns = Gomoku::_attack_patterns.at(player_color);
+//     const t_scores_map& op_att_patterns = Gomoku::_attack_patterns.at(GET_OPPONENT(player_color));
+//     const t_piece       opposite_color = GET_OPPONENT(player_color);
+
+//     score += (capture_count.maximizer_count - capture_count.minimizer_count) * CAPTURE_SCORE;
+//     if (capture_count.maximizer_count >= 5)
+//         return WIN_SCORE;
+//     if (capture_count.minimizer_count >= 5)
+//         return -WIN_SCORE;
+//     for (int y = 0; y <= board.size; ++y) {
+//         uint64_t row = board.data[y];
+//         if (!row)
+//             continue;
+//         int x = 0;
+//         while (row) {
+//             int bit_pos = __builtin_ctzll(row);
+//             x = bit_pos >> 1;
+
+//             if (x > board.size)
+//                 break;
+
+//             t_piece piece = (t_piece)((row >> (x * 2)) & 3);
+//             if (piece != EMPTY) {
+//                 t_coord             pos = {x, y};
+//                 const t_scores_map& att_patterns = (piece == player_color) ? p_att_patterns : op_att_patterns;
+//                 int64_t             position_score = 0;
+//                 for (const auto& dir : _directions)
+//                 {
+//                     int64_t score = evaluate_position(board, pos, piece, dir, att_patterns);
+//                     if (score == WIN_SCORE)
+//                         return (piece == player_color) ? WIN_SCORE : -WIN_SCORE;
+//                     position_score += score;
+//                 }
+//                 score += (piece == player_color) ? position_score : -position_score;
+//             }
+//             row &= ~(3ULL << bit_pos);
+//         }
+//     }
+//     return score;
+// }
+
+int64_t Gomoku::evaluate_board(t_board& board, t_piece player_color, t_capture_count capture_count) {
+    int64_t score = 0;
     const t_scores_map& p_att_patterns = Gomoku::_attack_patterns.at(player_color);
     const t_scores_map& op_att_patterns = Gomoku::_attack_patterns.at(GET_OPPONENT(player_color));
-    const t_piece       opposite_color = GET_OPPONENT(player_color);
+    const t_piece opposite_color = GET_OPPONENT(player_color);
 
+    // Adjust score based on capture counts
     score += (capture_count.maximizer_count - capture_count.minimizer_count) * CAPTURE_SCORE;
+
+    // Immediate win conditions based on captures
     if (capture_count.maximizer_count >= 5)
-        return WIN_SCORE;
-    if (capture_count.maximizer_count >= 5)
-        return -WIN_SCORE;
-    for (int y = 0; y <= board.size; ++y) {
+        return WIN_SCORE; // Maximizer wins
+    if (capture_count.minimizer_count >= 5)
+        return -WIN_SCORE; // Minimizer wins
+
+    // Loop through each row in the board
+    for (int y = 0; y < board.size; ++y) { // Use < instead of <= for size
         uint64_t row = board.data[y];
         if (!row)
             continue;
-        int x = 0;
-        while (row) {
-            int bit_pos = __builtin_ctzll(row);
-            x = bit_pos >> 1;
 
-            if (x > board.size)
+        // Process each piece in the row
+        while (row) {
+            int bit_pos = __builtin_ctzll(row); // Get the position of the first set bit
+            
+            // Ensure bit_pos is aligned to 2-bit boundaries
+            if (bit_pos % 2 != 0) {
+                bit_pos--; // Adjust to point to the first bit of a 2-bit piece
+            }
+
+            int x = bit_pos >> 1; // Convert to x-coordinate (piece index)
+            if (x >= board.size) // Ensure x is within board boundaries
                 break;
 
-            t_piece piece = (t_piece)((row >> (x * 2)) & 3);
+            t_piece piece = (t_piece)((row >> (x * 2)) & 3); // Extract the piece using 2 bits
             if (piece != EMPTY) {
-                t_coord             pos = {x, y};
+                t_coord pos = {x, y}; // Create position from x and y
                 const t_scores_map& att_patterns = (piece == player_color) ? p_att_patterns : op_att_patterns;
-                int64_t             position_score = 0;
-                for (const auto& dir : _directions)
-                {
-                    int64_t score = evaluate_position(board, pos, piece, dir, att_patterns);
-                    if (score == WIN_SCORE)
-                        return (piece == player_color) ? WIN_SCORE : -WIN_SCORE;
-                    position_score += score;
+                int64_t position_score = 0;
+
+                // Evaluate the position in all directions
+                for (const auto& dir : _directions) {
+                    int64_t score_eval = evaluate_position(board, pos, piece, dir, att_patterns);
+                    if (score_eval == WIN_SCORE)
+                        return (piece == player_color) ? WIN_SCORE : -WIN_SCORE; // Return immediate win score
+
+                    position_score += score_eval; // Accumulate position scores
                 }
+
+                // Adjust score based on the player's piece
                 score += (piece == player_color) ? position_score : -position_score;
             }
-            row &= ~(3ULL << bit_pos);
+
+            // Clear the processed bits for the current piece
+            row &= ~(3ULL << bit_pos); // Clear the 2 bits corresponding to the current piece
         }
     }
-    return score;
+    return score; // Return the final evaluated score
 }
 
-// bool Gomoku::is_winning_move(t_board &board, t_moveset &moveset, t_piece piece, t_coord move, uint8_t capture_count)
-// {
-//     t_sorted_updates possible_moves;
-
-//     this->evaluate_board
-//     return (false);
-// }
 
 void Gomoku::extract_captured_stoned(t_board &board, t_update_list& update_list, t_coord move, t_coord dir, t_piece piece)
 {

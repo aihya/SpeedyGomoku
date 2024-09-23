@@ -1,6 +1,8 @@
 import pygame
+import os
 from surface import Surface
 
+CURR_PATH = os.path.dirname(os.path.abspath(__file__))
 # Clock tick: 30 ticks
 CLOCK = pygame.time.Clock()
 
@@ -60,4 +62,5 @@ HARD = 3
 MODES = ["easy", "medium", "hard"]
 
 # Path to the executable
-EXE_PATH = "../src/a.out"
+
+EXE_PATH = os.path.join(CURR_PATH, "../.gomoku")

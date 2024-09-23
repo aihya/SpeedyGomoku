@@ -1,4 +1,5 @@
 import math
+import os
 from surface import Surface
 from init import *
 from computer import Computer, Player
@@ -324,6 +325,8 @@ class Stats(Surface):
         "_history_title",
     )
 
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
     def __init__(self, states, board, winner=None, *args, **kwargs):
         super().__init__(WIDTH - HEIGHT, HEIGHT, *args, **kwargs)
 
@@ -349,19 +352,17 @@ class Stats(Surface):
         )
 
         # Load images for left and right buttons
-        r_img = pygame.transform.smoothscale(
-            pygame.image.load("./ressources/images/right.png"), (30, 30)
-        )
-        l_img = pygame.transform.smoothscale(
-            pygame.image.load("./ressources/images/right.png"), (30, 30)
-        )
+        # r_img = pygame.transform.smoothscale(
+        #     pygame.image.load("./ressources/images/right.png"), (30, 30)
+        # )
+        r_img = self.load_images("ressources/images/right.png", (30, 30))
+        l_img = self.load_images("ressources/images/right.png", (30, 30))
         l_img = pygame.transform.rotate(l_img, 180)
-        rff_img = pygame.transform.smoothscale(
-            pygame.image.load("./ressources/images/rff.png").convert_alpha(), (30, 30)
-        )
-        lff_img = pygame.transform.smoothscale(
-            pygame.image.load("./ressources/images/rff.png"), (30, 30)
-        )
+        # rff_img = pygame.transform.smoothscale(
+        #     pygame.image.load("./ressources/images/rff.png").convert_alpha(), (30, 30)
+        # )
+        rff_img = self.load_images("ressources/images/rff.png", (30, 30))
+        lff_img = self.load_images("ressources/images/rff.png", (30, 30))
         lff_img = pygame.transform.rotate(lff_img, 180)
 
         self._left = Button(
@@ -425,6 +426,12 @@ class Stats(Surface):
 
         self._history = HistoryTable(self.states, self.width, 560, relative_to=self)
         self._history.position = (0, 190)
+
+    def load_images(self, path, size: tuple):
+        path = os.path.join(self.script_dir, path)
+        return pygame.transform.smoothscale(
+            pygame.image.load(path).convert_alpha(), size
+        )
 
     @property
     def history(self):
@@ -766,7 +773,7 @@ class Board(Surface):
             y = self.linspace[self.states.last.suggestion["move"][1]] + 1
             draw_circle(self.surface, x, y, radius, pygame.Color(color))
 
-        score = fonts.h4_t.render(f'Score: {self.states.current.score}', True, BLACK)
+        score = fonts.h4_t.render(f"Score: {self.states.current.score}", True, BLACK)
         score_rect = score.get_rect()
         score_rect.topleft = (self.offset + 10, self.height - 40)
         self.surface.blit(score, score_rect)
