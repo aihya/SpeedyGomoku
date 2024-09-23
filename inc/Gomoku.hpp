@@ -324,8 +324,9 @@ class Gomoku
         typedef std::unordered_map<uint16_t, t_scores>                      t_scores_map;
 
     private:
-
-
+        std::atomic<int> _last_best_move_x;
+        std::atomic<int> _last_best_move_y;
+        std::atomic<bool> _search_complete;
         const static std::array<t_coord, 4>     _directions;
         const static std::vector<t_coord>       _moveset_cells;
         static constexpr uint8_t            BLACK_CAPTURE_PATTERN = 0b01101001; // XOOX pattern for BLACK
@@ -362,9 +363,12 @@ class Gomoku
         int64_t                 evaluate_board(t_board &board, t_piece player_color, t_capture_count capture_count);
         void                    print_board(t_board &board, t_piece current_piece);
     private:
-        t_coord                 iterative_depth_search(t_moveset& moveset, t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
+        void iterative_depth_search(t_moveset& moveset, t_board &board, uint8_t max_depth, 
+                                    t_prunner prunner, t_capture_count count, t_piece piece);
+        t_coord ai_move(t_player& player, t_player &opponent, t_board& board);
+        // t_coord                 iterative_depth_search(t_moveset& moveset, t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
         t_coord                 human_move(t_player& player, t_player& opponent, t_board & board);
-        t_coord                 ai_move(t_player& player, t_player& opponent, t_board & board);
+        // t_coord                 ai_move(t_player& player, t_player& opponent, t_board & board);
         t_moveset               generate_rule_moveset(t_piece piece, t_board &board);
         t_player                get_player(t_player_type player_type, t_piece player_color, t_difficulty difficulty);
         t_scored_move           negascout(t_moveset& moveset, t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);

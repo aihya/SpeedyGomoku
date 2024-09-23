@@ -464,7 +464,9 @@ Gomoku::t_player Gomoku::get_player(t_player_type player_type,
 }
 
 Gomoku::Gomoku(uint8_t board_size, t_difficulty first_difficulty,
-    t_difficulty second_difficulty, t_player_type first_player_type, t_player_type second_player_type, t_rule rule): _board(board_size)
+    t_difficulty second_difficulty, t_player_type first_player_type, t_player_type second_player_type, t_rule rule): _board(board_size), _last_best_move_x(Gomoku::_invalid_coord.x),
+      _last_best_move_y(Gomoku::_invalid_coord.y),
+      _search_complete(false)
 {
 	//if (board_size != 15 && board_size != 19)
 	//    throw std::invalid_argument("Board size must be between 15 or 19");
@@ -1035,6 +1037,8 @@ Gomoku::t_scored_move Gomoku::negascout(t_moveset& moveset,
     best_eval = t_scored_move{Gomoku::_invalid_coord, -INTMAX_MAX};
     for (const auto& update: this->generate_sorted_updates(moveset, board, piece, depth))
     {
+        if (_search_complete.load())
+            return (t_scored_move{Gomoku::_invalid_coord, -WIN_SCORE});
         added_moveset.clear();
         count.maximizer_count += update.cupture_count;
         if (update.move.winning || count.maximizer_count >= MAX_CAPTURE)
@@ -1083,49 +1087,133 @@ Gomoku::t_moveset   Gomoku::generate_rule_moveset(t_piece piece, t_board& board)
     return (moveset);
 }
 
-Gomoku::t_coord Gomoku::iterative_depth_search(t_moveset& moveset,
-            t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece)
-{
-    auto start = std::chrono::steady_clock::now();
-    t_scored_move best_move;
-    t_scored_move move_score;
-    t_sorted_updates sorted_updates;
+// Gomoku::t_coord Gomoku::iterative_depth_search(t_moveset& moveset,
+//             t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece)
+// {
+//     auto start = std::chrono::steady_clock::now();
+//     t_scored_move best_move;
+//     t_scored_move move_score;
+//     t_sorted_updates sorted_updates;
 
-    this->_last_best = Gomoku::_invalid_coord;
-    // sorted_updates = this->generate_sorted_updates(moveset, board, piece);
-    for (uint8_t i_depth = 1; i_depth <= depth; i_depth++)
-    {
-        // for (const auto& update: sorted_updates)
-        // {
-        auto end = std::chrono::steady_clock::now();
+//     this->_last_best = Gomoku::_invalid_coord;
+//     // sorted_updates = this->generate_sorted_updates(moveset, board, piece);
+//     for (uint8_t i_depth = 1; i_depth <= depth; i_depth++)
+//     {
+//         // for (const auto& update: sorted_updates)
+//         // {
+//         auto end = std::chrono::steady_clock::now();
+//         this->_current_depth = i_depth;
+//         if (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() >= 500)
+//             break;
+//         move_score = this->negascout(moveset, board, i_depth, INITIAL_PRUNNER, count, piece);
+//         this->_last_best = move_score.coord;
+//     }
+//     return (this->_last_best);
+// }
+
+// Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent, t_board& board)
+// {
+//     t_coord         best_move;
+//     t_moveset       current_moveset = this->_ai_moveset;
+
+//     if (_turn == 0)
+//         best_move = GET_BOARD_CENTER(board);
+//     else
+//     {
+//         if (_turn == 2 && this->_rule != Gomoku::STANDARD)
+//             current_moveset = this->generate_rule_moveset(player.piece, board);
+//         best_move = this->iterative_depth_search(current_moveset,
+//             board, this->_depth,
+//             t_prunner{-INTMAX_MAX, INTMAX_MAX},
+//             t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
+//     }
+//     return best_move;
+// }
+
+
+// void Gomoku::iterative_depth_search(t_moveset& moveset, t_board &board, uint8_t max_depth, 
+//                                     t_prunner prunner, t_capture_count count, t_piece piece) {
+//     t_scored_move move_score;
+
+//     for (uint8_t i_depth = 1; i_depth <= max_depth; i_depth++) {
+//         if (_search_complete.load()) {
+//             return;
+//         }
+//         this->_current_depth = i_depth;
+//         move_score = this->negascout(moveset, board, i_depth, INITIAL_PRUNNER, count, piece);
+        
+//         // Always update the last best move, even if the search is incomplete
+//         _last_best_move.store(move_score.coord);
+//     }
+//     _search_complete.store(true);
+// }
+
+void Gomoku::iterative_depth_search(t_moveset& moveset, t_board &board, uint8_t max_depth, 
+                                    t_prunner prunner, t_capture_count count, t_piece piece) {
+    t_scored_move move_score;
+
+    for (uint8_t i_depth = 1; i_depth <= max_depth; i_depth++) {
+        if (_search_complete.load()) {
+            return;
+        }
         this->_current_depth = i_depth;
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() >= 500)
-            break;
         move_score = this->negascout(moveset, board, i_depth, INITIAL_PRUNNER, count, piece);
-        this->_last_best = move_score.coord;
+        
+        // Update the last best move coordinates
+        _last_best_move_x.store(move_score.coord.x);
+        _last_best_move_y.store(move_score.coord.y);
     }
-    return (this->_last_best);
+    _search_complete.store(true);
 }
 
-Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent, t_board& board)
-{
-    t_coord         best_move;
-    t_moveset       current_moveset = this->_ai_moveset;
+Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent, t_board& board) {
+    t_moveset current_moveset = this->_ai_moveset;
 
-    if (_turn == 0)
-        best_move = GET_BOARD_CENTER(board);
-    else
-    {
-        if (_turn == 2 && this->_rule != Gomoku::STANDARD)
-            current_moveset = this->generate_rule_moveset(player.piece, board);
-        best_move = this->iterative_depth_search(current_moveset,
-            board, this->_depth,
-            t_prunner{-INTMAX_MAX, INTMAX_MAX},
-            t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
+    if (_turn == 0) {
+        return GET_BOARD_CENTER(board);
     }
+
+    if (_turn == 2 && this->_rule != Gomoku::STANDARD) {
+        current_moveset = this->generate_rule_moveset(player.piece, board);
+    }
+
+    // Initialize with a valid move from the current moveset
+    if (!current_moveset.empty()) {
+        _last_best_move_x.store(current_moveset.begin()->x);
+        _last_best_move_y.store(current_moveset.begin()->y);
+    } else {
+        _last_best_move_x.store(Gomoku::_invalid_coord.x);
+        _last_best_move_y.store(Gomoku::_invalid_coord.y);
+    }
+    _search_complete.store(false);
+
+    auto start = std::chrono::steady_clock::now();
+    std::thread search_thread(&Gomoku::iterative_depth_search, this, std::ref(current_moveset),
+        std::ref(board), this->_depth, INITIAL_PRUNNER,
+        t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
+
+    while (true) {
+        auto now = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
+        
+        if (duration.count() >= 450 || _search_complete.load()) {
+            _search_complete.store(true);
+            break;
+        }
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    search_thread.join();
+    t_coord best_move = {_last_best_move_x.load(), _last_best_move_y.load()};
+
+    // If no valid move was found (shouldn't happen, but just in case), pick the first available move
+    if (best_move == Gomoku::_invalid_coord && !current_moveset.empty()) {
+        best_move = *current_moveset.begin();
+    }
+
     return best_move;
 }
-
 Gomoku::t_coord Gomoku::human_move(t_player& player, t_player &opponent, t_board& board)
 {
     t_coord coord;
