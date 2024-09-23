@@ -766,6 +766,11 @@ class Board(Surface):
             y = self.linspace[self.states.last.suggestion["move"][1]] + 1
             draw_circle(self.surface, x, y, radius, pygame.Color(color))
 
+        score = fonts.h4_t.render(f'Score: {self.states.current.score}', True, BLACK)
+        score_rect = score.get_rect()
+        score_rect.topleft = (self.offset + 10, self.height - 40)
+        self.surface.blit(score, score_rect)
+
     def check_hover(self):
         x, y = pygame.mouse.get_pos()
         if x >= self.offset and x <= self.limit:

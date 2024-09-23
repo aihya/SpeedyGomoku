@@ -99,21 +99,23 @@ class Computer:
         if len(buffer) == 1:
             return None
 
-        if len(buffer) == 23:
-            s, e = 3, -1
+        if len(buffer) == 24:
+            s, e = 4, -1
             move = {
                 "time": float(buffer[0]),
                 "move": tuple(int(c) for c in buffer[1].split()),
                 "captures": tuple(int(c) for c in buffer[2].split()),
                 "state": [],
+                "score": int(buffer[3])
             }
         else:
-            s, e = 2, -1
+            s, e = 3, -1
             move = {
                 "time": 0,
                 "move": tuple(int(c) for c in buffer[0].split()),
                 "captures": tuple(int(c) for c in buffer[1].split()),
                 "state": [],
+                "score": int(buffer[3])
             }
 
         for line in buffer[s:e]:

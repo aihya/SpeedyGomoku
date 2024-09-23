@@ -1193,9 +1193,9 @@ void Gomoku::make_move(t_player& player, t_player& opponent, t_board& board)
         PRINT_COORD(current_move);
         this->update_game_state(this->_board, player, current_move);
         PRINT_CAPTURE_COUNT();
-        this->print_board(this->_board, opponent.piece);
         score = this->evaluate_board(this->_board, player.piece, t_capture_count{player.capture_count, opponent.capture_count});
         std::cout << score << std::endl;
+        this->print_board(this->_board, opponent.piece);
         if (score == Gomoku::WIN_SCORE || score == -Gomoku::WIN_SCORE)
         {
             if (score == Gomoku::WIN_SCORE)

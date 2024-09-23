@@ -17,18 +17,24 @@ class State:
         "_suggestion",
         "_captures",
         "_color",
+        "_score",
     )
 
-    def __init__(self, state=None, time=0, move=None, captures=None):
+    def __init__(self, state=None, time=0, move=None, captures=None, score=0):
         self._state = state if state else [["0" for j in range(19)] for i in range(19)]
         self._count = {}
         self._time = time
         self._move = move
         self._suggestion = None
         self._captures = captures
+        self._score = score
 
     def __getitem__(self, index):
         return self.state[index]
+
+    @property
+    def score(self):
+        return self._score
 
     @property
     def color(self):
