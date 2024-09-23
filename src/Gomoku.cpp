@@ -797,6 +797,7 @@ int64_t Gomoku::evaluate_board(t_board&board, t_piece player_color, t_capture_co
     const t_scores_map& op_att_patterns = Gomoku::_attack_patterns.at(GET_OPPONENT(player_color));
     const t_piece       opposite_color = GET_OPPONENT(player_color);
 
+    score += (capture_count.maximizer_count - capture_count.minimizer_count) * CAPTURE_SCORE;
     if (capture_count.maximizer_count >= 5)
         return WIN_SCORE;
     if (capture_count.maximizer_count >= 5)
@@ -833,31 +834,13 @@ int64_t Gomoku::evaluate_board(t_board&board, t_piece player_color, t_capture_co
     return score;
 }
 
-bool Gomoku::is_winning_move(t_board &board, t_moveset &moveset, t_piece piece, t_coord move, uint8_t capture_count)
-{
-    t_sorted_updates possible_moves;
+// bool Gomoku::is_winning_move(t_board &board, t_moveset &moveset, t_piece piece, t_coord move, uint8_t capture_count)
+// {
+//     t_sorted_updates possible_moves;
 
-    if (capture_count >= MAX_CAPTURE)
-        return (true);
-    for (const auto& dir: _directions)
-    {
-        if (this->evaluate_move(board, move, piece, dir) >= Gomoku::FIVE_SCORE)
-        {
-            possible_moves = this->generate_sorted_updates(moveset, board, GET_OPPONENT(piece));
-            for (const auto& opp_move : possible_moves)
-            {
-                this->update_board(board, opp_move.updates);
-                if (this->evaluate_move(board, move, piece, dir) >= Gomoku::FIVE_SCORE)
-                {
-                    this->revert_board_update(board, opp_move.updates);
-                    return (true);
-                }
-                this->revert_board_update(board, opp_move.updates);
-            }
-        }
-    }
-    return (false);
-}
+//     this->evaluate_board
+//     return (false);
+// }
 
 void Gomoku::extract_captured_stoned(t_board &board, t_update_list& update_list, t_coord move, t_coord dir, t_piece piece)
 {
@@ -1194,6 +1177,7 @@ Gomoku::t_sequence Gomoku::extract_winning_sequence(t_board &board, t_piece piec
 void Gomoku::make_move(t_player& player, t_player& opponent, t_board& board)
 {
     t_coord         current_move;
+    int64_t         score;
 
     auto start = std::chrono::steady_clock::now();
     current_move  = (this->*player.move)(player, opponent, board);
@@ -1210,11 +1194,14 @@ void Gomoku::make_move(t_player& player, t_player& opponent, t_board& board)
         this->update_game_state(this->_board, player, current_move);
         PRINT_CAPTURE_COUNT();
         this->print_board(this->_board, opponent.piece);
-        if (this->is_winning_move(this->_board, this->_ai_moveset, player.piece, current_move, player.capture_count))
+        score = this->evaluate_board(this->_board, player.piece, t_capture_count{player.capture_count, opponent.capture_count});
+        std::cout << score << std::endl;
+        if (score == Gomoku::WIN_SCORE || score == -Gomoku::WIN_SCORE)
         {
-            PRINT_PLAYER_WIN(player.piece);
-            for (const auto& coord: this->extract_winning_sequence(this->_board, player.piece, current_move))
-                PRINT_COORD(coord);
+            if (score == Gomoku::WIN_SCORE)
+                PRINT_PLAYER_WIN(player.piece);
+            else
+                PRINT_PLAYER_WIN(opponent.piece);
             STOP_GAME();
         }
         PRINT_DELINEATION();
