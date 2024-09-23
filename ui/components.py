@@ -6,20 +6,36 @@ from init import *
 import math
 
 # type of button content
-TEXT  = 1
+TEXT = 1
 IMAGE = 2
 
+
 def draw_circle(surface, x, y, radius, color):
-    gfxdraw.aacircle(surface, x, y, radius+1, BLACK)
+    gfxdraw.aacircle(surface, x, y, radius + 1, BLACK)
     gfxdraw.aacircle(surface, x, y, radius, color)
     gfxdraw.filled_circle(surface, x, y, radius, color)
+
 
 class Button(Surface):
     """
     Class representing an interactive button object
     """
 
-    def __init__(self, fg, bg, content, font, width=None, height=None, hover_color=None, disabled=False, interactive=True, expand=False, *args, **kwargs):
+    def __init__(
+        self,
+        fg,
+        bg,
+        content,
+        font,
+        width=None,
+        height=None,
+        hover_color=None,
+        disabled=False,
+        interactive=True,
+        expand=False,
+        *args,
+        **kwargs
+    ):
 
         self._font = font
         self._bg_str = bg
@@ -39,7 +55,9 @@ class Button(Surface):
             self._content = content
 
         if width == None:
-            _width = kwargs['relative_to'].width if expand else self.content.get_width() + 60
+            _width = (
+                kwargs["relative_to"].width if expand else self.content.get_width() + 60
+            )
         else:
             _width = width
         _height = self.content.get_height() + 30 if height == None else height
@@ -158,10 +176,20 @@ class CheckBox(Surface):
 
     HEIGHT = 40
 
-    __slots__ = ('_label', '_box', '_value', '_filler', '_checked', '_label_rect', '_hovered', '_active', '_alignment')
-    
+    __slots__ = (
+        "_label",
+        "_box",
+        "_value",
+        "_filler",
+        "_checked",
+        "_label_rect",
+        "_hovered",
+        "_active",
+        "_alignment",
+    )
+
     def __init__(self, label, value, alignment=VERTICAL, *args, **kwargs):
-        
+
         self._value = value
         self._checked = False
         self._hovered = False
@@ -184,15 +212,10 @@ class CheckBox(Surface):
             _height = self.HEIGHT
             _width = self._label.get_width() + 50
 
-        super().__init__(
-            _width,
-            _height,
-            *args,
-            **kwargs
-        )
+        super().__init__(_width, _height, *args, **kwargs)
 
         self._box = Surface(self.HEIGHT, self.HEIGHT, (0, 0), self)
-        self._filler = Surface(self.HEIGHT-10, self.HEIGHT-10, (5, 5), self)
+        self._filler = Surface(self.HEIGHT - 10, self.HEIGHT - 10, (5, 5), self)
 
     @property
     def alignment(self):
@@ -201,7 +224,7 @@ class CheckBox(Surface):
     @property
     def active(self):
         return self._active
-    
+
     @active.setter
     def active(self, value: bool):
         self._active = value
@@ -268,19 +291,19 @@ class CheckBox(Surface):
 
 class CheckBoxs(Surface):
 
-    __slots__ = ('_container', '_anchor', '_active', '_alignment')
+    __slots__ = ("_container", "_anchor", "_active", "_alignment")
 
     def __init__(self, pairs: dict, alignment=VERTICAL, *args, **kwargs):
         self._alignment = alignment
-        _len    = len(pairs)
+        _len = len(pairs)
 
         if self.alignment == VERTICAL:
-            _height = CheckBox.HEIGHT * _len + (10 * (_len-1) if _len > 1 else 0)
-            _width  = kwargs['relative_to'].width
+            _height = CheckBox.HEIGHT * _len + (10 * (_len - 1) if _len > 1 else 0)
+            _width = kwargs["relative_to"].width
         else:
             _height = CheckBox.HEIGHT
-            _width  = kwargs['relative_to'].width
-            step = math.floor(kwargs['relative_to'].width / _len)
+            _width = kwargs["relative_to"].width
+            step = math.floor(kwargs["relative_to"].width / _len)
 
         super().__init__(width=_width, height=_height, **kwargs)
 
@@ -291,13 +314,31 @@ class CheckBoxs(Surface):
         for index, key in enumerate(pairs.keys()):
             if self.alignment == VERTICAL:
                 cb_pos = (0, offset)
-                self._container.append(CheckBox(pairs[key], key, position=cb_pos, alignment=alignment, relative_to=self, alpha=True))
+                self._container.append(
+                    CheckBox(
+                        pairs[key],
+                        key,
+                        position=cb_pos,
+                        alignment=alignment,
+                        relative_to=self,
+                        alpha=True,
+                    )
+                )
                 offset += self._container[-1].height
                 if index < _len - 1:
                     offset += 10
             else:
                 cb_pos = (offset, 0)
-                self._container.append(CheckBox(pairs[key], key, position=cb_pos, alignment=alignment, relative_to=self, alpha=True))
+                self._container.append(
+                    CheckBox(
+                        pairs[key],
+                        key,
+                        position=cb_pos,
+                        alignment=alignment,
+                        relative_to=self,
+                        alpha=True,
+                    )
+                )
                 offset += step
 
         # Anchor to first element of container list or set to None
@@ -314,7 +355,7 @@ class CheckBoxs(Surface):
     @property
     def active(self):
         return self._active
-    
+
     @active.setter
     def active(self, value: bool):
         self._active = value
@@ -342,6 +383,7 @@ class CheckBoxs(Surface):
                 box.checked = True
             self.surface.blit(box.surface, box.rect)
 
+
 class DropDown(Surface):
     def __init__(
         self,
@@ -353,7 +395,8 @@ class DropDown(Surface):
         label="Select an option",
         colors=None,
         disabled=False,
-        *args, **kwargs
+        *args,
+        **kwargs
     ):
         super().__init__(width=width, height=height, position=(x, y), **kwargs)
         self.x = x
@@ -505,9 +548,12 @@ class DropDown(Surface):
                 self.is_collapsed = not self.is_open
             elif self.is_open:
                 for i, option in enumerate(self.options):
-                    option_rect = Surface(self.width, self.height, 
-                                          (self.x, self.y + self.height + (i * self.height)),
-                                          relative_to=self)
+                    option_rect = Surface(
+                        self.width,
+                        self.height,
+                        (self.x, self.y + self.height + (i * self.height)),
+                        relative_to=self,
+                    )
                     # option_rect = pygame.Rect(
                     #     self.x,
                     #     self.y + self.height + (i * self.height),
@@ -526,9 +572,12 @@ class DropDown(Surface):
         elif event.type == pygame.MOUSEMOTION:
             if self.is_open:
                 for i, option in enumerate(self.options):
-                    option_rect = Surface(self.width, self.height, 
-                                          (self.x, self.y + self.height + (i * self.height)),
-                                          relative_to=self)
+                    option_rect = Surface(
+                        self.width,
+                        self.height,
+                        (self.x, self.y + self.height + (i * self.height)),
+                        relative_to=self,
+                    )
                     # option_rect = pygame.Rect(
                     #     self.x,
                     #     self.y + self.height + (i * self.height),
@@ -560,6 +609,7 @@ class DropDown(Surface):
         if disabled:
             self.is_open = False
             self.animation_progress = 0
+
 
 custom_colors = {
     "primary": (40, 40, 40),  # Light gray (dropdown background)

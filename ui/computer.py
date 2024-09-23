@@ -3,16 +3,17 @@ from pexpect.popen_spawn import PopenSpawn
 from pexpect.exceptions import TIMEOUT, EOF
 from init import EXE_PATH
 
+
 class Computer:
     """
     This class represents the computer player.
     """
 
-    __slots__ = ('_process', '_executable', '_args', '_expecting', '_invalid_move')
+    __slots__ = ("_process", "_executable", "_args", "_expecting", "_invalid_move")
 
     def __init__(self, *args):
         self._process = None
-        self._executable = ' '.join([EXE_PATH, *args])
+        self._executable = " ".join([EXE_PATH, *args])
         self._expecting = False
         self._invalid_move = None
 
@@ -31,7 +32,7 @@ class Computer:
     @property
     def invalid_move(self):
         return self._invalid_move
-    
+
     @invalid_move.setter
     def invalid_move(self, coords):
         self._invalid_move = coords
@@ -40,11 +41,11 @@ class Computer:
         if self.process:
             self.stop()
         self.process = PopenSpawn(self.executable)
-        print('Started process', self.process)
+        print("Started process", self.process)
 
     def stop(self):
         if self.process:
-            print('Stopped process', self.process)
+            print("Stopped process", self.process)
             self.process.kill(signal.SIGKILL)
             self.process = None
 
@@ -63,7 +64,7 @@ class Computer:
             self.process.kill(signal.SIGCONT)
 
     def send(self, what: str, expect=True):
-        print('Sending:', what)
+        print("Sending:", what)
         self.process.send(what)
         self.expecting = expect
 
@@ -87,10 +88,10 @@ class Computer:
         return
 
     def extract_suggestion(self, buffer):
-        print('received:', buffer)
+        print("received:", buffer)
         suggestion = {
-            'time': float(buffer[0]),
-            'move': tuple(int(c) for c in buffer[1].split())
+            "time": float(buffer[0]),
+            "move": tuple(int(c) for c in buffer[1].split()),
         }
         return suggestion
 
@@ -101,28 +102,28 @@ class Computer:
         if len(buffer) == 23:
             s, e = 3, -1
             move = {
-                'time'    : float(buffer[0]),
-                'move'    : tuple(int(c) for c in buffer[1].split()),
-                'captures': tuple(int(c) for c in buffer[2].split()),
-                'state'   : [],
+                "time": float(buffer[0]),
+                "move": tuple(int(c) for c in buffer[1].split()),
+                "captures": tuple(int(c) for c in buffer[2].split()),
+                "state": [],
             }
         else:
             s, e = 2, -1
             move = {
-                'time'    : 0,
-                'move'    : tuple(int(c) for c in buffer[0].split()),
-                'captures': tuple(int(c) for c in buffer[1].split()),
-                'state'   : [],
+                "time": 0,
+                "move": tuple(int(c) for c in buffer[0].split()),
+                "captures": tuple(int(c) for c in buffer[1].split()),
+                "state": [],
             }
 
         for line in buffer[s:e]:
-            move['state'].append(['.XO?*'.find(c) for c in line if c in '.XO?*'])
+            move["state"].append([".XO?*".find(c) for c in line if c in ".XO?*"])
 
         return move
 
     def next_move(self):
         """
-        Read the buffer from pexpect.popen_spawn.PopenSpawn, process the 
+        Read the buffer from pexpect.popen_spawn.PopenSpawn, process the
         content and create a move object.
         """
 
@@ -131,15 +132,17 @@ class Computer:
 
         # Attempt an expect operation from subprocess.
         # Return None if no match found.
-        index = self.expect([
-            f'{"-" * 37}\n',
-            'Player 1 wins !\n',
-            'Player 2 wins !\n',
-            'END SUGGESTION\n',
-            'Illegal move\n',
-            'Tie\n',
-            EOF
-        ])
+        index = self.expect(
+            [
+                f'{"-" * 37}\n',
+                "Player 1 wins !\n",
+                "Player 2 wins !\n",
+                "END SUGGESTION\n",
+                "Illegal move\n",
+                "Tie\n",
+                EOF,
+            ]
+        )
 
         if index is None:
             return None
@@ -149,10 +152,10 @@ class Computer:
 
         elif index in (0, 1, 2, 3):
             # Read the content sent from the subprocess
-            buffer = self.process.before.decode('utf-8').split('\n')
+            buffer = self.process.before.decode("utf-8").split("\n")
 
-            print('Direct buffer:', buffer)
-            if index == 3: # Suggestion
+            print("Direct buffer:", buffer)
+            if index == 3:  # Suggestion
                 return index, self.extract_suggestion(buffer)
             else:
                 # Extract the move informations and store it in a dictionary
@@ -163,7 +166,7 @@ class Computer:
 
 class Player:
 
-    __slots__ = ('_player', '_turn')
+    __slots__ = ("_player", "_turn")
 
     def __init__(self, player, turn):
         self._player = player
@@ -172,7 +175,7 @@ class Player:
     @property
     def player(self):
         return self._player
-    
+
     @property
     def turn(self):
         return self._turn

@@ -4,74 +4,94 @@ from init import *
 from computer import Computer, Player
 from components import Button, CheckBoxs, DropDown, custom_colors, draw_circle
 from state import States, State, HistoryTable
+
 # from dropdown import Dropdown, custom_colors
 import fonts
 
+
 class Setup(Surface):
-    """ 
+    """
     This class represents the setup surface
     """
 
-    __slots__ = ('_repeat', '_start', '_p1', '_p1_surf', '_p1_type', 
-            '_p1_mode', '_p2', '_p2_surf', '_p2_type', '_p2_mode', '_p1', '_p2', 
-            '_rules', '_rules_surf', '_sizes', '_sizes_surf', '_sizes_dropdown')
+    __slots__ = (
+        "_repeat",
+        "_start",
+        "_p1",
+        "_p1_surf",
+        "_p1_type",
+        "_p1_mode",
+        "_p2",
+        "_p2_surf",
+        "_p2_type",
+        "_p2_mode",
+        "_p1",
+        "_p2",
+        "_rules",
+        "_rules_surf",
+        "_sizes",
+        "_sizes_surf",
+        "_sizes_dropdown",
+    )
 
     def __init__(self, *args, **kwargs):
-        super().__init__(WIDTH-HEIGHT, HEIGHT, alpha=True, *args, **kwargs)
+        super().__init__(WIDTH - HEIGHT, HEIGHT, alpha=True, *args, **kwargs)
         self._repeat = True
 
-        self._start = Button(LIGHT, GRAY_2, "START", fonts.h4_b, height=50, expand=True, relative_to=self)
+        self._start = Button(
+            LIGHT, GRAY_2, "START", fonts.h4_b, height=50, expand=True, relative_to=self
+        )
         self._start.position = (0, self.height - self._start.height)
-        
+
         # Player 1 setup surface
         self._p1_surf = Surface(300, 400, (50, 70), self, True)
         self._p1_type = CheckBoxs(
-            {HUMAN: 'Human', COMPUTER: 'CPU'},
+            {HUMAN: "Human", COMPUTER: "CPU"},
             position=(0, 40),
             relative_to=self._p1_surf,
-            alpha=True
+            alpha=True,
         )
-        self._p1_mode = CheckBoxs( 
-            {EASY: 'Easy', MEDIUM: 'Medium', HARD: 'Hard'},
+        self._p1_mode = CheckBoxs(
+            {EASY: "Easy", MEDIUM: "Medium", HARD: "Hard"},
             position=(0, self._p1_type.height + 110),
             relative_to=self._p1_surf,
-            alpha=True
+            alpha=True,
         )
 
         # Player 2 setup surface
         self._p2_surf = Surface(300, 400, (320, 70), self, True)
         self._p2_type = CheckBoxs(
-            {HUMAN: 'Human', COMPUTER: 'CPU'},
+            {HUMAN: "Human", COMPUTER: "CPU"},
             position=(0, 40),
             relative_to=self._p2_surf,
-            alpha=True
+            alpha=True,
         )
         self._p2_mode = CheckBoxs(
-            {EASY: 'Easy', MEDIUM: 'Medium', HARD: 'Hard'},
+            {EASY: "Easy", MEDIUM: "Medium", HARD: "Hard"},
             position=(0, self._p2_type.height + 110),
             relative_to=self._p2_surf,
-            alpha=True
+            alpha=True,
         )
 
         self._rules_surf = Surface(self.width - 50, 190, (50, 480), self, True)
         self._rules = CheckBoxs(
-            {STANDARD: 'Standard', LONG_PRO: 'Long Pro', PRO: 'Pro'},
+            {STANDARD: "Standard", LONG_PRO: "Long Pro", PRO: "Pro"},
             position=(0, 0),
             relative_to=self.rules_surf,
-            alpha=True
+            alpha=True,
         )
 
         self._sizes_surf = Surface(self.width - 50, 190, (320, 480), self, True)
         self._sizes = CheckBoxs(
-            {SIZE_19: '19x19', SIZE_15: '15x15', SIZE_13: '13x13'},
+            {SIZE_19: "19x19", SIZE_15: "15x15", SIZE_13: "13x13"},
             position=(0, 0),
             relative_to=self._sizes_surf,
-            alpha=True
+            alpha=True,
         )
 
         self._p1 = None
         self._p2 = None
-        # self._sizes_dropdown = DropDown(50, 600, 300, 50, 
+        # self._sizes_dropdown = DropDown(50, 600, 300, 50,
         #                                ["19x19", "15x15", "13x13", "10x10"],
         #                                colors=custom_colors,
         #                                disabled=False,
@@ -150,11 +170,13 @@ class Setup(Surface):
         self._repeat = value
 
     def draw_box_1(self):
-        header = fonts.h4_b.render('Black', True, LIGHT)
+        header = fonts.h4_b.render("Black", True, LIGHT)
         header_rect = header.get_rect()
         header_rect.topleft = (0, 0)
 
-        self.p1_surf.surface.blit(header, header_rect, special_flags=pygame.BLEND_RGBA_MAX)
+        self.p1_surf.surface.blit(
+            header, header_rect, special_flags=pygame.BLEND_RGBA_MAX
+        )
 
         # Update type checkboxs
         self.p1_type.update()
@@ -167,11 +189,13 @@ class Setup(Surface):
         self.surface.blit(self.p1_surf.surface, self.p1_surf.rect)
 
     def draw_box_2(self):
-        header = fonts.h4_b.render('White', True, LIGHT)
+        header = fonts.h4_b.render("White", True, LIGHT)
         header_rect = header.get_rect()
         header_rect.topleft = (0, 0)
 
-        self.p2_surf.surface.blit(header, header_rect, special_flags=pygame.BLEND_RGBA_MAX)
+        self.p2_surf.surface.blit(
+            header, header_rect, special_flags=pygame.BLEND_RGBA_MAX
+        )
 
         # Update type checkboxs
         self.p2_type.update()
@@ -194,19 +218,19 @@ class Setup(Surface):
         self.surface.blit(self.sizes_surf.surface, self.sizes_surf.rect)
 
     def draw_titles(self):
-        black_level = fonts.h4_b.render('Black Level', True, LIGHT)
-        white_level = fonts.h4_b.render('White Level', True, LIGHT)
+        black_level = fonts.h4_b.render("Black Level", True, LIGHT)
+        white_level = fonts.h4_b.render("White Level", True, LIGHT)
 
         black_level_rect = black_level.get_rect()
         white_level_rect = white_level.get_rect()
         black_level_rect.topleft = (50, 220)
         white_level_rect.topleft = (320, 220)
 
-        rules = fonts.h4_b.render('Game Rules', True, LIGHT)
+        rules = fonts.h4_b.render("Game Rules", True, LIGHT)
         rules_rect = rules.get_rect()
         rules_rect.topleft = (50, 430)
 
-        sizes = fonts.h4_b.render('Board Size', True, LIGHT)
+        sizes = fonts.h4_b.render("Board Size", True, LIGHT)
         sizes_rect = rules.get_rect()
         sizes_rect.topleft = (320, 430)
 
@@ -219,7 +243,7 @@ class Setup(Surface):
         self.surface.fill(GRAY_1)
 
         # Title
-        middle = fonts.h3_b.render('Game Setup', True, LIGHT)
+        middle = fonts.h3_b.render("Game Setup", True, LIGHT)
         middle_rect = middle.get_rect()
         middle_rect.center = (int(self.width / 2), 30)
 
@@ -231,7 +255,7 @@ class Setup(Surface):
                 exit(0)
 
             # self.sizes_dropdown.handle_event(event)
-            
+
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 if self.start.clicked():
                     self.start.pressed = False
@@ -249,14 +273,14 @@ class Setup(Surface):
                     box.check_clicked()
                     box.update()
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                self.start.pressed = False # Just in case it's not reseted
+                self.start.pressed = False  # Just in case it's not reseted
                 return BOARD_SURFACE
 
         if self.p1_type.anchor.value == 2:
             self.p1_mode.active = True
         else:
             self.p1_mode.active = False
-        
+
         if self.p2_type.anchor.value == 2:
             self.p2_mode.active = True
         else:
@@ -268,7 +292,9 @@ class Setup(Surface):
         self.draw_rules()
         self.draw_sizes()
         self.start.update()
-        self.surface.blit(self.start.surface, self.start.rect, special_flags=pygame.BLEND_RGBA_MAX)
+        self.surface.blit(
+            self.start.surface, self.start.rect, special_flags=pygame.BLEND_RGBA_MAX
+        )
         self.surface.blit(middle, middle_rect)
         # self.sizes_dropdown.update()
         # self.sizes_dropdown.draw_main(self.surface)
@@ -278,56 +304,124 @@ class Setup(Surface):
             return BOARD_SURFACE
         return SETUP_SURFACE
 
+
 class Stats(Surface):
 
-    __slots__ = ('_left', '_right', '_rff', '_lff', '_states', '_board', '_text', '_restart', '_suggest', '_player_header', '_versus_message', '_winner', '_history', '_history_title')
+    __slots__ = (
+        "_left",
+        "_right",
+        "_rff",
+        "_lff",
+        "_states",
+        "_board",
+        "_text",
+        "_restart",
+        "_suggest",
+        "_player_header",
+        "_versus_message",
+        "_winner",
+        "_history",
+        "_history_title",
+    )
 
     def __init__(self, states, board, winner=None, *args, **kwargs):
-        super().__init__(WIDTH-HEIGHT, HEIGHT, *args, **kwargs)
+        super().__init__(WIDTH - HEIGHT, HEIGHT, *args, **kwargs)
 
-        suggest_text = fonts.h5_b.render('Suggestion', True, BLACK)
+        suggest_text = fonts.h5_b.render("Suggestion", True, BLACK)
         self._suggest = Button(
-            '#000000', 
-            '#FFBC24', 
-            suggest_text, 
-            None, 
-            height=50,
-            relative_to=self)
-        self._suggest.position = (0, self.height-self.suggest.height)
+            "#000000", "#FFBC24", suggest_text, None, height=50, relative_to=self
+        )
+        self._suggest.position = (0, self.height - self.suggest.height)
 
-        restart_text = fonts.h5_b.render('Restart', True, BLACK)
+        restart_text = fonts.h5_b.render("Restart", True, BLACK)
         self._restart = Button(
-            '#000000', 
-            '#008CDB', 
-            restart_text, 
-            None, 
-            width = self.suggest.width,
-            height = 50,
-            relative_to=self)
-        self._restart.position = (self.width-self.restart.width, self.height-self.restart.height)
+            "#000000",
+            "#008CDB",
+            restart_text,
+            None,
+            width=self.suggest.width,
+            height=50,
+            relative_to=self,
+        )
+        self._restart.position = (
+            self.width - self.restart.width,
+            self.height - self.restart.height,
+        )
 
         # Load images for left and right buttons
-        r_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/right.png'), (30, 30))
-        l_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/right.png'), (30, 30))
+        r_img = pygame.transform.smoothscale(
+            pygame.image.load("./ressources/images/right.png"), (30, 30)
+        )
+        l_img = pygame.transform.smoothscale(
+            pygame.image.load("./ressources/images/right.png"), (30, 30)
+        )
         l_img = pygame.transform.rotate(l_img, 180)
-        rff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png').convert_alpha(), (30, 30))
-        lff_img = pygame.transform.smoothscale(pygame.image.load('./ressources/images/rff.png'), (30, 30))
+        rff_img = pygame.transform.smoothscale(
+            pygame.image.load("./ressources/images/rff.png").convert_alpha(), (30, 30)
+        )
+        lff_img = pygame.transform.smoothscale(
+            pygame.image.load("./ressources/images/rff.png"), (30, 30)
+        )
         lff_img = pygame.transform.rotate(lff_img, 180)
 
-        self._left  = Button(WHITE, GRAY_1, l_img, None, width=65, height=50, hover_color=GRAY_3, relative_to=self)
-        self._right = Button(WHITE, GRAY_1, r_img, None, width=65, height=50, hover_color=GRAY_3, relative_to=self)
-        self._lff   = Button(WHITE, GRAY_1, lff_img, None, width=65, height=50, hover_color=GRAY_3, relative_to=self)
-        self._rff   = Button(WHITE, GRAY_1, rff_img, None, width=65, height=50, hover_color=GRAY_3, relative_to=self)
-        self._left.position  = (self.width / 2 - self.left.width, self.height - self.left.height)
+        self._left = Button(
+            WHITE,
+            GRAY_1,
+            l_img,
+            None,
+            width=65,
+            height=50,
+            hover_color=GRAY_3,
+            relative_to=self,
+        )
+        self._right = Button(
+            WHITE,
+            GRAY_1,
+            r_img,
+            None,
+            width=65,
+            height=50,
+            hover_color=GRAY_3,
+            relative_to=self,
+        )
+        self._lff = Button(
+            WHITE,
+            GRAY_1,
+            lff_img,
+            None,
+            width=65,
+            height=50,
+            hover_color=GRAY_3,
+            relative_to=self,
+        )
+        self._rff = Button(
+            WHITE,
+            GRAY_1,
+            rff_img,
+            None,
+            width=65,
+            height=50,
+            hover_color=GRAY_3,
+            relative_to=self,
+        )
+        self._left.position = (
+            self.width / 2 - self.left.width,
+            self.height - self.left.height,
+        )
         self._right.position = (self.width / 2, self.height - self.left.height)
-        self._lff.position   = (self.suggest.width, self.height - self.left.height)
-        self._rff.position   = (self.restart.position[0]-self.rff.width, self.height - self.left.height)
+        self._lff.position = (self.suggest.width, self.height - self.left.height)
+        self._rff.position = (
+            self.restart.position[0] - self.rff.width,
+            self.height - self.left.height,
+        )
 
         self._states = states
         self._board = board
 
-        self._versus_message = fonts.h3_b.render('VS', True, WHITE)
-        self._history_title  = fonts.h4_b.render('History', True, pygame.Color("#DFDFDF"))
+        self._versus_message = fonts.h3_b.render("VS", True, WHITE)
+        self._history_title = fonts.h4_b.render(
+            "History", True, pygame.Color("#DFDFDF")
+        )
 
         self._history = HistoryTable(self.states, self.width, 560, relative_to=self)
         self._history.position = (0, 190)
@@ -351,7 +445,7 @@ class Stats(Surface):
     @property
     def left(self):
         return self._left
-    
+
     @property
     def right(self):
         return self._right
@@ -359,7 +453,7 @@ class Stats(Surface):
     @property
     def lff(self):
         return self._lff
-    
+
     @property
     def rff(self):
         return self._rff
@@ -367,7 +461,7 @@ class Stats(Surface):
     @property
     def restart(self):
         return self._restart
-    
+
     @property
     def suggest(self):
         return self._suggest
@@ -390,7 +484,10 @@ class Stats(Surface):
                     self.left.pressed = False
                 elif self.right.clicked():
                     self.history.selected_slot = None
-                    if self.states.index < self.states.counter and self.states.index != -1:
+                    if (
+                        self.states.index < self.states.counter
+                        and self.states.index != -1
+                    ):
                         self.states.index += 1
                         if self.states.index == self.states.counter:
                             self.states.index = -1
@@ -416,22 +513,25 @@ class Stats(Surface):
         else:
             ind_x, ind_y = 3 * self.width // 4, 80
 
-        draw_circle(self.surface, ind_x, ind_y, 60, pygame.Color('#0B64C1'))
+        draw_circle(self.surface, ind_x, ind_y, 60, pygame.Color("#0B64C1"))
         draw_circle(self.surface, self.width // 4, 80, 50, BLACK)
         draw_circle(self.surface, 3 * self.width // 4, 80, 50, pygame.Color("#DFDFDF"))
 
-        self.surface.blit(self.versus_message, (self.width / 2 - self.versus_message.get_rect()[2] / 2, 65))
+        self.surface.blit(
+            self.versus_message,
+            (self.width / 2 - self.versus_message.get_rect()[2] / 2, 65),
+        )
 
         if self.states.states[-1].captures == None:
             white_score, black_score = 0, 0
         else:
             black_score = self.states.states[-1].captures[0]
             white_score = self.states.states[-1].captures[1]
-        black_score_text = fonts.h2_b.render(f'{black_score}', True, WHITE)
-        white_score_text = fonts.h2_b.render(f'{white_score}', True, BLACK)
+        black_score_text = fonts.h2_b.render(f"{black_score}", True, WHITE)
+        white_score_text = fonts.h2_b.render(f"{white_score}", True, BLACK)
 
         black_score_text_rect = black_score_text.get_rect()
-        black_score_text_rect.center = (    self.width // 4, 80)
+        black_score_text_rect.center = (self.width // 4, 80)
 
         white_score_text_rect = white_score_text.get_rect()
         white_score_text_rect.center = (3 * self.width // 4, 80)
@@ -460,24 +560,38 @@ class Stats(Surface):
 
 
 class Board(Surface):
-    """ 
+    """
     This class represents the board surface.
     """
 
-    __slots__ = ('_turn', '_setup', '_states', '_computer', '_size', '_repeat', '_offset', '_limit', '_step', '_linspace', '_p1', '_p2', '_finished')
+    __slots__ = (
+        "_turn",
+        "_setup",
+        "_states",
+        "_computer",
+        "_size",
+        "_repeat",
+        "_offset",
+        "_limit",
+        "_step",
+        "_linspace",
+        "_p1",
+        "_p2",
+        "_finished",
+    )
 
     def __init__(self, states, setup, p1, p2, computer, size=15, *args, **kwargs):
         super().__init__(HEIGHT, HEIGHT, *args, **kwargs)
-        self._setup    = setup
-        self._states   = states
-        self._offset   = 50
-        self._size     = size
-        self._step     = int((self.height-self.offset) / self.size)
-        self._limit    = self.offset + self.step * (self.size-1)
-        self._linspace = [i for i in range(self.offset, self.limit+1, self.step)]
-        self._p1       = p1
-        self._p2       = p2
-        self._turn     = self._p1
+        self._setup = setup
+        self._states = states
+        self._offset = 50
+        self._size = size
+        self._step = int((self.height - self.offset) / self.size)
+        self._limit = self.offset + self.step * (self.size - 1)
+        self._linspace = [i for i in range(self.offset, self.limit + 1, self.step)]
+        self._p1 = p1
+        self._p2 = p2
+        self._turn = self._p1
         self._computer = computer
         self._finished = False
 
@@ -492,7 +606,7 @@ class Board(Surface):
     @property
     def turn(self):
         return self._turn
-    
+
     @property
     def computer(self):
         return self._computer
@@ -536,43 +650,61 @@ class Board(Surface):
     @property
     def linspace(self):
         return self._linspace
-    
+
     @property
     def finished(self):
         return self._finished
-    
+
     @property
     def size(self):
         return self._size
-    
+
     @finished.setter
     def finished(self, value):
         self._finished = value
 
     def draw_board(self):
         self.surface.fill(BOARD_COLOR)
-        pygame.draw.line(self.surface, GRAY_1, (self.width-1, 0), (self.width-1, HEIGHT), 1)
-        
+        pygame.draw.line(
+            self.surface, GRAY_1, (self.width - 1, 0), (self.width - 1, HEIGHT), 1
+        )
+
         for i in range(0, self.size):
             # Draw vertical lines
             ys, xs = self.offset + (i * self.step), self.offset
             ye, xe = self.offset + (i * self.step), self.limit
-            pygame.draw.line(self.surface, pygame.Color('#000000'), (xs, ys), (xe, ye), 2 if i in (0, self.size - 1) else 1)
+            pygame.draw.line(
+                self.surface,
+                pygame.Color("#000000"),
+                (xs, ys),
+                (xe, ye),
+                2 if i in (0, self.size - 1) else 1,
+            )
 
             # Draw horizontal lines
             xs, ys = self.offset + (i * self.step), self.offset
             xe, ye = self.offset + (i * self.step), self.limit
-            pygame.draw.line(self.surface, pygame.Color('#000000'), (xs, ys), (xe, ye), 2 if i in (0, self.size - 1) else 1)
+            pygame.draw.line(
+                self.surface,
+                pygame.Color("#000000"),
+                (xs, ys),
+                (xe, ye),
+                2 if i in (0, self.size - 1) else 1,
+            )
 
             x, y = -1, -1
             if self.check_hover():
                 x, y = pygame.mouse.get_pos()
-                x = self.linspace[math.floor((x-self.offset+self.step/2) / self.step)]
-                y = self.linspace[math.floor((y-self.offset+self.step/2) / self.step)]
+                x = self.linspace[
+                    math.floor((x - self.offset + self.step / 2) / self.step)
+                ]
+                y = self.linspace[
+                    math.floor((y - self.offset + self.step / 2) / self.step)
+                ]
 
             # Draw y-coords
             font = fonts.h5_b if y == (i * self.step) + self.offset else fonts.h5_t
-            text = font.render(f'{i+1}', True, BLACK)
+            text = font.render(f"{i+1}", True, BLACK)
             text_rect = text.get_rect()
             text_rect.center = (25, self.offset + (i * self.step))
             self.surface.blit(text, text_rect)
@@ -600,11 +732,19 @@ class Board(Surface):
                     if counter == self.states.counter:
                         x = self.offset + c * self.step
                         y = self.offset + r * self.step
-                        draw_circle(self.surface, x+self.step//2-10, y-self.step//2+10, 5, (255, 255, 0))
-                        count_text = fonts.h6_b.render(f'{counter}', True, (255, 0, 0))
+                        draw_circle(
+                            self.surface,
+                            x + self.step // 2 - 10,
+                            y - self.step // 2 + 10,
+                            5,
+                            (255, 255, 0),
+                        )
+                        count_text = fonts.h6_b.render(f"{counter}", True, (255, 0, 0))
 
                     font = fonts.h6_b if self.size > 15 else fonts.h5_b
-                    count_text = font.render(f'{counter}', True, (0, 0, 0) if col == 2 else (255, 255, 255))
+                    count_text = font.render(
+                        f"{counter}", True, (0, 0, 0) if col == 2 else (255, 255, 255)
+                    )
                     count_rect = count_text.get_rect()
                     count_rect.center = (x, y)
                     self.surface.blit(count_text, count_rect)
@@ -612,18 +752,18 @@ class Board(Surface):
                 elif col == 3:
                     x = self.offset + c * self.step
                     y = self.offset + r * self.step
-                    draw_circle(self.surface, x, y, 3, pygame.Color('#E83907'))
+                    draw_circle(self.surface, x, y, 3, pygame.Color("#E83907"))
 
                 elif col == 4:
                     x = self.offset + c * self.step
                     y = self.offset + r * self.step
-                    draw_circle(self.surface, x, y, 3, pygame.Color('#00ff00'))
+                    draw_circle(self.surface, x, y, 3, pygame.Color("#00ff00"))
 
         if self.states.last == self.states.current and self.states.last.suggestion:
             # Show suggestion only if we are at the last state
             color = "#ffffff88" if self.turn.turn == 2 else "#00000088"
-            x = self.linspace[self.states.last.suggestion['move'][0]] + 1
-            y = self.linspace[self.states.last.suggestion['move'][1]] + 1
+            x = self.linspace[self.states.last.suggestion["move"][0]] + 1
+            y = self.linspace[self.states.last.suggestion["move"][1]] + 1
             draw_circle(self.surface, x, y, radius, pygame.Color(color))
 
     def check_hover(self):
@@ -637,14 +777,14 @@ class Board(Surface):
         radius = math.floor(self.step / 2)
         color = "#ffffff" if self.turn == self.p2 else "#000000"
         x, y = pygame.mouse.get_pos()
-        x = self.linspace[math.floor((x-self.offset+self.step/2) / self.step)]
-        y = self.linspace[math.floor((y-self.offset+self.step/2) / self.step)]
+        x = self.linspace[math.floor((x - self.offset + self.step / 2) / self.step)]
+        y = self.linspace[math.floor((y - self.offset + self.step / 2) / self.step)]
         draw_circle(self.surface, x, y, radius, pygame.Color(color))
 
         # Show the current count value on the hover piece.
         if self.turn.player == HUMAN:
             color = "#000000" if self.turn == self.p2 else "#ffffff"
-            count_text = fonts.h5_b.render(f'{self.states.counter + 1}', True, color)
+            count_text = fonts.h5_b.render(f"{self.states.counter + 1}", True, color)
             count_rect = count_text.get_rect()
             count_rect.center = (x, y)
             self.surface.blit(count_text, count_rect)
@@ -679,7 +819,7 @@ class Board(Surface):
 
         # Not used yet
         if self.finished:
-            print('----------------------------------')
+            print("----------------------------------")
             return
 
         # Human turn
@@ -699,34 +839,36 @@ class Board(Surface):
                     # 16 is the diameter of the pieces
                     # x = math.floor((pos[0]-16) / self.step)
                     # y = math.floor((pos[1]-16) / self.step)
-                    x = math.floor((pos[0]-self.offset+self.step/2) / self.step)
-                    y = math.floor((pos[1]-self.offset+self.step/2) / self.step)
+                    x = math.floor((pos[0] - self.offset + self.step / 2) / self.step)
+                    y = math.floor((pos[1] - self.offset + self.step / 2) / self.step)
                     # x = self.offset + x * self.step - self.step
                     # y = self.offset + y * self.step - self.step
 
                     # print()
                     # if self.states.last.state[y][x] == '0':
-                        # Send coords to the process and want for responce
-                        # only if the position does not corresponde to an
-                        # illegal move or is not already occupied.
+                    # Send coords to the process and want for responce
+                    # only if the position does not corresponde to an
+                    # illegal move or is not already occupied.
                     print(pos, x, y)
-                    self.computer.send(f'M\n{x} {y}\n')
+                    self.computer.send(f"M\n{x} {y}\n")
             else:
                 # Process the received output
                 self.computer.expecting = True
                 resp = self.computer.next_move()
                 if resp:
-                    if isinstance(resp, tuple) and resp[0] == 0: # No winner yet
-                        print(f'Human[{self.turn.turn}]', resp[1]['time'], resp[1]['move'])
+                    if isinstance(resp, tuple) and resp[0] == 0:  # No winner yet
+                        print(
+                            f"Human[{self.turn.turn}]", resp[1]["time"], resp[1]["move"]
+                        )
                         print(resp)
                         self.states.add(State(**resp[1]))
                         self.turn = self.p1 if self.turn == self.p2 else self.p2
                         self.computer.expecting = False
-                        print('turn:', self.turn.turn)
+                        print("turn:", self.turn.turn)
 
                     elif isinstance(resp, tuple) and resp[0] in (1, 2):
                         self.states.add(State(**resp[1]))
-                        print(f'Player {resp[0]} wins!')
+                        print(f"Player {resp[0]} wins!")
                         self.finished = True
                         self.winner = resp[0]
 
@@ -748,14 +890,16 @@ class Board(Surface):
             self.computer.expecting = True
             resp = self.computer.next_move()
             if resp:
-                if isinstance(resp, tuple) and resp[0] == 0: # No winner yet
-                    print(f'Computer[{self.turn.turn}]', resp[1]['time'], resp[1]['move'])
+                if isinstance(resp, tuple) and resp[0] == 0:  # No winner yet
+                    print(
+                        f"Computer[{self.turn.turn}]", resp[1]["time"], resp[1]["move"]
+                    )
                     self.states.add(State(**resp[1]))
                     self.turn = self.p1 if self.turn == self.p2 else self.p2
                     self.computer.expecting = False
-                elif isinstance(resp, tuple) and resp[0] in (1, 2): # Winner found
+                elif isinstance(resp, tuple) and resp[0] in (1, 2):  # Winner found
                     self.states.add(State(**resp[1]))
-                    print(f'Player {resp[0]} wins!')
+                    print(f"Player {resp[0]} wins!")
                     self.finished = True
                 elif resp == 4:
                     self.finished = True
@@ -765,9 +909,19 @@ class Board(Surface):
         self.setup_players()
         self.turn = self.p1
 
+
 class Game:
-     
-    __slots__ = ('_window', '_board', '_stats', '_states', '_setup', '_computer', '_p1', '_p2')
+
+    __slots__ = (
+        "_window",
+        "_board",
+        "_stats",
+        "_states",
+        "_setup",
+        "_computer",
+        "_p1",
+        "_p2",
+    )
 
     def __init__(self, window, setup, *args, **kwargs):
         self._window = window
@@ -790,11 +944,11 @@ class Game:
     @property
     def stats(self):
         return self._stats
-    
+
     @stats.setter
     def stats(self, obj: Stats):
         self._stats = obj
-    
+
     @property
     def states(self):
         return self._states
@@ -810,7 +964,7 @@ class Game:
     @property
     def computer(self):
         return self._computer
-    
+
     @computer.setter
     def computer(self, obj: Computer):
         self._computer = obj
@@ -822,7 +976,7 @@ class Game:
     @property
     def p2(self):
         return self._p2
-    
+
     @p1.setter
     def p1(self, obj: Player):
         self._p1 = obj
@@ -839,20 +993,26 @@ class Game:
         p1_diff = MODES[self.setup.p1_mode.anchor.value - 1]
         p2_type = TYPES[self.setup.p2_type.anchor.value - 1]
         p2_diff = MODES[self.setup.p2_mode.anchor.value - 1]
-        size    = SIZES[self.setup.sizes.anchor.value - 1]
+        size = SIZES[self.setup.sizes.anchor.value - 1]
 
         args = [
-            f'{SIZES[self.setup.sizes.anchor.value - 1]}',
-            f'--p1_type={p1_type}', f'--p1_diff={p1_diff}',
-            f'--p2_type={p2_type}', f'--p2_diff={p2_diff}'
+            f"{SIZES[self.setup.sizes.anchor.value - 1]}",
+            f"--p1_type={p1_type}",
+            f"--p1_diff={p1_diff}",
+            f"--p2_type={p2_type}",
+            f"--p2_diff={p2_diff}",
         ]
 
         self.p1 = Player(self.setup.p1_type.anchor.value, 1)
         self.p2 = Player(self.setup.p2_type.anchor.value, 2)
 
         self.computer = Computer(*args)
-        self.board = Board(self.states, self.setup, self.p1, self.p2, self.computer, size=int(size))
-        self.stats = Stats(self.states, self.board, relative_to=self.window, position=(HEIGHT, 0))
+        self.board = Board(
+            self.states, self.setup, self.p1, self.p2, self.computer, size=int(size)
+        )
+        self.stats = Stats(
+            self.states, self.board, relative_to=self.window, position=(HEIGHT, 0)
+        )
 
     def loop(self):
         self.setup_game()
@@ -869,9 +1029,12 @@ class Game:
                         self.computer.stop()
                         return
                     if self.board.turn.player == HUMAN:
-                        if self.stats.suggest.clicked() and self.board.states.last.suggestion == None:
+                        if (
+                            self.stats.suggest.clicked()
+                            and self.board.states.last.suggestion == None
+                        ):
                             self.stats.suggest.pressed = False
-                            self.computer.send('S')
+                            self.computer.send("S")
                     else:
                         self.stats.suggest.disable()
 

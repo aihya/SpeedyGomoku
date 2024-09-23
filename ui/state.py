@@ -2,24 +2,34 @@ from surface import Surface
 from components import draw_circle
 from init import *
 import fonts
+
+
 class State:
     """
     This class represents a board state read from the game logic.
     """
 
-    __slots__ = ('_state', '_count', '_move', '_time', '_suggestion', '_captures', '_color')
+    __slots__ = (
+        "_state",
+        "_count",
+        "_move",
+        "_time",
+        "_suggestion",
+        "_captures",
+        "_color",
+    )
 
     def __init__(self, state=None, time=0, move=None, captures=None):
-        self._state = state if state else [['0' for j in range(19)] for i in range(19)]
+        self._state = state if state else [["0" for j in range(19)] for i in range(19)]
         self._count = {}
-        self._time  = time
-        self._move  = move
+        self._time = time
+        self._move = move
         self._suggestion = None
         self._captures = captures
 
     def __getitem__(self, index):
         return self.state[index]
-    
+
     @property
     def color(self):
         if self.move:
@@ -40,7 +50,7 @@ class State:
     @property
     def count(self):
         return self._count
-    
+
     @count.setter
     def count(self, value):
         self._count = value
@@ -48,7 +58,7 @@ class State:
     @property
     def time(self):
         return self._time
-    
+
     # Very unlikely to be used.
     @time.setter
     def time(self, new_time):
@@ -57,7 +67,7 @@ class State:
     @property
     def move(self):
         return self._move
-    
+
     # Very unlikely to be used.
     @move.setter
     def move(self, new_move: tuple):
@@ -77,11 +87,12 @@ class State:
 
     def print(self):
         for row in self.state:
-            print(''.join(row))
+            print("".join(row))
+
 
 class States:
 
-    __slots__ = ('_states', '_counter', '_index')
+    __slots__ = ("_states", "_counter", "_index")
 
     def __init__(self):
         self._states = [State()]
@@ -91,11 +102,11 @@ class States:
     @property
     def states(self):
         return self._states
-    
+
     @property
     def counter(self):
         return self._counter
-    
+
     @counter.setter
     def counter(self, obj: int):
         self._counter = obj
@@ -109,7 +120,7 @@ class States:
     @property
     def index(self):
         return self._index
-    
+
     @index.setter
     def index(self, value):
         self._index = value
@@ -128,12 +139,22 @@ class States:
         state.count[state.move] = self.counter
         self.states.append(state)
 
+
 class HistoryTable(Surface):
 
-    __slots__ = ('_states', '_slots', '_slot_height', '_num_slots', '_current', '_start', '_stop', '_selected_slot')
+    __slots__ = (
+        "_states",
+        "_slots",
+        "_slot_height",
+        "_num_slots",
+        "_current",
+        "_start",
+        "_stop",
+        "_selected_slot",
+    )
 
     def __init__(self, states, width, height, *args, **kwargs):
-        super().__init__(width, height, relative_to=kwargs['relative_to'])
+        super().__init__(width, height, relative_to=kwargs["relative_to"])
         self._states = states
         self._slot_height = self.height // 20
         self._slots = []
@@ -147,7 +168,7 @@ class HistoryTable(Surface):
     @property
     def selected_slot(self):
         return self._selected_slot
-    
+
     @selected_slot.setter
     def selected_slot(self, slot):
         self._selected_slot = slot
@@ -159,15 +180,15 @@ class HistoryTable(Surface):
     @property
     def slots(self):
         return self._slots
-    
+
     @property
     def slot_height(self):
         return self._slot_height
-    
+
     @property
     def num_slots(self):
         return self._num_slots
-    
+
     @num_slots.setter
     def num_slots(self, value):
         self._num_slots = value
@@ -187,7 +208,7 @@ class HistoryTable(Surface):
     @start.setter
     def start(self, value):
         self._start = value
-    
+
     @property
     def stop(self):
         return self._stop
@@ -202,23 +223,32 @@ class HistoryTable(Surface):
             slot = Surface(self.width, self.slot_height, relative_to=self)
             slot.surface.fill(GRAY_2 if state.color == 2 else GRAY_3)
 
-            count = fonts.h5_t.render(f'{len(state.count)}. ', True, WHITE)
+            count = fonts.h5_t.render(f"{len(state.count)}. ", True, WHITE)
             count_rect = count.get_rect()
             count_rect.left = 20
             count_rect.centery = self.slot_height // 2
 
-            time = fonts.h5_t.render(f'{state.time:.2f} ms', True, WHITE)
+            time = fonts.h5_t.render(f"{state.time:.2f} ms", True, WHITE)
             time_rect = time.get_rect()
             time_rect.centerx = self.width - time_rect.width // 2 - 30
             time_rect.centery = self.slot_height // 2
 
             coords = fonts.h5_t.render(
-                f'{"ABCDEFGHIJKLMNOPQRST"[state.move[0]]} - {state.move[1]+1}', True, WHITE)
+                f'{"ABCDEFGHIJKLMNOPQRST"[state.move[0]]} - {state.move[1]+1}',
+                True,
+                WHITE,
+            )
             coords_rect = coords.get_rect()
             coords_rect.left = 120
             coords_rect.centery = self.slot_height // 2
 
-            draw_circle(slot.surface, 90, self.slot_height // 2, 8, WHITE if state.color == 2 else BLACK)
+            draw_circle(
+                slot.surface,
+                90,
+                self.slot_height // 2,
+                8,
+                WHITE if state.color == 2 else BLACK,
+            )
             slot.surface.blit(count, count_rect)
             slot.surface.blit(coords, coords_rect)
             slot.surface.blit(time, time_rect)
@@ -262,7 +292,13 @@ class HistoryTable(Surface):
                     self.selected_slot = start + i
             if coll_rect.collidepoint(pygame.mouse.get_pos()):
                 replicate = slot.surface.copy()
-                draw_circle(replicate, self.width - 15, self.slot_height // 2, 4, pygame.Color('#FFFF00'))
+                draw_circle(
+                    replicate,
+                    self.width - 15,
+                    self.slot_height // 2,
+                    4,
+                    pygame.Color("#FFFF00"),
+                )
                 self.surface.blit(replicate, slot_rect)
             else:
                 self.surface.blit(slot.surface, slot_rect)

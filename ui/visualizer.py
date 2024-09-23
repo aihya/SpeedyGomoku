@@ -1,10 +1,10 @@
 import pygame
-from surface    import Surface
-from fonts      import *
-from init       import *
-from board      import Setup, Board, Game
-from final      import Final
-from state      import State
+from surface import Surface
+from fonts import *
+from init import *
+from board import Setup, Board, Game
+from final import Final
+from state import State
 
 # Initialize pygame
 pygame.init()
@@ -15,7 +15,7 @@ class Window(Surface):
     This class represents the display surface.
     """
 
-    __slots__ = ('_quit',)
+    __slots__ = ("_quit",)
 
     def __init__(self):
         super().__init__(WIDTH, HEIGHT, is_window=True)
@@ -24,7 +24,7 @@ class Window(Surface):
     @property
     def quit(self):
         return self._quit
-    
+
     @quit.setter
     def quit(self, value):
         self._quit = value
@@ -38,24 +38,36 @@ class Window(Surface):
 
 class Controller:
 
-    __slots__ = ('_window', '_phase', '_state', '_board', '_setup', '_stats', '_events', '_sidebar', '_repeat', '_p1', '_p2')
+    __slots__ = (
+        "_window",
+        "_phase",
+        "_state",
+        "_board",
+        "_setup",
+        "_stats",
+        "_events",
+        "_sidebar",
+        "_repeat",
+        "_p1",
+        "_p2",
+    )
 
     def __init__(self):
         self._window = Window()
         self._events = None
         self._repeat = True
-        self._p1     = None
-        self._p2     = None
+        self._p1 = None
+        self._p2 = None
         # self._state  = State()
         # self._stats  = Stats(relative_to=self.window, position=(HEIGHT, 0))
-        self._setup  = Setup(relative_to=self.window, position=(HEIGHT, 0))
-        self._board  = Board(None, self._setup, self._p1, self._p2, None)
-        self._phase  = SETUP_SURFACE
+        self._setup = Setup(relative_to=self.window, position=(HEIGHT, 0))
+        self._board = Board(None, self._setup, self._p1, self._p2, None)
+        self._phase = SETUP_SURFACE
 
     @property
     def phase(self):
         return self._phase
-    
+
     @phase.setter
     def phase(self, value):
         self._phase = value
@@ -91,7 +103,7 @@ class Controller:
     @property
     def p1(self):
         return self._p1
-    
+
     @p1.setter
     def p1(self, value):
         self._p1 = value
@@ -99,7 +111,7 @@ class Controller:
     @property
     def p2(self):
         return self._p2
-    
+
     @p2.setter
     def p2(self, value):
         self._p2 = value

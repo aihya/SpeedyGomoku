@@ -1,5 +1,6 @@
 import pygame
 
+
 class Surface:
     """
     This class is an abstraction over pygame.Surface
@@ -7,9 +8,26 @@ class Surface:
 
     QUIT = False
 
-    __slots__ = ('_is_window', '_position', '_width', '_height', '_surface', '_rect', '_relative_to', '_abs_rect')
+    __slots__ = (
+        "_is_window",
+        "_position",
+        "_width",
+        "_height",
+        "_surface",
+        "_rect",
+        "_relative_to",
+        "_abs_rect",
+    )
 
-    def __init__(self, width, height, position=(0, 0), relative_to=None, alpha=False, is_window=False):
+    def __init__(
+        self,
+        width,
+        height,
+        position=(0, 0),
+        relative_to=None,
+        alpha=False,
+        is_window=False,
+    ):
         self._relative_to = relative_to
 
         # Surface alpha flag
@@ -31,7 +49,7 @@ class Surface:
     @property
     def position(self):
         return self.rect.topleft
-    
+
     @position.setter
     def position(self, coords: tuple):
         self._position = coords
@@ -57,10 +75,10 @@ class Surface:
     @property
     def abs_rect(self):
         return self._abs_rect
-    
+
     @property
     def relative_to(self):
         return self._relative_to
-    
+
     def check_hover(self):
         return self.abs_rect.collidepoint(pygame.mouse.get_pos())

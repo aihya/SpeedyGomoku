@@ -46,11 +46,11 @@ PRO = 2
 LONG_PRO = 3
 
 # Sizes
-SIZE_19     = 1
-SIZE_15     = 2
-SIZE_13     = 3
-SIZE_10     = 4
-SIZES       = ['19', '15', '13', '10']
+SIZE_19 = 1
+SIZE_15 = 2
+SIZE_13 = 3
+SIZE_10 = 4
+SIZES = ["19", "15", "13", "10"]
 
 
 # Computer difficulty
@@ -60,4 +60,4 @@ HARD = 3
 MODES = ["easy", "medium", "hard"]
 
 # Path to the executable
-EXE_PATH = "../src/a.out"
+EXE_PATH = "../v2/a.out"

@@ -5,19 +5,26 @@ from components import Button
 
 
 class Final(Surface):
-    """ 
-    This class represents the surface of the end 
+    """
+    This class represents the surface of the end
     state of the game.
     """
 
-    __slots__ = ('_repeat', '_window', '_winner', '_button')
+    __slots__ = ("_repeat", "_window", "_winner", "_button")
 
     def __init__(self, window):
         super().__init__(WIDTH, HEIGHT, (0, 0), True)
         self._repeat = True
         self._window = window
         self._winner = 0
-        self._button = Button(int(self.width / 2), int(self.height / 2) + 200, "#000000", "#F5BB55", "REMATCH", fonts.h3_t)
+        self._button = Button(
+            int(self.width / 2),
+            int(self.height / 2) + 200,
+            "#000000",
+            "#F5BB55",
+            "REMATCH",
+            fonts.h3_t,
+        )
 
     @property
     def window(self):
@@ -47,15 +54,19 @@ class Final(Surface):
         global QUIT
 
         # Header message
-        header = fonts.h2_b.render('Game Finished!', True, BLACK_COLOR, DEFAULT_BG)
+        header = fonts.h2_b.render("Game Finished!", True, BLACK_COLOR, DEFAULT_BG)
         header_rect = header.get_rect()
         header_rect.center = (int(self.width / 2), int(self.height / 2) - 100)
 
         # Mid-screen message
         if self.winner == 3:
-            middle = fonts.h3_r.render('The game is a Tie', True, BLACK_COLOR, DEFAULT_BG)
+            middle = fonts.h3_r.render(
+                "The game is a Tie", True, BLACK_COLOR, DEFAULT_BG
+            )
         else:
-            middle = fonts.h3_r.render(f'Player {self.winner} is Victorious', True, BLACK_COLOR, DEFAULT_BG)
+            middle = fonts.h3_r.render(
+                f"Player {self.winner} is Victorious", True, BLACK_COLOR, DEFAULT_BG
+            )
         middle_rect = middle.get_rect()
         middle_rect.center = (int(self.width / 2), int(self.height / 2))
 
