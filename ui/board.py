@@ -819,7 +819,6 @@ class Board(Surface):
 
         # Not used yet
         if self.finished:
-            print("----------------------------------")
             return
 
         # Human turn
