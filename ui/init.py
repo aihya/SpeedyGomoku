@@ -60,4 +60,4 @@ HARD = 3
 MODES = ["easy", "medium", "hard"]
 
 # Path to the executable
-EXE_PATH = "../v2/a.out"
+EXE_PATH = "../src/a.out"
