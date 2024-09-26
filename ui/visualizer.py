@@ -5,6 +5,7 @@ from init import *
 from board import Setup, Board, Game
 from final import Final
 from state import State
+from components import ColorPallet
 
 # Initialize pygame
 pygame.init()
@@ -48,6 +49,7 @@ class Controller:
         "_events",
         "_sidebar",
         "_repeat",
+        "_pallet",
         "_p1",
         "_p2",
     )
@@ -60,9 +62,14 @@ class Controller:
         self._p2 = None
         # self._state  = State()
         # self._stats  = Stats(relative_to=self.window, position=(HEIGHT, 0))
-        self._setup = Setup(relative_to=self.window, position=(HEIGHT, 0))
-        self._board = Board(None, self._setup, self._p1, self._p2, None)
+        self._pallet = ColorPallet()
+        self._setup = Setup(self.pallet, relative_to=self.window, position=(HEIGHT, 0))
+        self._board = Board(self.pallet, None, self._setup, self._p1, self._p2, None)
         self._phase = SETUP_SURFACE
+
+    @property
+    def pallet(self):
+        return self._pallet
 
     @property
     def phase(self):
@@ -135,7 +142,7 @@ class Controller:
                 self.board.draw_board()
                 self.phase = self.setup.update(self.events)
             else:
-                game = Game(self.window, self.setup)
+                game = Game(self.pallet, self.window, self.setup)
                 game.loop()
                 self.phase = SETUP_SURFACE
 

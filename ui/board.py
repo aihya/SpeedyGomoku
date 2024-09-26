@@ -3,10 +3,8 @@ import os
 from surface import Surface
 from init import *
 from computer import Computer, Player
-from components import Button, CheckBoxs, DropDown, custom_colors, draw_circle
+from components import Button, CheckBoxs, ColorPallet, draw_circle
 from state import States, State, HistoryTable
-
-# from dropdown import Dropdown, custom_colors
 import fonts
 
 
@@ -33,26 +31,36 @@ class Setup(Surface):
         "_sizes",
         "_sizes_surf",
         "_sizes_dropdown",
+        "_pallet",
+        "_themes",
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, pallet, *args, **kwargs):
         super().__init__(WIDTH - HEIGHT, HEIGHT, alpha=True, *args, **kwargs)
         self._repeat = True
-
+        self._pallet = pallet
         self._start = Button(
-            LIGHT, GRAY_2, "START", fonts.h4_b, height=50, expand=True, relative_to=self
+            self.pallet.foreground,
+            self.pallet.secondary,
+            "START",
+            fonts.h4_b,
+            height=50,
+            expand=True,
+            relative_to=self,
         )
         self._start.position = (0, self.height - self._start.height)
 
         # Player 1 setup surface
         self._p1_surf = Surface(300, 400, (50, 70), self, True)
         self._p1_type = CheckBoxs(
+            self.pallet,
             {HUMAN: "Human", COMPUTER: "CPU"},
             position=(0, 40),
             relative_to=self._p1_surf,
             alpha=True,
         )
         self._p1_mode = CheckBoxs(
+            self.pallet,
             {EASY: "Easy", MEDIUM: "Medium", HARD: "Hard"},
             position=(0, self._p1_type.height + 110),
             relative_to=self._p1_surf,
@@ -62,12 +70,14 @@ class Setup(Surface):
         # Player 2 setup surface
         self._p2_surf = Surface(300, 400, (320, 70), self, True)
         self._p2_type = CheckBoxs(
+            self.pallet,
             {HUMAN: "Human", COMPUTER: "CPU"},
             position=(0, 40),
             relative_to=self._p2_surf,
             alpha=True,
         )
         self._p2_mode = CheckBoxs(
+            self.pallet,
             {EASY: "Easy", MEDIUM: "Medium", HARD: "Hard"},
             position=(0, self._p2_type.height + 110),
             relative_to=self._p2_surf,
@@ -76,6 +86,7 @@ class Setup(Surface):
 
         self._rules_surf = Surface(self.width - 50, 190, (50, 480), self, True)
         self._rules = CheckBoxs(
+            self.pallet,
             {STANDARD: "Standard", LONG_PRO: "Long Pro", PRO: "Pro"},
             position=(0, 0),
             relative_to=self.rules_surf,
@@ -84,14 +95,28 @@ class Setup(Surface):
 
         self._sizes_surf = Surface(self.width - 50, 190, (320, 480), self, True)
         self._sizes = CheckBoxs(
+            self.pallet,
             {SIZE_19: "19x19", SIZE_15: "15x15", SIZE_13: "13x13"},
             position=(0, 0),
             relative_to=self._sizes_surf,
             alpha=True,
         )
 
+        coords = [(100, 690), (self.width // 2 - 45, 690), (self.width - 200, 690)]
+        self._themes = []
+        for i in range(3):
+            self._themes.append(Surface(90, 30, position=coords[i], relative_to=self))
+
         self._p1 = None
         self._p2 = None
+
+    @property
+    def themes(self):
+        return self._themes
+
+    @property
+    def pallet(self):
+        return self._pallet
 
     @property
     def rules(self):
@@ -162,7 +187,7 @@ class Setup(Surface):
         self._repeat = value
 
     def draw_box_1(self):
-        header = fonts.h4_b.render("Black", True, LIGHT)
+        header = fonts.h4_b.render("Black", True, self.pallet.foreground)
         header_rect = header.get_rect()
         header_rect.topleft = (0, 0)
 
@@ -181,7 +206,7 @@ class Setup(Surface):
         self.surface.blit(self.p1_surf.surface, self.p1_surf.rect)
 
     def draw_box_2(self):
-        header = fonts.h4_b.render("White", True, LIGHT)
+        header = fonts.h4_b.render("White", True, self.pallet.foreground)
         header_rect = header.get_rect()
         header_rect.topleft = (0, 0)
 
@@ -210,19 +235,19 @@ class Setup(Surface):
         self.surface.blit(self.sizes_surf.surface, self.sizes_surf.rect)
 
     def draw_titles(self):
-        black_level = fonts.h4_b.render("Black Level", True, LIGHT)
-        white_level = fonts.h4_b.render("White Level", True, LIGHT)
+        black_level = fonts.h4_b.render("Black Level", True, self.pallet.foreground)
+        white_level = fonts.h4_b.render("White Level", True, self.pallet.foreground)
 
         black_level_rect = black_level.get_rect()
         white_level_rect = white_level.get_rect()
         black_level_rect.topleft = (50, 220)
         white_level_rect.topleft = (320, 220)
 
-        rules = fonts.h4_b.render("Game Rules", True, LIGHT)
+        rules = fonts.h4_b.render("Game Rules", True, self.pallet.foreground)
         rules_rect = rules.get_rect()
         rules_rect.topleft = (50, 430)
 
-        sizes = fonts.h4_b.render("Board Size", True, LIGHT)
+        sizes = fonts.h4_b.render("Board Size", True, self.pallet.foreground)
         sizes_rect = rules.get_rect()
         sizes_rect.topleft = (320, 430)
 
@@ -231,11 +256,32 @@ class Setup(Surface):
         self.surface.blit(rules, rules_rect)
         self.surface.blit(sizes, sizes_rect)
 
+    def draw_themes(self):
+        themes_title = fonts.h3_b.render("Themes", True, self.pallet.foreground)
+        themes_title_rect = themes_title.get_rect()
+        themes_title_rect.center = (self.width // 2, 650)
+        self.surface.blit(themes_title, themes_title_rect)
+        coords = [(100, 730), (self.width // 2 - 45, 730), (self.width - 200, 730)]
+        for i, theme_surf in enumerate(self.themes):
+            theme_surf.surface.fill(self.pallet.background)
+            draw_circle(theme_surf.surface, 15, 15, 10, self.pallet.pallets[i][0])
+            draw_circle(theme_surf.surface, 45, 15, 10, self.pallet.pallets[i][1])
+            draw_circle(theme_surf.surface, 75, 15, 10, self.pallet.pallets[i][3])
+            if self.pallet.pallet == self.pallet.pallets[i]:
+                surf = Surface(90, 2, position=coords[i], relative_to=self)
+                surf.surface.fill(self.pallet.accent_dimmed)
+                self.surface.blit(surf.surface, surf.rect)
+            if theme_surf.check_hover():
+                surf = Surface(90, 2, position=coords[i], relative_to=self)
+                surf.surface.fill(self.pallet.accent)
+                self.surface.blit(surf.surface, surf.rect)
+            self.surface.blit(theme_surf.surface, theme_surf.rect)
+
     def update(self, events):
-        self.surface.fill(GRAY_1)
+        self.surface.fill(self.pallet.background)
 
         # Title
-        middle = fonts.h3_b.render("Game Setup", True, LIGHT)
+        middle = fonts.h3_b.render("Game Setup", True, self.pallet.foreground)
         middle_rect = middle.get_rect()
         middle_rect.center = (int(self.width / 2), 30)
 
@@ -262,6 +308,9 @@ class Setup(Surface):
                 for box in self.sizes.container:
                     box.check_clicked()
                     box.update()
+                for i, theme in enumerate(self.themes):
+                    if theme.check_hover():
+                        self.pallet.pallet = i
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 self.start.pressed = False  # Just in case it's not reseted
                 return BOARD_SURFACE
@@ -281,9 +330,10 @@ class Setup(Surface):
         self.draw_box_2()
         self.draw_rules()
         self.draw_sizes()
+        self.draw_themes()
         self.start.update()
         self.surface.blit(
-            self.start.surface, self.start.rect, special_flags=pygame.BLEND_RGBA_MAX
+            self.start.surface, self.start.rect
         )
         self.surface.blit(middle, middle_rect)
         if self.start.pressed:
@@ -309,22 +359,29 @@ class Stats(Surface):
         "_winner",
         "_history",
         "_history_title",
+        "_pallet",
     )
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    def __init__(self, states, board, winner=None, *args, **kwargs):
+    def __init__(self, pallet, states, board, winner=None, *args, **kwargs):
         super().__init__(WIDTH - HEIGHT, HEIGHT, *args, **kwargs)
 
-        suggest_text = fonts.h5_b.render("Suggestion", True, BLACK)
+        self._pallet = pallet
+        suggest_text = fonts.h5_b.render("Suggestion", True, self.pallet.black)
         self._suggest = Button(
-            "#000000", "#FFBC24", suggest_text, None, height=50, relative_to=self
+            self.pallet.black,
+            "#FFBC24",
+            suggest_text,
+            None,
+            height=50,
+            relative_to=self,
         )
         self._suggest.position = (0, self.height - self.suggest.height)
 
-        restart_text = fonts.h5_b.render("Restart", True, BLACK)
+        restart_text = fonts.h5_b.render("Restart", True, self.pallet.black)
         self._restart = Button(
-            "#000000",
+            self.pallet.black,
             "#008CDB",
             restart_text,
             None,
@@ -352,8 +409,8 @@ class Stats(Surface):
         lff_img = pygame.transform.rotate(lff_img, 180)
 
         self._left = Button(
-            WHITE,
-            GRAY_1,
+            self.pallet.white,
+            self.pallet.primary,
             l_img,
             None,
             width=65,
@@ -362,8 +419,8 @@ class Stats(Surface):
             relative_to=self,
         )
         self._right = Button(
-            WHITE,
-            GRAY_1,
+            self.pallet.white,
+            self.pallet.primary,
             r_img,
             None,
             width=65,
@@ -372,8 +429,8 @@ class Stats(Surface):
             relative_to=self,
         )
         self._lff = Button(
-            WHITE,
-            GRAY_1,
+            self.pallet.white,
+            self.pallet.primary,
             lff_img,
             None,
             width=65,
@@ -382,8 +439,8 @@ class Stats(Surface):
             relative_to=self,
         )
         self._rff = Button(
-            WHITE,
-            GRAY_1,
+            self.pallet.white,
+            self.pallet.primary,
             rff_img,
             None,
             width=65,
@@ -405,12 +462,10 @@ class Stats(Surface):
         self._states = states
         self._board = board
 
-        self._versus_message = fonts.h3_b.render("VS", True, WHITE)
-        self._history_title = fonts.h4_b.render(
-            "History", True, pygame.Color("#DFDFDF")
-        )
+        self._versus_message = fonts.h3_b.render("VS", True, self.pallet.foreground)
+        self._history_title = fonts.h4_b.render("History", True, self.pallet.foreground)
 
-        self._history = HistoryTable(self.states, self.width, 560, relative_to=self)
+        self._history = HistoryTable(self.pallet, self.states, self.width, 560, relative_to=self)
         self._history.position = (0, 190)
 
     def load_images(self, path, size: tuple):
@@ -418,6 +473,10 @@ class Stats(Surface):
         return pygame.transform.smoothscale(
             pygame.image.load(path).convert_alpha(), size
         )
+
+    @property
+    def pallet(self):
+        return self._pallet
 
     @property
     def history(self):
@@ -495,7 +554,7 @@ class Stats(Surface):
                     self.lff.pressed = False
 
     def update(self, events):
-        self.surface.fill(GRAY_1)
+        self.surface.fill(self.pallet.background)
 
         history_rect = self.history_title.get_rect()
         history_rect.center = (self.width // 2, 160)
@@ -506,9 +565,9 @@ class Stats(Surface):
         else:
             ind_x, ind_y = 3 * self.width // 4, 80
 
-        draw_circle(self.surface, ind_x, ind_y, 60, pygame.Color("#0B64C1"))
-        draw_circle(self.surface, self.width // 4, 80, 50, BLACK)
-        draw_circle(self.surface, 3 * self.width // 4, 80, 50, pygame.Color("#DFDFDF"))
+        draw_circle(self.surface, ind_x, ind_y, 60, self.pallet.accent)
+        draw_circle(self.surface, self.width // 4, 80, 50, self.pallet.black)
+        draw_circle(self.surface, 3 * self.width // 4, 80, 50, self.pallet.white)
 
         self.surface.blit(
             self.versus_message,
@@ -520,8 +579,8 @@ class Stats(Surface):
         else:
             black_score = self.states.states[-1].captures[0]
             white_score = self.states.states[-1].captures[1]
-        black_score_text = fonts.h2_b.render(f"{black_score}", True, WHITE)
-        white_score_text = fonts.h2_b.render(f"{white_score}", True, BLACK)
+        black_score_text = fonts.h2_b.render(f"{black_score}", True, self.pallet.white)
+        white_score_text = fonts.h2_b.render(f"{white_score}", True, self.pallet.black)
 
         black_score_text_rect = black_score_text.get_rect()
         black_score_text_rect.center = (self.width // 4, 80)
@@ -571,10 +630,14 @@ class Board(Surface):
         "_p1",
         "_p2",
         "_finished",
+        "_pallet",
     )
 
-    def __init__(self, states, setup, p1, p2, computer, size=15, *args, **kwargs):
+    def __init__(
+        self, pallet, states, setup, p1, p2, computer, size=15, *args, **kwargs
+    ):
         super().__init__(HEIGHT, HEIGHT, *args, **kwargs)
+        self._pallet = pallet
         self._setup = setup
         self._states = states
         self._offset = 50
@@ -587,6 +650,10 @@ class Board(Surface):
         self._turn = self._p1
         self._computer = computer
         self._finished = False
+
+    @property
+    def pallet(self):
+        return self._pallet
 
     @property
     def p1(self):
@@ -668,7 +735,7 @@ class Board(Surface):
             ye, xe = self.offset + (i * self.step), self.limit
             pygame.draw.line(
                 self.surface,
-                pygame.Color("#000000"),
+                self.pallet.black,
                 (xs, ys),
                 (xe, ye),
                 2 if i in (0, self.size - 1) else 1,
@@ -679,7 +746,7 @@ class Board(Surface):
             xe, ye = self.offset + (i * self.step), self.limit
             pygame.draw.line(
                 self.surface,
-                pygame.Color("#000000"),
+                self.pallet.black,
                 (xs, ys),
                 (xe, ye),
                 2 if i in (0, self.size - 1) else 1,
@@ -697,14 +764,14 @@ class Board(Surface):
 
             # Draw y-coords
             font = fonts.h5_b if y == (i * self.step) + self.offset else fonts.h5_t
-            text = font.render(f"{i+1}", True, BLACK)
+            text = font.render(f"{i+1}", True, self.pallet.black)
             text_rect = text.get_rect()
             text_rect.center = (25, self.offset + (i * self.step))
             self.surface.blit(text, text_rect)
 
             # Draw x-coords
             font = fonts.h5_b if x == (i * self.step) + self.offset else fonts.h5_t
-            text = font.render(f'{"ABCDEFGHIJKLMNOPQRS"[i]}', True, BLACK)
+            text = font.render(f'{"ABCDEFGHIJKLMNOPQRS"[i]}', True, self.pallet.black)
             text_rect = text.get_rect()
             text_rect.center = (self.offset + (i * self.step), 25)
             self.surface.blit(text, text_rect)
@@ -714,10 +781,10 @@ class Board(Surface):
         for r, row in enumerate(self.states.current.state):
             for c, col in enumerate(row):
                 if col in (1, 2):
-                    color = "#ffffff" if col == 2 else "#000000"
+                    color = self.pallet.white if col == 2 else self.pallet.black
                     x = self.offset + c * self.step
                     y = self.offset + r * self.step
-                    draw_circle(self.surface, x, y, radius, pygame.Color(color))
+                    draw_circle(self.surface, x, y, radius, color)
 
                     counter = self.states.current.count.get((c, r))
                     if counter == None:
@@ -732,11 +799,10 @@ class Board(Surface):
                             5,
                             (255, 255, 0),
                         )
-                        count_text = fonts.h6_b.render(f"{counter}", True, (255, 0, 0))
 
                     font = fonts.h6_b if self.size > 15 else fonts.h5_b
                     count_text = font.render(
-                        f"{counter}", True, (0, 0, 0) if col == 2 else (255, 255, 255)
+                        f"{counter}", True, self.pallet.black if col == 2 else self.pallet.white
                     )
                     count_rect = count_text.get_rect()
                     count_rect.center = (x, y)
@@ -833,17 +899,10 @@ class Board(Surface):
                         pos = event.pos
 
                 if pos and self.check_hover() and self.states.index == -1:
-                    # 16 is the diameter of the pieces
-                    # x = math.floor((pos[0]-16) / self.step)
-                    # y = math.floor((pos[1]-16) / self.step)
                     x = math.floor((pos[0] - self.offset + self.step / 2) / self.step)
                     y = math.floor((pos[1] - self.offset + self.step / 2) / self.step)
-                    # x = self.offset + x * self.step - self.step
-                    # y = self.offset + y * self.step - self.step
 
-                    # print()
-                    # if self.states.last.state[y][x] == '0':
-                    # Send coords to the process and want for responce
+                    # Send coords to the process and wait for responce
                     # only if the position does not corresponde to an
                     # illegal move or is not already occupied.
                     print(pos, x, y)
@@ -910,6 +969,7 @@ class Board(Surface):
 class Game:
 
     __slots__ = (
+        "_pallet",
         "_window",
         "_board",
         "_stats",
@@ -920,7 +980,8 @@ class Game:
         "_p2",
     )
 
-    def __init__(self, window, setup, *args, **kwargs):
+    def __init__(self, pallet, window, setup, *args, **kwargs):
+        self._pallet = pallet
         self._window = window
         self._states = States()
         self._setup = setup
@@ -929,6 +990,10 @@ class Game:
         self._computer = None
         self._p1 = None
         self._p2 = None
+
+    @property
+    def pallet(self):
+        return self._pallet
 
     @property
     def window(self):
@@ -1005,10 +1070,20 @@ class Game:
 
         self.computer = Computer(*args)
         self.board = Board(
-            self.states, self.setup, self.p1, self.p2, self.computer, size=int(size)
+            self.pallet,
+            self.states,
+            self.setup,
+            self.p1,
+            self.p2,
+            self.computer,
+            size=int(size),
         )
         self.stats = Stats(
-            self.states, self.board, relative_to=self.window, position=(HEIGHT, 0)
+            self.pallet,
+            self.states,
+            self.board,
+            relative_to=self.window,
+            position=(HEIGHT, 0),
         )
 
     def loop(self):

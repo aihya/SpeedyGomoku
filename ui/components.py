@@ -177,6 +177,7 @@ class CheckBox(Surface):
     HEIGHT = 40
 
     __slots__ = (
+        "_pallet",
         "_label",
         "_box",
         "_value",
@@ -188,8 +189,8 @@ class CheckBox(Surface):
         "_alignment",
     )
 
-    def __init__(self, label, value, alignment=VERTICAL, *args, **kwargs):
-
+    def __init__(self, pallet, label, value, alignment=VERTICAL, *args, **kwargs):
+        self._pallet = pallet
         self._value = value
         self._checked = False
         self._hovered = False
@@ -198,14 +199,14 @@ class CheckBox(Surface):
         print(self.alignment)
 
         if self.alignment == VERTICAL:
-            self._label = h4_r.render(label, True, LIGHT)
+            self._label = h4_r.render(label, True, self.pallet.foreground)
             self._label_rect = self.label.get_rect()
             self._label_rect.left = 70
             self._label_rect.top = 5
             _height = self.HEIGHT
             _width = self._label.get_width() + 70
         else:
-            self._label = h4_r.render(label, True, LIGHT)
+            self._label = h4_r.render(label, True, self.pallet.foreground)
             self._label_rect = self.label.get_rect()
             self._label_rect.left = 50
             self._label_rect.top = 5
@@ -214,8 +215,9 @@ class CheckBox(Surface):
 
         super().__init__(_width, _height, *args, **kwargs)
 
-        self._box = Surface(self.HEIGHT, self.HEIGHT, (0, 0), self)
-        self._filler = Surface(self.HEIGHT - 10, self.HEIGHT - 10, (5, 5), self)
+    @property
+    def pallet(self):
+        return self._pallet
 
     @property
     def alignment(self):
@@ -240,14 +242,6 @@ class CheckBox(Surface):
     @property
     def value(self):
         return self._value
-
-    @property
-    def box(self):
-        return self._box
-
-    @property
-    def filler(self):
-        return self._filler
 
     @property
     def checked(self):
@@ -276,24 +270,24 @@ class CheckBox(Surface):
             self.checked = True
 
     def update(self):
-        self.surface.fill(GRAY_1)
-        self.surface.blit(self.box.surface, self.box.rect)
+        self.surface.fill(self.pallet.background)
+        draw_circle(self.surface, self.height // 2, self.height // 2, 18, self.pallet.primary)
         if self.active:
             self.check_hover()
         if self.checked or self.hovered:
             if self.active:
-                self.filler.surface.fill(BOARD_COLOR)
+                draw_circle(self.surface, self.height // 2, self.height // 2, 14, self.pallet.accent)
             else:
-                self.filler.surface.fill((120, 120, 120))
-            self.surface.blit(self.filler.surface, self.filler.rect)
+                draw_circle(self.surface, self.height // 2, self.height // 2, 14, self.pallet.accent_dimmed)
         self.surface.blit(self.label, self._label_rect)
 
 
 class CheckBoxs(Surface):
 
-    __slots__ = ("_container", "_anchor", "_active", "_alignment")
+    __slots__ = ("_pallet", "_container", "_anchor", "_active", "_alignment")
 
-    def __init__(self, pairs: dict, alignment=VERTICAL, *args, **kwargs):
+    def __init__(self, pallet, pairs: dict, alignment=VERTICAL, *args, **kwargs):
+        self._pallet = pallet
         self._alignment = alignment
         _len = len(pairs)
 
@@ -316,6 +310,7 @@ class CheckBoxs(Surface):
                 cb_pos = (0, offset)
                 self._container.append(
                     CheckBox(
+                        pallet,
                         pairs[key],
                         key,
                         position=cb_pos,
@@ -331,6 +326,7 @@ class CheckBoxs(Surface):
                 cb_pos = (offset, 0)
                 self._container.append(
                     CheckBox(
+                        pallet,
                         pairs[key],
                         key,
                         position=cb_pos,
@@ -347,6 +343,10 @@ class CheckBoxs(Surface):
             self._anchor.checked = True
 
         self._active = True
+
+    @property
+    def pallet(self):
+        return self._pallet
 
     @property
     def alignment(self):
@@ -387,6 +387,9 @@ class CheckBoxs(Surface):
 class ColorPallet:
 
     __slots__ = (
+        "_rose",
+        "_blue",
+        "_green",
         "_pallets",
         "_pallet",
         "_accent",
@@ -394,22 +397,28 @@ class ColorPallet:
         "_secondary",
         "_background",
         "_foreground",
+        "_black",
+        "_white",
     )
 
     def __init__(self):
+        self._white = pygame.Color("#FFFFFF")
+        self._black = pygame.Color("#000000")
         self._rose = [
             pygame.Color("#E5405B"),
             pygame.Color("#323232"),
             pygame.Color("#4B4B4B"),
             pygame.Color("#E0E0E0"),
             pygame.Color("#252525"),
+            pygame.Color("#666666"),
         ]
         self._blue = [
-            pygame.Color("#0B64C1"),
+            pygame.Color("#178afc"),
             pygame.Color("#3D3D3D"),
             pygame.Color("#565656"),
             pygame.Color("#E7E7E7"),
             pygame.Color("#171717"),
+            pygame.Color("#666666"),
         ]
         self._green = [
             pygame.Color("#FEE96D"),
@@ -417,8 +426,9 @@ class ColorPallet:
             pygame.Color("#CCCCCC"),
             pygame.Color("#212823"),
             pygame.Color("#FAFEF5"),
+            pygame.Color("#666666"),
         ]
-        self._pallets = [self.rose, self.blue, self.green]
+        self._pallets = [self._blue, self._rose, self._green]
         self._pallet = self.pallets[0]
 
     @property
@@ -435,15 +445,27 @@ class ColorPallet:
         return self._pallets
 
     @property
+    def white(self):
+        return self._white
+
+    @property
+    def black(self):
+        return self._black
+
+    @property
     def accent(self):
         return self.pallet[0]
+    
+    @property
+    def accent_dimmed(self):
+        return self.pallet[5]
 
     @property
     def primary(self):
         return self.pallet[1]
 
     @property
-    def sencondary(self):
+    def secondary(self):
         return self.pallet[2]
 
     @property

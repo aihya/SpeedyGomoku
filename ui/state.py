@@ -157,10 +157,12 @@ class HistoryTable(Surface):
         "_start",
         "_stop",
         "_selected_slot",
+        "_pallet",
     )
 
-    def __init__(self, states, width, height, *args, **kwargs):
+    def __init__(self, pallet, states, width, height, *args, **kwargs):
         super().__init__(width, height, relative_to=kwargs["relative_to"])
+        self._pallet = pallet
         self._states = states
         self._slot_height = self.height // 20
         self._slots = []
@@ -170,6 +172,10 @@ class HistoryTable(Surface):
         self._stop = None
         self._selected_slot = None
         self.update_slots()
+
+    @property
+    def pallet(self):
+        return self._pallet
 
     @property
     def selected_slot(self):
@@ -262,7 +268,7 @@ class HistoryTable(Surface):
             self.num_slots = self.states.counter
 
     def update(self, events):
-        self.surface.fill(GRAY_1)
+        self.surface.fill(self.pallet.background)
 
         button_down_pos = None
         for event in events:
