@@ -1280,6 +1280,7 @@ int main(int argc, char **argv)
     Gomoku::t_player_type p2_type;
     Gomoku::t_difficulty p1_diff;
     Gomoku::t_difficulty p2_diff;
+    Gomoku::t_rule rule;
 	uint16_t size;
 
     p1_type = Gomoku::HUMAN;
@@ -1287,6 +1288,7 @@ int main(int argc, char **argv)
     p1_diff = Gomoku::EASY;
     p2_diff = Gomoku::EASY;
 
+    
 	size = std::atoi(argv[1]);
 
     for (int i = 2; i < argc; i++)
@@ -1300,9 +1302,18 @@ int main(int argc, char **argv)
             p2_type = Gomoku::HUMAN;
         else if (!strcmp(argv[i], "--p2_type=ai"))
             p2_type = Gomoku::AI;
+        else {
+            if (!strcmp(argv[i], "--rule=standard"))
+                rule = Gomoku::STANDARD;
+            else if (!strcmp(argv[i], "--rule=pro"))
+                rule = Gomoku::PRO;
+            else if (!strcmp(argv[i], "--rule=long_pro"))
+                rule = Gomoku::LONG_PRO;
+            continue;
+        }
 
         // Check difficulty
-        else if (p1_type == Gomoku::AI)
+        if (p1_type == Gomoku::AI)
         {
             if (!strcmp(argv[i], "--p1_diff=easy"))
                 p1_diff = Gomoku::EASY;
@@ -1322,7 +1333,7 @@ int main(int argc, char **argv)
         }
     }
 
-    Gomoku game(size, p1_diff, p2_diff, p1_type, p2_type, Gomoku::STANDARD);
+    Gomoku game(size, p1_diff, p2_diff, p1_type, p2_type, rule);
 
     game.start_game();
 

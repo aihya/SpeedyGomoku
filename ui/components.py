@@ -196,7 +196,6 @@ class CheckBox(Surface):
         self._hovered = False
         self._active = True
         self._alignment = alignment
-        print(self.alignment)
 
         if self.alignment == VERTICAL:
             self._label = h4_r.render(label, True, self.pallet.foreground)

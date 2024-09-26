@@ -164,9 +164,9 @@ class Dropdown:
             return
         if event.type == pygame.MOUSEBUTTONDOWN:
             dropdown_rect = pygame.Rect(self.x, self.y, self.width, self.height)
-            print(dropdown_rect, event.pos)
+            # print(dropdown_rect, event.pos)
             if dropdown_rect.collidepoint(event.pos):
-                print(event)
+                # print(event)
                 self.is_open = not self.is_open
                 self.is_collapsed = not self.is_open
             elif self.is_open:

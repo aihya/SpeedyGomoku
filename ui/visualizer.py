@@ -1,3 +1,6 @@
+import os
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 import pygame
 from surface import Surface
 from fonts import *
@@ -7,7 +10,6 @@ from final import Final
 from state import State
 from components import ColorPallet
 
-# Initialize pygame
 pygame.init()
 
 

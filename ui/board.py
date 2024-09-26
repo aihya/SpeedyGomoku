@@ -332,9 +332,7 @@ class Setup(Surface):
         self.draw_sizes()
         self.draw_themes()
         self.start.update()
-        self.surface.blit(
-            self.start.surface, self.start.rect
-        )
+        self.surface.blit(self.start.surface, self.start.rect)
         self.surface.blit(middle, middle_rect)
         if self.start.pressed:
             self.start.pressed = False
@@ -360,6 +358,7 @@ class Stats(Surface):
         "_history",
         "_history_title",
         "_pallet",
+        "_winner",
     )
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -465,7 +464,9 @@ class Stats(Surface):
         self._versus_message = fonts.h3_b.render("VS", True, self.pallet.foreground)
         self._history_title = fonts.h4_b.render("History", True, self.pallet.foreground)
 
-        self._history = HistoryTable(self.pallet, self.states, self.width, 560, relative_to=self)
+        self._history = HistoryTable(
+            self.pallet, self.states, self.width, 560, relative_to=self
+        )
         self._history.position = (0, 190)
 
     def load_images(self, path, size: tuple):
@@ -723,6 +724,14 @@ class Board(Surface):
     def finished(self, value):
         self._finished = value
 
+    @property
+    def winner(self):
+        return self._winner
+
+    @winner.setter
+    def winner(self, value):
+        self._winner = value
+
     def draw_board(self):
         self.surface.fill(BOARD_COLOR)
         pygame.draw.line(
@@ -802,7 +811,9 @@ class Board(Surface):
 
                     font = fonts.h6_b if self.size > 15 else fonts.h5_b
                     count_text = font.render(
-                        f"{counter}", True, self.pallet.black if col == 2 else self.pallet.white
+                        f"{counter}",
+                        True,
+                        self.pallet.black if col == 2 else self.pallet.white,
                     )
                     count_rect = count_text.get_rect()
                     count_rect.center = (x, y)
@@ -913,18 +924,15 @@ class Board(Surface):
                 resp = self.computer.next_move()
                 if resp:
                     if isinstance(resp, tuple) and resp[0] == 0:  # No winner yet
-                        print(
-                            f"Human[{self.turn.turn}]", resp[1]["time"], resp[1]["move"]
-                        )
-                        print(resp)
+                        # print(
+                        #     f"Human[{self.turn.turn}]", resp[1]["time"], resp[1]["move"]
+                        # )
                         self.states.add(State(**resp[1]))
                         self.turn = self.p1 if self.turn == self.p2 else self.p2
                         self.computer.expecting = False
-                        print("turn:", self.turn.turn)
 
                     elif isinstance(resp, tuple) and resp[0] in (1, 2):
                         self.states.add(State(**resp[1]))
-                        print(f"Player {resp[0]} wins!")
                         self.finished = True
                         self.winner = resp[0]
 
@@ -1055,6 +1063,7 @@ class Game:
         p1_diff = MODES[self.setup.p1_mode.anchor.value - 1]
         p2_type = TYPES[self.setup.p2_type.anchor.value - 1]
         p2_diff = MODES[self.setup.p2_mode.anchor.value - 1]
+        rule = RULES[self.setup.rules.anchor.value - 1]
         size = SIZES[self.setup.sizes.anchor.value - 1]
 
         args = [
@@ -1063,6 +1072,7 @@ class Game:
             f"--p1_diff={p1_diff}",
             f"--p2_type={p2_type}",
             f"--p2_diff={p2_diff}",
+            f"--rule={rule}",
         ]
 
         self.p1 = Player(self.setup.p1_type.anchor.value, 1)

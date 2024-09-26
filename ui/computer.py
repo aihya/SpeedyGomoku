@@ -9,13 +9,25 @@ class Computer:
     This class represents the computer player.
     """
 
-    __slots__ = ("_process", "_executable", "_args", "_expecting", "_invalid_move")
+    __slots__ = (
+        "_process",
+        "_executable",
+        "_args",
+        "_expecting",
+        "_invalid_move",
+        "_board_size",
+    )
 
     def __init__(self, *args):
         self._process = None
         self._executable = " ".join([EXE_PATH, *args])
+        self._board_size = int(args[0])
         self._expecting = False
         self._invalid_move = None
+
+    @property
+    def board_size(self):
+        return self._board_size
 
     @property
     def process(self):
@@ -41,7 +53,6 @@ class Computer:
         if self.process:
             self.stop()
         self.process = PopenSpawn(self.executable)
-        print("Started process", self.process)
 
     def stop(self):
         if self.process:
@@ -99,14 +110,14 @@ class Computer:
         if len(buffer) == 1:
             return None
 
-        if len(buffer) == 24:
+        if len(buffer) == (4 + self.board_size + 1):
             s, e = 4, -1
             move = {
                 "time": float(buffer[0]),
                 "move": tuple(int(c) for c in buffer[1].split()),
                 "captures": tuple(int(c) for c in buffer[2].split()),
                 "state": [],
-                "score": int(buffer[3])
+                "score": int(buffer[3]),
             }
         else:
             s, e = 3, -1
@@ -115,7 +126,7 @@ class Computer:
                 "move": tuple(int(c) for c in buffer[0].split()),
                 "captures": tuple(int(c) for c in buffer[1].split()),
                 "state": [],
-                "score": int(buffer[3])
+                "score": int(buffer[3]),
             }
 
         for line in buffer[s:e]:
@@ -156,7 +167,7 @@ class Computer:
             # Read the content sent from the subprocess
             buffer = self.process.before.decode("utf-8").split("\n")
 
-            print("Direct buffer:", buffer)
+            # print("Direct buffer:", buffer)
             if index == 3:  # Suggestion
                 return index, self.extract_suggestion(buffer)
             else:
