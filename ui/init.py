@@ -63,4 +63,4 @@ MODES = ["easy", "medium", "hard"]
 
 # Path to the executable
 
-EXE_PATH = os.path.join(CURR_PATH, "../.gomoku")
+EXE_PATH = os.path.join(CURR_PATH, "../Gomoku")

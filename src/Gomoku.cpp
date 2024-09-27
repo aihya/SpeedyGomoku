@@ -724,11 +724,18 @@ uint8_t Gomoku::capture_pattern(t_board&board, t_coord pos, t_coord dir, t_piece
     for (int i = 0; i < 4; ++i) {
         t_coord check_pos = pos + dir * (i - 1);
         t_piece curr_piece = board.get_piece(check_pos);
-        
+        evaluate_move(board, pos, piece, dir);
         if (curr_piece == ERROR || 
-            // (curr_piece == EMPTY && (empty_c++ || get_piece(_illegal_boards[piece - 1], check_pos))) ||
             (curr_piece == piece && piece_c++ > 1)) {
             return 0;
+        }
+        if (curr_piece == EMPTY && ++empty_c ){
+            bool is_illegal = false;
+            for (auto &curr_dir : _directions) {
+                is_illegal = is_illegal || (evaluate_move(board, check_pos, GET_OPPONENT(piece), curr_dir) == ILLEGAL_SCORE);
+            }
+            if (!is_illegal)
+                return 0;
         }
         pattern |= (curr_piece == EMPTY ? piece : curr_piece) << (i << 1);
     }
@@ -838,7 +845,6 @@ int64_t Gomoku::evaluate_board(t_board& board, t_piece player_color, t_capture_c
     int64_t score = 0;
     const t_scores_map& p_att_patterns = Gomoku::_attack_patterns.at(player_color);
     const t_scores_map& op_att_patterns = Gomoku::_attack_patterns.at(GET_OPPONENT(player_color));
-    const t_piece opposite_color = GET_OPPONENT(player_color);
 
     // Adjust score based on capture counts
     score += (capture_count.maximizer_count - capture_count.minimizer_count) * CAPTURE_SCORE;
