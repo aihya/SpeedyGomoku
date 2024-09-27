@@ -632,6 +632,7 @@ class Board(Surface):
         "_p2",
         "_finished",
         "_pallet",
+        "_winner",
     )
 
     def __init__(

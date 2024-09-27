@@ -24,14 +24,14 @@ typedef enum        e_scores
     ILLEGAL_SCORE          = -1,
 
     WIN_SCORE              = INT64_MAX,
-    FIVE_SCORE             = 2000000,
-    OPEN_FOUR_SCORE        = 1000000,
-    FIVE_BLOCK_SCORE       = 1000000,
+    FIVE_SCORE             = 200000,
+    OPEN_FOUR_SCORE        = 100000,
+    FIVE_BLOCK_SCORE       = 100000,
+    THREE_SCORE            = 10000,
     CAPTURE_SCORE          = 5000,
     FOUR_SCORE             = 10000,
     OPEN_THREE_SCORE       = 1000,
     OPEN_BLOCK_SCORE       = 1000,
-    THREE_SCORE            = 100,
     OPEN_TWO_SCORE         = 10,
     TWO_SCORE              = 10,
     ZERO_SCORE             = 0
