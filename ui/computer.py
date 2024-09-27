@@ -172,7 +172,9 @@ class Computer:
                 return index, self.extract_suggestion(buffer)
             else:
                 # Extract the move informations and store it in a dictionary
-                return index, self.extract_move(buffer)
+                move = self.extract_move(buffer)
+                print(move)
+                return index, move
 
         return index
 
