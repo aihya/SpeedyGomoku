@@ -316,14 +316,11 @@ class Setup(Surface):
                 return BOARD_SURFACE
 
         if self.p1_type.anchor.value == 2:
-            # self.p2_type.anchor = self.p2_type.container[0]
             self.p1_mode.active = True
         else:
-            # self.p2_type.anchor = self.p2_type.container[1]
             self.p1_mode.active = False
 
         if self.p2_type.anchor.value == 2:
-            # self.p1_type.anchor = self.p1_type.container[0]
             self.p2_mode.active = True
         else:
             self.p2_mode.active = False
@@ -357,18 +354,18 @@ class Stats(Surface):
         "_suggest",
         "_player_header",
         "_versus_message",
-        "_winner",
         "_history",
         "_history_title",
         "_pallet",
         "_winner",
+        "_winner_message",
     )
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    def __init__(self, pallet, states, board, winner=None, *args, **kwargs):
+    def __init__(self, pallet, states, board, winner, *args, **kwargs):
         super().__init__(WIDTH - HEIGHT, HEIGHT, *args, **kwargs)
-
+        self._winner = winner
         self._pallet = pallet
         suggest_text = fonts.h5_b.render("Suggestion", True, self.pallet.black)
         self._suggest = Button(
@@ -397,15 +394,9 @@ class Stats(Surface):
         )
 
         # Load images for left and right buttons
-        # r_img = pygame.transform.smoothscale(
-        #     pygame.image.load("./ressources/images/right.png"), (30, 30)
-        # )
         r_img = self.load_images("ressources/images/right.png", (30, 30))
         l_img = self.load_images("ressources/images/right.png", (30, 30))
         l_img = pygame.transform.rotate(l_img, 180)
-        # rff_img = pygame.transform.smoothscale(
-        #     pygame.image.load("./ressources/images/rff.png").convert_alpha(), (30, 30)
-        # )
         rff_img = self.load_images("ressources/images/rff.png", (30, 30))
         lff_img = self.load_images("ressources/images/rff.png", (30, 30))
         lff_img = pygame.transform.rotate(lff_img, 180)
@@ -466,7 +457,7 @@ class Stats(Surface):
 
         self._versus_message = fonts.h3_b.render("VS", True, self.pallet.foreground)
         self._history_title = fonts.h4_b.render("History", True, self.pallet.foreground)
-
+        self._winner_message = fonts.h4_b.render("Winner", True, self.pallet.white)
         self._history = HistoryTable(
             self.pallet, self.states, self.width, 560, relative_to=self
         )
@@ -477,6 +468,10 @@ class Stats(Surface):
         return pygame.transform.smoothscale(
             pygame.image.load(path).convert_alpha(), size
         )
+
+    @property
+    def winner(self):
+        return self._winner
 
     @property
     def pallet(self):
@@ -525,6 +520,10 @@ class Stats(Surface):
     @property
     def history_title(self):
         return self._history_title
+
+    @property
+    def winner_message(self):
+        return self._winner_message
 
     def update_current_state(self, events):
         if self.history.selected_slot:
@@ -594,6 +593,15 @@ class Stats(Surface):
         self.surface.blit(black_score_text, black_score_text_rect)
         self.surface.blit(white_score_text, white_score_text_rect)
 
+        # if self.winner and self.winner.w == 1:
+        #     winner_message_rect = self.winner_message.get_rect()
+        #     winner_message_rect.center = (0, 0)
+        #     self.surface.blit(self.winner_message, winner_message_rect)
+        # elif self.winner and self.winner.w == 2:
+        #     winner_message_rect = self.winner_message.get_rect()
+        #     winner_message_rect.center = (100, 0)
+        #     self.surface.blit(self.winner_message, winner_message_rect)
+
         self.restart.update()
         self.surface.blit(self.restart.surface, self.restart.rect)
 
@@ -639,7 +647,7 @@ class Board(Surface):
     )
 
     def __init__(
-        self, pallet, states, setup, p1, p2, computer, size=15, *args, **kwargs
+        self, pallet, states, setup, p1, p2, computer, winner, size=15, *args, **kwargs
     ):
         super().__init__(HEIGHT, HEIGHT, *args, **kwargs)
         self._pallet = pallet
@@ -655,6 +663,12 @@ class Board(Surface):
         self._turn = self._p1
         self._computer = computer
         self._finished = False
+        self._winner = winner
+        print('232342345', winner)
+
+    @property
+    def winner(self):
+        self._winner
 
     @property
     def pallet(self):
@@ -727,14 +741,6 @@ class Board(Surface):
     @finished.setter
     def finished(self, value):
         self._finished = value
-
-    @property
-    def winner(self):
-        return self._winner
-
-    @winner.setter
-    def winner(self, value):
-        self._winner = value
 
     def draw_board(self):
         self.surface.fill(BOARD_COLOR)
@@ -937,7 +943,7 @@ class Board(Surface):
                     elif isinstance(resp, tuple) and resp[0] in (1, 2):
                         self.states.add(State(**resp[1]))
                         self.finished = True
-                        self.winner = resp[0]
+                        self.winner.w = resp[0]
 
                     elif isinstance(resp, tuple) and resp[0] == 3:
                         self.states.last.suggestion = resp[1]
@@ -958,16 +964,17 @@ class Board(Surface):
             resp = self.computer.next_move()
             if resp:
                 if isinstance(resp, tuple) and resp[0] == 0:  # No winner yet
-                    print(
-                        f"Computer[{self.turn.turn}]", resp[1]["time"], resp[1]["move"]
-                    )
+                    # print(
+                    #     f"Computer[{self.turn.turn}]", resp[1]["time"], resp[1]["move"]
+                    # )
                     self.states.add(State(**resp[1]))
                     self.turn = self.p1 if self.turn == self.p2 else self.p2
                     self.computer.expecting = False
                 elif isinstance(resp, tuple) and resp[0] in (1, 2):  # Winner found
                     self.states.add(State(**resp[1]))
-                    print(f"Player {resp[0]} wins!")
+                    # print(f"Player {resp[0]} wins!")
                     self.finished = True
+                    self.winner.w = resp[0]
                 elif resp == 4:
                     self.finished = True
 
@@ -989,6 +996,7 @@ class Game:
         "_computer",
         "_p1",
         "_p2",
+        "_winner",
     )
 
     def __init__(self, pallet, window, setup, *args, **kwargs):
@@ -1001,6 +1009,12 @@ class Game:
         self._computer = None
         self._p1 = None
         self._p2 = None
+        self._winner = [None]
+        print('--->', self.winner.w)
+
+    @property
+    def winner(self):
+        return self._winner
 
     @property
     def pallet(self):
@@ -1082,6 +1096,7 @@ class Game:
         self.p2 = Player(self.setup.p2_type.anchor.value, 2)
 
         self.computer = Computer(*args)
+        
         self.board = Board(
             self.pallet,
             self.states,
@@ -1089,12 +1104,14 @@ class Game:
             self.p1,
             self.p2,
             self.computer,
+            self.winner,
             size=int(size),
         )
         self.stats = Stats(
             self.pallet,
             self.states,
             self.board,
+            self.winner,
             relative_to=self.window,
             position=(HEIGHT, 0),
         )
