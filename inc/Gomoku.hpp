@@ -1,5 +1,4 @@
 #pragma once
-
 #include <iostream>
 #include <limits>
 #include <map>
@@ -392,6 +391,10 @@ class Gomoku
         bool                    possible_capture(t_board&board, t_coord pos, t_piece color, t_coord dir);
         bool                    check_for_win(t_board&board, t_coord pos, t_piece color, t_coord dir);
         int64_t                 evaluate_position(t_board&board, t_coord pos, t_piece color, t_coord dir, const t_scores_map &patterns);
+
+        bool                    possible_capture(t_board& board, t_coord pos, t_piece color, t_coord dir);
+        bool                    check_capture_direction(t_board& board, t_coord pos, t_piece color, t_coord dir);
+        bool                    is_illegal_move(t_board& board, t_coord pos, t_piece color);
     private:
         bool                        check_illegal_moves(t_board &board, t_coord piece_coord, t_piece piece, t_coord direction);
         void                        iterative_depth_search(t_moveset& moveset, t_board &board, uint8_t max_depth, 

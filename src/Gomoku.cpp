@@ -469,13 +469,11 @@ Gomoku::Gomoku(uint8_t board_size, t_difficulty first_difficulty,
     _last_best_move_y(Gomoku::_invalid_coord.y),
     _search_complete(false)
 {
-	//if (board_size != 15 && board_size != 19)
-	//    throw std::invalid_argument("Board size must be between 15 or 19");
     this->_first_player  = get_player(first_player_type, Gomoku::BLACK, first_difficulty);
     this->_second_player = get_player(second_player_type, Gomoku::WHITE, second_difficulty);
     this->_rule = rule;
-    this->_depth[0] = (first_difficulty == Gomoku::HARD) ? 5 : (first_difficulty == Gomoku::MEDIUM) ? 3 : 1;
-    this->_depth[1] = (second_difficulty == Gomoku::HARD) ? 5 : (second_difficulty == Gomoku::MEDIUM) ? 3 : 1;
+    this->_depth[0] = (first_difficulty == Gomoku::HARD) ? 7 : (first_difficulty == Gomoku::MEDIUM) ? 3 : 1;
+    this->_depth[1] = (second_difficulty == Gomoku::HARD) ? 7 : (second_difficulty == Gomoku::MEDIUM) ? 3 : 1;
     this->_game_over = false;
     this->_turn = 0;
 }
@@ -581,56 +579,31 @@ bool Gomoku::check_illegal_moves(t_board &board, t_coord piece_coord, t_piece pi
     }
     return (false);
 }
+
 bool Gomoku::possible_capture(t_board&board, t_coord pos, t_piece color, t_coord dir) {
-    t_coord check_pos;
-    bool is_illegal = false;
-    bool is_capture = false;
+    bool is_illegal_1 = false;
+    bool is_illegal_2 = false;
 
     for (auto& curr_dir : _directions) {
         if (curr_dir == dir)
             continue;
         if (board.get_piece(pos + curr_dir) == color)
         {
-            if (board.get_piece(pos - curr_dir) != GET_OPPONENT(color))
-                continue;
-            check_pos = pos - (curr_dir * 2);     
-            if (board.get_piece(check_pos) != EMPTY)
-                continue;
-            board.add_piece(check_pos, color);
-            for (auto& curr_dir : _directions) {
-                is_illegal = check_illegal_moves(board, check_pos, color, curr_dir);
-                if (is_illegal)
-                    break;
-            }
-            board.remove_piece(check_pos);
-            if (is_illegal)
-                return 0;
-            is_capture = true;
+            t_coord p_x1 = pos - curr_dir;
+            t_coord p_x2 = pos + (curr_dir * 2);
+            
+
         }
         if (board.get_piece(pos - curr_dir) == color)
         {
-            if (board.get_piece(pos + curr_dir) != GET_OPPONENT(color))
-                continue;
-            check_pos = pos + (curr_dir * 2);
-            if (board.get_piece(check_pos) != EMPTY)
-                continue;
-            board.add_piece(check_pos, color);
-            for (auto& curr_dir : _directions) {
-                is_illegal = check_illegal_moves(board, check_pos, color, curr_dir);
-                if (is_illegal)
-                    break;
-            }
-            board.remove_piece(check_pos);
-            if (is_illegal)
-                return 0;
-            is_capture = true;
-        }
-        if (is_capture)
-            break;
-    };
-    return is_capture;
-}
+            t_coord p_x1 = pos + curr_dir;
+            t_coord p_x2 = pos - (curr_dir * 2);
 
+
+        }
+    }
+    return true;
+}
 bool Gomoku::check_for_win(t_board&board, t_coord pos, t_piece color, t_coord dir) {
     uint64_t combo = 0;
     t_piece piece;
@@ -641,7 +614,7 @@ bool Gomoku::check_for_win(t_board&board, t_coord pos, t_piece color, t_coord di
         piece = board.get_piece(pos);
         if (piece != color)
             break;
-        if (possible_capture(board, pos, GET_OPPONENT(color), dir))
+        if (possible_capture(board, pos, color, dir))
             combo = 0;
         else
             combo++;
@@ -1192,7 +1165,7 @@ int main(int argc, char **argv)
     // game._board.add_piece({6, 10}, Gomoku::WHITE);
     // game._board.add_piece({5, 10}, Gomoku::WHITE);
     // game._board.add_piece({4, 10}, Gomoku::WHITE);
-    // // game._board.add_piece({4, 10}, Gomoku::WHITE);
+    // game._board.add_piece({4, 10}, Gomoku::WHITE);
 
     // game.print_board(game._board, Gomoku::BLACK);
     // std::cout << game.evaluate_board(game._board, Gomoku::WHITE, {0, 0}) << std::endl;
