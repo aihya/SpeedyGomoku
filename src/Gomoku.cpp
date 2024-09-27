@@ -474,7 +474,7 @@ Gomoku::Gomoku(uint8_t board_size, t_difficulty first_difficulty,
     this->_first_player  = get_player(first_player_type, Gomoku::BLACK, first_difficulty);
     this->_second_player = get_player(second_player_type, Gomoku::WHITE, second_difficulty);
     this->_rule = rule;
-    this->_depth = 5;
+    this->_depth = 7;
     this->_game_over = false;
     this->_turn = 0;
     
@@ -968,12 +968,12 @@ Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent, t_board& b
         auto now = std::chrono::steady_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
         
-        if (duration.count() >= 450 || _search_complete.load()) {
+        if (duration.count() >= 490 || _search_complete.load()) {
             _search_complete.store(true);
             break;
         }
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        // std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     search_thread.join();
     t_coord best_move = {_last_best_move_x.load(), _last_best_move_y.load()};

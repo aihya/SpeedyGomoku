@@ -920,7 +920,7 @@ class Board(Surface):
                     self.computer.send(f"M\n{x} {y}\n")
             else:
                 # Process the received output
-                self.computer.expecting = True
+                # self.computer.expecting = True
                 resp = self.computer.next_move()
                 if resp:
                     if isinstance(resp, tuple) and resp[0] == 0:  # No winner yet
@@ -1104,13 +1104,16 @@ class Game:
         rule = self.setup.rules.anchor.value - 1
         while True:
             events = pygame.event.get()
+            if is_first_move and self.p1.player == HUMAN and rule in (1, 2):
+                self.computer.expecting = True
+                resp = self.computer.next_move()
+                if resp == None:
+                    continue
+                self.states.add(State(**resp[1]))
+                self.board.turn = self.p1 if self.board.turn == self.p2 else self.p2
+                self.computer.expecting = False
+                is_first_move = False
 
-            # if is_first_move and self.p1.player == HUMAN and rule in (1, 2):
-            #     self.computer.expecting = True
-            #     resp = self.computer.next_move()
-            #     self.states.add(State(**resp[1]))
-            #     self.turn = self.p1 if self.turn == self.p2 else self.p2
-            #     self.computer.expecting = False
             for event in events:
                 if event.type == pygame.QUIT:
                     self.computer.stop()
