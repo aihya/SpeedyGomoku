@@ -474,12 +474,10 @@ Gomoku::Gomoku(uint8_t board_size, t_difficulty first_difficulty,
     this->_first_player  = get_player(first_player_type, Gomoku::BLACK, first_difficulty);
     this->_second_player = get_player(second_player_type, Gomoku::WHITE, second_difficulty);
     this->_rule = rule;
-    this->_depth = 7;
+    this->_depth[0] = (first_difficulty == Gomoku::HARD) ? 5 : (first_difficulty == Gomoku::MEDIUM) ? 3 : 1;
+    this->_depth[1] = (second_difficulty == Gomoku::HARD) ? 5 : (second_difficulty == Gomoku::MEDIUM) ? 3 : 1;
     this->_game_over = false;
     this->_turn = 0;
-    
-    
-    
 }
 
 Gomoku::~Gomoku()
@@ -792,8 +790,6 @@ Gomoku::t_sorted_updates Gomoku::generate_sorted_updates(t_moveset& moveset, t_b
         this->generate_scored_update(board, move, piece, scored_move);
         if (scored_move.updates.empty())
             continue;
-        if (depth && depth == this->_current_depth && move == this->_last_best)
-            scored_move.move.score = INTMAX_MAX;
         sorted_updates.push_back(scored_move);
     }
 
@@ -842,20 +838,20 @@ void Gomoku::revert_node_state(t_board &board, t_moveset &added_moves, t_moveset
     }
 }
 
-void Gomoku::update_ttable(t_board& board, t_scored_move& best_move, uint8_t depth, int64_t alpha, int64_t beta)
-{
-    TTable::t_TTEntry   entry;
-    TTable::t_bound     bound;
+// void Gomoku::update_ttable(t_board& board, t_scored_move& best_move, uint8_t depth, int64_t alpha, int64_t beta)
+// {
+//     TTable::t_TTEntry   entry;
+//     TTable::t_bound     bound;
     
-    entry = this->_ttable.get_entry(board.hash);
-    bound = TTable::Bound::EXACT;
-    if (best_move.score <= alpha)
-        bound = TTable::Bound::UPPER_BOUND;
-    if (best_move.score >= beta)
-        bound = TTable::Bound::LOWER_BOUND;
-    if (entry.bound == TTable::Bound::ERROR || entry.depth < depth)
-        this->_ttable.add_entry(board.hash, depth, {best_move.coord.x, best_move.coord.y}, best_move.score, bound);
-}
+//     entry = this->_ttable.get_entry(board.hash);
+//     bound = TTable::Bound::EXACT;
+//     if (best_move.score <= alpha)
+//         bound = TTable::Bound::UPPER_BOUND;
+//     if (best_move.score >= beta)
+//         bound = TTable::Bound::LOWER_BOUND;
+//     if (entry.bound == TTable::Bound::ERROR || entry.depth < depth)
+//         this->_ttable.add_entry(board.hash, depth, {best_move.coord.x, best_move.coord.y}, best_move.score, bound);
+// }
 
 Gomoku::t_scored_move Gomoku::negascout(t_moveset& moveset,
             t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece)
@@ -871,7 +867,7 @@ Gomoku::t_scored_move Gomoku::negascout(t_moveset& moveset,
     for (const auto& update: this->generate_sorted_updates(moveset, board, piece, depth))
     {
         if (_search_complete.load())
-            return (best_eval);
+            return t_scored_move{Gomoku::_invalid_coord, INTMAX_MAX};
 
         added_moveset.clear();
         count.maximizer_count += update.cupture_count;
@@ -944,6 +940,7 @@ void Gomoku::iterative_depth_search(t_moveset& moveset, t_board &board, uint8_t 
 
 Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent, t_board& board) {
     t_moveset current_moveset = this->_ai_moveset;
+    uint8_t depth = this->_depth[player.piece - 1];
 
     if (_turn == 0) {
         return GET_BOARD_CENTER(board);
@@ -962,7 +959,7 @@ Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent, t_board& b
     _search_complete.store(false);
     auto start = std::chrono::steady_clock::now();
     std::thread search_thread(&Gomoku::iterative_depth_search, this, std::ref(current_moveset),
-        std::ref(board), this->_depth, INITIAL_PRUNNER,
+        std::ref(board), depth, INITIAL_PRUNNER,
         t_capture_count{player.capture_count, opponent.capture_count}, player.piece);
     while (true) {
         auto now = std::chrono::steady_clock::now();
@@ -1159,6 +1156,18 @@ int main(int argc, char **argv)
             p2_type = Gomoku::HUMAN;
         else if (!strcmp(argv[i], "--p2_type=ai"))
             p2_type = Gomoku::AI;
+        else if (strcmp(argv[i], "--p1_diff=easy") == 0)
+            p1_diff = Gomoku::EASY;
+        else if (strcmp(argv[i], "--p1_diff=medium") == 0)
+            p1_diff = Gomoku::MEDIUM;
+        else if (strcmp(argv[i], "--p1_diff=hard") == 0)
+            p1_diff = Gomoku::HARD;
+        else if (!strcmp(argv[i], "--p2_diff=easy"))
+            p2_diff = Gomoku::EASY;
+        else if (!strcmp(argv[i], "--p2_diff=medium"))
+            p2_diff = Gomoku::MEDIUM;
+        else if (!strcmp(argv[i], "--p2_diff=hard"))
+            p2_diff = Gomoku::HARD;
         else {
             if (!strcmp(argv[i], "--rule=standard"))
                 rule = Gomoku::STANDARD;
@@ -1168,28 +1177,8 @@ int main(int argc, char **argv)
                 rule = Gomoku::LONG_PRO;
             continue;
         }
-
-        // Check difficulty
-        if (p1_type == Gomoku::AI)
-        {
-            if (!strcmp(argv[i], "--p1_diff=easy"))
-                p1_diff = Gomoku::EASY;
-            else if (!strcmp(argv[i], "--p1_diff=medium"))
-                p1_diff = Gomoku::MEDIUM;
-            else if (!strcmp(argv[i], "--p1_diff=hard"))
-                p1_diff = Gomoku::HARD;
-        }
-        else if (p2_type == Gomoku::AI)
-        {
-            if (!strcmp(argv[i], "--p2_diff=easy"))
-                p2_diff = Gomoku::EASY;
-            else if (!strcmp(argv[i], "--p2_diff=medium"))
-                p2_diff = Gomoku::MEDIUM;
-            else if (!strcmp(argv[i], "--p2_diff=hard"))
-                p2_diff = Gomoku::HARD;
-        }
+    
     }
-
     Gomoku game(size, p1_diff, p2_diff, p1_type, p2_type, rule);
 
     game.start_game();

@@ -302,15 +302,10 @@ class HistoryTable(Surface):
                         self.selected_slot = i
                 else:
                     self.selected_slot = start + i
+            self.surface.blit(slot.surface, slot_rect)
             if coll_rect.collidepoint(pygame.mouse.get_pos()):
-                replicate = slot.surface.copy()
-                draw_circle(
-                    replicate,
-                    self.width - 15,
-                    self.slot_height // 2,
-                    4,
-                    pygame.Color("#FFFF00"),
-                )
-                self.surface.blit(replicate, slot_rect)
-            else:
-                self.surface.blit(slot.surface, slot_rect)
+                underline = Surface(self.width, 2)
+                underline_rect = underline.surface.get_rect()
+                underline_rect.topleft = (0, self.slot_height * (i + 1) - 2)
+                underline.surface.fill(self.pallet.accent)
+                self.surface.blit(underline.surface, underline_rect)

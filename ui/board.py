@@ -316,11 +316,14 @@ class Setup(Surface):
                 return BOARD_SURFACE
 
         if self.p1_type.anchor.value == 2:
+            # self.p2_type.anchor = self.p2_type.container[0]
             self.p1_mode.active = True
         else:
+            # self.p2_type.anchor = self.p2_type.container[1]
             self.p1_mode.active = False
 
         if self.p2_type.anchor.value == 2:
+            # self.p1_type.anchor = self.p1_type.container[0]
             self.p2_mode.active = True
         else:
             self.p2_mode.active = False

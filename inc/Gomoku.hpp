@@ -97,16 +97,16 @@ class Gomoku
         {
             ILLEGAL_SCORE          = -1,
             WIN_SCORE              = INT64_MAX,
-            FIVE_SCORE             = 1000001,
+            FIVE_SCORE             = 10100000,
+            FIVE_BLOCK_SCORE       = 10000000,
             OPEN_FOUR_SCORE        = 1000000,
-            FIVE_BLOCK_SCORE       = 1000000,
             CAPTURE_SCORE          = 20000,
-            FOUR_SCORE             = 1000,
-            OPEN_THREE_SCORE       = 100,
-            OPEN_BLOCK_SCORE       = 100,
-            THREE_SCORE            = 10,
-            OPEN_TWO_SCORE         = 10,
-            TWO_SCORE              = -200,
+            FOUR_SCORE             = 10000,
+            OPEN_THREE_SCORE       = 10000,
+            OPEN_BLOCK_SCORE       = 1000,
+            THREE_SCORE            = 5000,
+            OPEN_TWO_SCORE         = 100,
+            TWO_SCORE              = 50,
             ZERO_SCORE             = 0
         }                   t_scores;
 
@@ -343,7 +343,7 @@ class Gomoku
         const static t_patterns                 _capture_patterns;
         const static t_coord                    _invalid_coord;
 
-        uint8_t                                 _depth;
+        uint8_t                                 _depth[2];
         t_player                                _first_player;
         t_player                                _second_player;
         t_capture_count                         _capture_count;

@@ -420,11 +420,11 @@ class ColorPallet:
             pygame.Color("#666666"),
         ]
         self._green = [
-            pygame.Color("#FEE96D"),
+            pygame.Color("#EAE6E3"),
             pygame.Color("#6DD247"),
             pygame.Color("#CCCCCC"),
-            pygame.Color("#212823"),
-            pygame.Color("#FAFEF5"),
+            pygame.Color("#E0E0E0"),
+            pygame.Color("#252525"),
             pygame.Color("#666666"),
         ]
         self._pallets = [self._blue, self._rose, self._green]
