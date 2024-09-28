@@ -158,6 +158,7 @@ class HistoryTable(Surface):
         "_stop",
         "_selected_slot",
         "_pallet",
+        "_count",
     )
 
     def __init__(self, pallet, states, width, height, *args, **kwargs):
@@ -172,6 +173,7 @@ class HistoryTable(Surface):
         self._stop = None
         self._selected_slot = None
         self.update_slots()
+        self._count = 1
 
     @property
     def pallet(self):
@@ -235,7 +237,7 @@ class HistoryTable(Surface):
             slot = Surface(self.width, self.slot_height, relative_to=self)
             slot.surface.fill(GRAY_2 if state.color == 2 else GRAY_3)
 
-            count = fonts.h5_t.render(f"{len(state.count)}. ", True, WHITE)
+            count = fonts.h5_t.render(f"{self._count}. ", True, WHITE)
             count_rect = count.get_rect()
             count_rect.left = 20
             count_rect.centery = self.slot_height // 2
@@ -265,6 +267,7 @@ class HistoryTable(Surface):
             slot.surface.blit(coords, coords_rect)
             slot.surface.blit(time, time_rect)
             self.slots.append(slot)
+            self._count += 1
             self.num_slots = self.states.counter
 
     def update(self, events):
