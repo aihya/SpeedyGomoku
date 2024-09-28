@@ -15,17 +15,6 @@
 #include <atomic>
 #include <unistd.h>
 #include <unordered_set>
-/**
- * @brief Game class
- * This game is a simple implementation of the gomoku game using minimax algorithm.
- * The player 1 is the black player and the player 2 is the white player.
- * The pieces are represented by a 2 bits, 01 (1) for black and 10 (2) for white.
- * The board is represented by an array of ints
- * 
- * NB: The same concept is working for an array of char, i tried it but we will stick
- * to ints for now because of readability, we may change it later for performance.
- */
-
 
 class Gomoku
 {
@@ -323,7 +312,7 @@ class Gomoku
                 return (coord.x * coord.x + 3 * coord.x + 2 * coord.x * coord.y + coord.y * coord.y) / 2;
             }
         };
-        typedef std::unordered_set<t_coord, coord_hash>                     t_moveset;// <-- each time we add a move we increment the dependency count of the move it's generating
+        typedef std::unordered_set<t_coord, coord_hash>                     t_moveset;
         typedef std::vector<t_coord>                                        t_sequence;
         typedef std::vector<t_scored_update>                                t_sorted_updates;
         typedef std::map< t_piece, std::unordered_map<uint16_t, t_scores> > t_patterns;
@@ -334,8 +323,8 @@ class Gomoku
 
         const static std::array<t_coord, 4>     _directions;
         const static std::vector<t_coord>       _moveset_cells;
-        static constexpr uint8_t            BLACK_CAPTURE_PATTERN = 0b01101001; // XOOX pattern for BLACK
-        static constexpr uint8_t            WHITE_CAPTURE_PATTERN = ~BLACK_CAPTURE_PATTERN; // OXXO pattern for WHITE
+        static constexpr uint8_t            BLACK_CAPTURE_PATTERN = 0b01101001;
+        static constexpr uint8_t            WHITE_CAPTURE_PATTERN = ~BLACK_CAPTURE_PATTERN;
 
         const static t_patterns                 _attack_patterns;
         const static t_patterns                 _defense_patterns;
@@ -365,6 +354,10 @@ class Gomoku
                                                 t_player_type second_player_type, t_rule rule);
                                 ~Gomoku();
         void                    start_game();
+    private:
+        bool                    check_illegal_moves(t_board &board, t_coord piece_coord, t_piece piece, t_coord direction);
+        void                    iterative_depth_search(t_moveset& moveset, t_board &board, uint8_t max_depth, 
+                                    t_prunner prunner, t_capture_count count, t_piece piece);
         int64_t                 evaluate_board(t_board &board, t_piece player_color, t_capture_count capture_count);
         void                    print_board(t_board &board, t_piece current_piece);
         t_coord                 human_move(t_player& player, t_player& opponent, t_board & board);
@@ -391,35 +384,5 @@ class Gomoku
         bool                    possible_capture(t_board&board, t_coord pos, t_piece color, t_coord dir);
         bool                    check_for_win(t_board&board, t_coord pos, t_piece color, t_coord dir);
         int64_t                 evaluate_position(t_board&board, t_coord pos, t_piece color, t_coord dir, const t_scores_map &patterns);
-    private:
-        bool                        check_illegal_moves(t_board &board, t_coord piece_coord, t_piece piece, t_coord direction);
-        void                        iterative_depth_search(t_moveset& moveset, t_board &board, uint8_t max_depth, 
-                                        t_prunner prunner, t_capture_count count, t_piece piece);
-        // t_coord                 iterative_depth_search(t_moveset& moveset, t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
-        // t_coord                 human_move(t_player& player, t_player& opponent, t_board & board);
-        // t_coord                 ai_move(t_player& player, t_player& opponent, t_board & board);
-        // t_moveset               generate_rule_moveset(t_piece piece, t_board &board);
-        // t_player                get_player(t_player_type player_type, t_piece player_color, t_difficulty difficulty);
-        // t_scored_move           negascout(t_moveset& moveset, t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
-        // t_sorted_updates        generate_sorted_updates(t_moveset& moveset, t_board &board, t_piece piece, uint8_t depth = 0);
-        // t_sequence              extract_winning_sequence(t_board &board, t_piece piece, t_coord start_coord);
-        // int32_t                 evaluate_move(t_board &board, t_coord piece_coord, t_piece piece, t_coord direction);
-        // int64_t                 evaluate_pattern(t_board& board, t_coord start, t_piece player_color, std::set<std::pair<t_coord, t_coord>> &head_tail_set);
-        // void                    make_move(t_player& player, t_player& opponent, t_board& board);
-        // void                    update_ttable(t_board& board, t_scored_move& best_move, uint8_t depth, int64_t alpha, int64_t beta);
-        // void                    generate_scored_update(t_board &board, t_coord move, t_piece piece, t_scored_update& scored_update);
-        // void                    update_game_state(t_board& board, t_player& player, t_coord current_move);
-        // void                    update_node_state(t_board &board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
-        // void                    revert_node_state(t_board &board, t_moveset &added_moves, t_moveset &moveset, const t_update_list& update_list);
-        // void                    extract_captured_stoned(t_board &board, t_update_list& update_list, t_coord move, t_coord dir, t_piece piece);
-        // void                    update_board(t_board &board, const t_update_list &update_list);
-        // void                    revert_board_update(t_board &board, const t_update_list &update_list);
-        // bool                    is_move_valid(t_board& board, t_coord piece_coord, t_piece piece);
-        // bool                    is_inside_square(t_board& board, t_coord piece_coord);
-        // char                    get_game_command();
-        // uint8_t                 capture_pattern(t_board&board, t_coord pos, t_coord dir, t_piece piece);
-        // bool                    possible_capture(t_board&board, t_coord pos, t_piece color, t_coord dir);
-        // bool                    check_for_win(t_board&board, t_coord pos, t_piece color, t_coord dir);
-        // int64_t                 evaluate_position(t_board&board, t_coord pos, t_piece color, t_coord dir, const t_scores_map &patterns);
 };
 
