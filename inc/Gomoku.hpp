@@ -294,7 +294,7 @@ class Gomoku
             }
         }                   t_move_occurence;
 
-        // instead of having and added moveset set for each node we can make the moveset know if it's been added or not
+
         typedef struct    s_move
         {
             t_coord         coord;
