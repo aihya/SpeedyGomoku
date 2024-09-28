@@ -357,15 +357,12 @@ class Stats(Surface):
         "_history",
         "_history_title",
         "_pallet",
-        "_winner",
-        "_winner_message",
     )
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    def __init__(self, pallet, states, board, winner, *args, **kwargs):
+    def __init__(self, pallet, states, board, *args, **kwargs):
         super().__init__(WIDTH - HEIGHT, HEIGHT, *args, **kwargs)
-        self._winner = winner
         self._pallet = pallet
         suggest_text = fonts.h5_b.render("Suggestion", True, self.pallet.black)
         self._suggest = Button(
@@ -457,7 +454,6 @@ class Stats(Surface):
 
         self._versus_message = fonts.h3_b.render("VS", True, self.pallet.foreground)
         self._history_title = fonts.h4_b.render("History", True, self.pallet.foreground)
-        self._winner_message = fonts.h4_b.render("Winner", True, self.pallet.white)
         self._history = HistoryTable(
             self.pallet, self.states, self.width, 560, relative_to=self
         )
@@ -468,10 +464,6 @@ class Stats(Surface):
         return pygame.transform.smoothscale(
             pygame.image.load(path).convert_alpha(), size
         )
-
-    @property
-    def winner(self):
-        return self._winner
 
     @property
     def pallet(self):
@@ -520,10 +512,6 @@ class Stats(Surface):
     @property
     def history_title(self):
         return self._history_title
-
-    @property
-    def winner_message(self):
-        return self._winner_message
 
     def update_current_state(self, events):
         if self.history.selected_slot:
@@ -593,15 +581,6 @@ class Stats(Surface):
         self.surface.blit(black_score_text, black_score_text_rect)
         self.surface.blit(white_score_text, white_score_text_rect)
 
-        # if self.winner and self.winner.w == 1:
-        #     winner_message_rect = self.winner_message.get_rect()
-        #     winner_message_rect.center = (0, 0)
-        #     self.surface.blit(self.winner_message, winner_message_rect)
-        # elif self.winner and self.winner.w == 2:
-        #     winner_message_rect = self.winner_message.get_rect()
-        #     winner_message_rect.center = (100, 0)
-        #     self.surface.blit(self.winner_message, winner_message_rect)
-
         self.restart.update()
         self.surface.blit(self.restart.surface, self.restart.rect)
 
@@ -647,7 +626,7 @@ class Board(Surface):
     )
 
     def __init__(
-        self, pallet, states, setup, p1, p2, computer, winner, size=15, *args, **kwargs
+        self, pallet, states, setup, p1, p2, computer, size=15, *args, **kwargs
     ):
         super().__init__(HEIGHT, HEIGHT, *args, **kwargs)
         self._pallet = pallet
@@ -663,8 +642,7 @@ class Board(Surface):
         self._turn = self._p1
         self._computer = computer
         self._finished = False
-        self._winner = winner
-        print('232342345', winner)
+        self._winner = 0
 
     @property
     def winner(self):
@@ -834,22 +812,12 @@ class Board(Surface):
                     y = self.offset + r * self.step
                     draw_circle(self.surface, x, y, 3, pygame.Color("#E83907"))
 
-                elif col == 4:
-                    x = self.offset + c * self.step
-                    y = self.offset + r * self.step
-                    draw_circle(self.surface, x, y, 3, pygame.Color("#00ff00"))
-
         if self.states.last == self.states.current and self.states.last.suggestion:
             # Show suggestion only if we are at the last state
             color = "#ffffff88" if self.turn.turn == 2 else "#00000088"
             x = self.linspace[self.states.last.suggestion["move"][0]] + 1
             y = self.linspace[self.states.last.suggestion["move"][1]] + 1
             draw_circle(self.surface, x, y, radius, pygame.Color(color))
-
-        score = fonts.h4_t.render(f"Score: {self.states.current.score}", True, BLACK)
-        score_rect = score.get_rect()
-        score_rect.topleft = (self.offset + 10, self.height - 40)
-        self.surface.blit(score, score_rect)
 
     def check_hover(self):
         x, y = pygame.mouse.get_pos()
@@ -878,7 +846,6 @@ class Board(Surface):
         return x, y
 
     def update(self, events):
-
         # Ajust the index of the current state.
         for event in events:
             if event.type == pygame.KEYDOWN:
@@ -901,9 +868,14 @@ class Board(Surface):
 
         self.draw_board()
         self.draw_state()
-
+        
         # Not used yet
         if self.finished:
+            if self._winner:
+                w = fonts.h4_t.render(f"Winner: {'Black' if self._winner == 1 else 'White'}", True, BLACK)
+                w_rect = w.get_rect()
+                w_rect.center = (self.width // 2, self.height - 20)
+                self.surface.blit(w, w_rect)
             return
 
         # Human turn
@@ -929,13 +901,9 @@ class Board(Surface):
                     self.computer.send(f"M\n{x} {y}\n")
             else:
                 # Process the received output
-                # self.computer.expecting = True
                 resp = self.computer.next_move()
                 if resp:
                     if isinstance(resp, tuple) and resp[0] == 0:  # No winner yet
-                        # print(
-                        #     f"Human[{self.turn.turn}]", resp[1]["time"], resp[1]["move"]
-                        # )
                         self.states.add(State(**resp[1]))
                         self.turn = self.p1 if self.turn == self.p2 else self.p2
                         self.computer.expecting = False
@@ -943,7 +911,7 @@ class Board(Surface):
                     elif isinstance(resp, tuple) and resp[0] in (1, 2):
                         self.states.add(State(**resp[1]))
                         self.finished = True
-                        # self.winner.w = resp[0]
+                        self._winner = resp[0]
 
                     elif isinstance(resp, tuple) and resp[0] == 3:
                         self.states.last.suggestion = resp[1]
@@ -964,17 +932,14 @@ class Board(Surface):
             resp = self.computer.next_move()
             if resp:
                 if isinstance(resp, tuple) and resp[0] == 0:  # No winner yet
-                    # print(
-                    #     f"Computer[{self.turn.turn}]", resp[1]["time"], resp[1]["move"]
-                    # )
                     self.states.add(State(**resp[1]))
                     self.turn = self.p1 if self.turn == self.p2 else self.p2
                     self.computer.expecting = False
                 elif isinstance(resp, tuple) and resp[0] in (1, 2):  # Winner found
+                    self._winner = resp[0]
                     self.states.add(State(**resp[1]))
-                    # print(f"Player {resp[0]} wins!")
                     self.finished = True
-                    # self.winner.w = resp[0]
+                    self.computer.expecting = False
                 elif resp == 4:
                     self.finished = True
 
@@ -996,7 +961,6 @@ class Game:
         "_computer",
         "_p1",
         "_p2",
-        "_winner",
     )
 
     def __init__(self, pallet, window, setup, *args, **kwargs):
@@ -1009,11 +973,6 @@ class Game:
         self._computer = None
         self._p1 = None
         self._p2 = None
-        self._winner = [None]
-
-    @property
-    def winner(self):
-        return self._winner
 
     @property
     def pallet(self):
@@ -1103,14 +1062,12 @@ class Game:
             self.p1,
             self.p2,
             self.computer,
-            self.winner,
             size=int(size),
         )
         self.stats = Stats(
             self.pallet,
             self.states,
             self.board,
-            self.winner,
             relative_to=self.window,
             position=(HEIGHT, 0),
         )
@@ -1123,6 +1080,8 @@ class Game:
         rule = self.setup.rules.anchor.value - 1
         while True:
             events = pygame.event.get()
+
+            # This if statement is used solely with pro and long pro configurations.
             if is_first_move and self.p1.player == HUMAN and rule in (1, 2):
                 self.computer.expecting = True
                 resp = self.computer.next_move()

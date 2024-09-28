@@ -66,7 +66,7 @@ class Controller:
         # self._stats  = Stats(relative_to=self.window, position=(HEIGHT, 0))
         self._pallet = ColorPallet()
         self._setup = Setup(self.pallet, relative_to=self.window, position=(HEIGHT, 0))
-        self._board = Board(self.pallet, None, self._setup, self._p1, self._p2, None, None)
+        self._board = Board(self.pallet, None, None, self._p1, self._p2, 0)
         self._phase = SETUP_SURFACE
 
     @property

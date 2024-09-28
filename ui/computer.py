@@ -56,7 +56,6 @@ class Computer:
 
     def stop(self):
         if self.process:
-            print("Stopped process", self.process)
             self.process.kill(signal.SIGKILL)
             self.process = None
 
@@ -75,7 +74,6 @@ class Computer:
             self.process.kill(signal.SIGCONT)
 
     def send(self, what: str, expect=True):
-        print("Sending:", what)
         self.process.send(what)
         self.expecting = expect
 
@@ -99,7 +97,6 @@ class Computer:
         return
 
     def extract_suggestion(self, buffer):
-        print("received:", buffer)
         suggestion = {
             "time": float(buffer[0]),
             "move": tuple(int(c) for c in buffer[1].split()),
@@ -167,13 +164,11 @@ class Computer:
             # Read the content sent from the subprocess
             buffer = self.process.before.decode("utf-8").split("\n")
 
-            # print("Direct buffer:", buffer)
             if index == 3:  # Suggestion
                 return index, self.extract_suggestion(buffer)
             else:
                 # Extract the move informations and store it in a dictionary
                 move = self.extract_move(buffer)
-                print(move)
                 return index, move
 
         return index
