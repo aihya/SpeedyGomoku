@@ -36,7 +36,7 @@ class Setup(Surface):
     )
 
     def __init__(self, pallet, *args, **kwargs):
-        super().__init__(WIDTH - HEIGHT, HEIGHT, alpha=True, *args, **kwargs)
+        super().__init__(WIDTH - HEIGHT, HEIGHT, *args, **kwargs)
         self._repeat = True
         self._pallet = pallet
         self._start = Button(
