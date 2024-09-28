@@ -943,7 +943,7 @@ class Board(Surface):
                     elif isinstance(resp, tuple) and resp[0] in (1, 2):
                         self.states.add(State(**resp[1]))
                         self.finished = True
-                        self.winner.w = resp[0]
+                        # self.winner.w = resp[0]
 
                     elif isinstance(resp, tuple) and resp[0] == 3:
                         self.states.last.suggestion = resp[1]
@@ -974,7 +974,7 @@ class Board(Surface):
                     self.states.add(State(**resp[1]))
                     # print(f"Player {resp[0]} wins!")
                     self.finished = True
-                    self.winner.w = resp[0]
+                    # self.winner.w = resp[0]
                 elif resp == 4:
                     self.finished = True
 
@@ -1010,7 +1010,6 @@ class Game:
         self._p1 = None
         self._p2 = None
         self._winner = [None]
-        print('--->', self.winner.w)
 
     @property
     def winner(self):

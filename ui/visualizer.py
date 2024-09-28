@@ -5,7 +5,7 @@ import pygame
 from surface import Surface
 from fonts import *
 from init import *
-from board import Setup, Board, Game, Winner
+from board import Setup, Board, Game
 from final import Final
 from state import State
 from components import ColorPallet
@@ -66,7 +66,7 @@ class Controller:
         # self._stats  = Stats(relative_to=self.window, position=(HEIGHT, 0))
         self._pallet = ColorPallet()
         self._setup = Setup(self.pallet, relative_to=self.window, position=(HEIGHT, 0))
-        self._board = Board(self.pallet, None, self._setup, self._p1, self._p2, None, Winner())
+        self._board = Board(self.pallet, None, self._setup, self._p1, self._p2, None, None)
         self._phase = SETUP_SURFACE
 
     @property
