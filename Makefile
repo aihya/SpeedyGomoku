@@ -4,11 +4,11 @@ NAME = Gomoku
 CC = g++
 SRC_PATH = ./src/
 OBJ_PATH = ./obj/
-INC_PATH = ./inc/
+INC_PATH = ./inc
 UI_PATH = ./ui/
 
 SRC_NAME = Gomoku.cpp
-DEPS = $(INC_PATH)/Gomoku.h  # Adjust this if you have headers
+DEPS = $(INC_PATH)/Gomoku.hpp
 OBJ_NAME = $(SRC_NAME:.cpp=.o)
 
 SRC = $(addprefix $(SRC_PATH),$(SRC_NAME))
@@ -27,7 +27,7 @@ $(NAME): $(OBJ)
 	@echo "\033[32m[OK]\033[0m \033[33mGomoku compiled\033[0m"
 
 # Compile .cpp to .o in obj folder
-$(OBJ_PATH)%.o: $(SRC_PATH)%.cpp
+$(OBJ_PATH)%.o: $(SRC_PATH)%.cpp $(DEPS)
 	@mkdir -p $(OBJ_PATH)
 	@$(CC) $(FLAGS) -c $< -o $@
 

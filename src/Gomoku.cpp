@@ -581,54 +581,33 @@ bool Gomoku::check_illegal_moves(t_board &board, t_coord piece_coord, t_piece pi
     }
     return (false);
 }
+
 bool Gomoku::possible_capture(t_board&board, t_coord pos, t_piece color, t_coord dir) {
     t_coord check_pos;
+    int32_t score;
     bool is_illegal = false;
     bool is_capture = false;
+    t_piece opp_color = GET_OPPONENT(color);
 
     for (auto& curr_dir : _directions) {
         if (curr_dir == dir)
             continue;
-        if (board.get_piece(pos + curr_dir) == color)
-        {
-            if (board.get_piece(pos - curr_dir) != GET_OPPONENT(color))
-                continue;
-            check_pos = pos - (curr_dir * 2);     
-            if (board.get_piece(check_pos) != EMPTY)
-                continue;
-            board.add_piece(check_pos, color);
-            for (auto& curr_dir : _directions) {
-                is_illegal = check_illegal_moves(board, check_pos, color, curr_dir);
-                if (is_illegal)
-                    break;
+        is_illegal = false;
+        for (auto& factor : {-1, 1}){
+            if (board.get_piece(pos + (curr_dir * factor)) == color){
+                t_coord pos_1 = pos - (curr_dir * factor);
+                t_coord pos_2 = pos + (curr_dir * (factor * 2));
+
+                if (board.get_piece(pos_1) == opp_color && board.get_piece(pos_2) == EMPTY)
+                    is_capture = is_move_valid(board, pos_2, opp_color);
+                if (board.get_piece(pos_2) == opp_color && board.get_piece(pos_1) == EMPTY) 
+                    is_capture = is_move_valid(board, pos_1, opp_color);
+                if (is_capture)
+                    return true;
             }
-            board.remove_piece(check_pos);
-            if (is_illegal)
-                return 0;
-            is_capture = true;
         }
-        if (board.get_piece(pos - curr_dir) == color)
-        {
-            if (board.get_piece(pos + curr_dir) != GET_OPPONENT(color))
-                continue;
-            check_pos = pos + (curr_dir * 2);
-            if (board.get_piece(check_pos) != EMPTY)
-                continue;
-            board.add_piece(check_pos, color);
-            for (auto& curr_dir : _directions) {
-                is_illegal = check_illegal_moves(board, check_pos, color, curr_dir);
-                if (is_illegal)
-                    break;
-            }
-            board.remove_piece(check_pos);
-            if (is_illegal)
-                return 0;
-            is_capture = true;
-        }
-        if (is_capture)
-            break;
     };
-    return is_capture;
+    return false;
 }
 
 bool Gomoku::check_for_win(t_board&board, t_coord pos, t_piece color, t_coord dir) {
@@ -641,7 +620,7 @@ bool Gomoku::check_for_win(t_board&board, t_coord pos, t_piece color, t_coord di
         piece = board.get_piece(pos);
         if (piece != color)
             break;
-        if (possible_capture(board, pos, GET_OPPONENT(color), dir))
+        if (possible_capture(board, pos, color, dir))
             combo = 0;
         else
             combo++;
@@ -679,58 +658,50 @@ int64_t Gomoku::evaluate_board(t_board& board, t_piece player_color, t_capture_c
     const t_scores_map& p_att_patterns = Gomoku::_attack_patterns.at(player_color);
     const t_scores_map& op_att_patterns = Gomoku::_attack_patterns.at(GET_OPPONENT(player_color));
 
-    // Adjust score based on capture counts
     score += (capture_count.maximizer_count - capture_count.minimizer_count) * CAPTURE_SCORE;
 
-    // Immediate win conditions based on captures
     if (capture_count.maximizer_count >= 5)
-        return WIN_SCORE; // Maximizer wins
+        return WIN_SCORE;
     if (capture_count.minimizer_count >= 5)
-        return -WIN_SCORE; // Minimizer wins
+        return -WIN_SCORE;
 
-    // Loop through each row in the board
-    for (int y = 0; y < board.size; ++y) { // Use < instead of <= for size
+    for (int y = 0; y < board.size; ++y) {
         uint64_t row = board.data[y];
         if (!row)
             continue;
 
-        // Process each piece in the row
         while (row) {
-            int bit_pos = __builtin_ctzll(row); // Get the position of the first set bit
-            
-            // Ensure bit_pos is aligned to 2-bit boundaries
+            int bit_pos = __builtin_ctzll(row);
+
             if (bit_pos % 2 != 0) {
-                bit_pos--; // Adjust to point to the first bit of a 2-bit piece
+                bit_pos--;
             }
 
-            int x = bit_pos >> 1; // Convert to x-coordinate (piece index)
-            if (x >= board.size) // Ensure x is within board boundaries
+            int x = bit_pos >> 1;
+            if (x >= board.size)
                 break;
 
-            t_piece piece = (t_piece)((row >> (x * 2)) & 3); // Extract the piece using 2 bits
+            t_piece piece = (t_piece)((row >> (x * 2)) & 3);
             if (piece != EMPTY) {
-                t_coord pos = {x, y}; // Create position from x and y
+                t_coord pos = {x, y};
                 const t_scores_map& att_patterns = (piece == player_color) ? p_att_patterns : op_att_patterns;
                 int64_t position_score = 0;
 
-                // Evaluate the position in all directions
                 for (const auto& dir : _directions) {
                     int64_t score_eval = evaluate_position(board, pos, piece, dir, att_patterns);
                     if (score_eval == WIN_SCORE)
-                        return (piece == player_color) ? WIN_SCORE : -WIN_SCORE; // Return immediate win score
+                        return (piece == player_color) ? WIN_SCORE : -WIN_SCORE;
 
-                    position_score += score_eval; // Accumulate position scores
+                    position_score += score_eval;
                 }
 
-                // Adjust score based on the player's piece
                 score += (piece == player_color) ? position_score : -position_score;
             }
 
-            // Clear the processed bits for the current piece
-            row &= ~(3ULL << bit_pos); // Clear the 2 bits corresponding to the current piece
+            row &= ~(3ULL << bit_pos);
         }
     }
-    return score; // Return the final evaluated score
+    return score;
 }
 
 
@@ -750,8 +721,7 @@ void Gomoku::extract_captured_stoned(t_board &board, t_update_list& update_list,
         }
     }
 }
-//  generating the update should be left till the move is actually played
-// we can still check the score of each move that is helpful
+
 void Gomoku::generate_scored_update(t_board &board, t_coord move, t_piece piece, t_scored_update& scored_update)
 {
     int32_t         pattern_eval;
@@ -838,21 +808,6 @@ void Gomoku::revert_node_state(t_board &board, t_moveset &added_moves, t_moveset
     }
 }
 
-// void Gomoku::update_ttable(t_board& board, t_scored_move& best_move, uint8_t depth, int64_t alpha, int64_t beta)
-// {
-//     TTable::t_TTEntry   entry;
-//     TTable::t_bound     bound;
-    
-//     entry = this->_ttable.get_entry(board.hash);
-//     bound = TTable::Bound::EXACT;
-//     if (best_move.score <= alpha)
-//         bound = TTable::Bound::UPPER_BOUND;
-//     if (best_move.score >= beta)
-//         bound = TTable::Bound::LOWER_BOUND;
-//     if (entry.bound == TTable::Bound::ERROR || entry.depth < depth)
-//         this->_ttable.add_entry(board.hash, depth, {best_move.coord.x, best_move.coord.y}, best_move.score, bound);
-// }
-
 Gomoku::t_scored_move Gomoku::negascout(t_moveset& moveset,
             t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece)
 {
@@ -921,7 +876,7 @@ void Gomoku::iterative_depth_search(t_moveset& moveset, t_board &board, uint8_t 
                                     t_prunner prunner, t_capture_count count, t_piece piece) {
     t_scored_move move_score;
 
-    for (uint8_t i_depth = 1; i_depth <= max_depth; i_depth++) {
+    for (uint8_t i_depth = 1; i_depth <= max_depth; i_depth += 2) {
         if (_search_complete.load()) {
             return;
         }
@@ -948,7 +903,7 @@ Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent, t_board& b
     if (_turn == 2 && this->_rule != Gomoku::STANDARD) {
         current_moveset = this->generate_rule_moveset(player.piece, board);
     }
-    // Initialize with a valid move from the current moveset
+
     if (!current_moveset.empty()) {
         _last_best_move_x.store(current_moveset.begin()->x);
         _last_best_move_y.store(current_moveset.begin()->y);
@@ -969,12 +924,9 @@ Gomoku::t_coord Gomoku::ai_move(t_player& player, t_player &opponent, t_board& b
             _search_complete.store(true);
             break;
         }
-        
-        // std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     search_thread.join();
     t_coord best_move = {_last_best_move_x.load(), _last_best_move_y.load()};
-    // If no valid move was found (shouldn't happen, but just in case), pick the first available move
     if (best_move == Gomoku::_invalid_coord && !current_moveset.empty()) {
         best_move = *current_moveset.begin();
     }
@@ -1141,8 +1093,14 @@ int main(int argc, char **argv)
     p2_type = Gomoku::HUMAN;
     p1_diff = Gomoku::EASY;
     p2_diff = Gomoku::EASY;
+    rule = Gomoku::STANDARD;
 
-    
+    if (argc < 2)
+    {
+        std::cout << "Usage: ./gomoku [size] [options]" << std::endl;
+        return (1);
+    }
+
 	size = std::atoi(argv[1]);
 
     for (int i = 2; i < argc; i++)
@@ -1182,104 +1140,5 @@ int main(int argc, char **argv)
     Gomoku game(size, p1_diff, p2_diff, p1_type, p2_type, rule);
 
     game.start_game();
-    // game._board.add_piece({9, 10}, Gomoku::BLACK);
-    // // game._board.add_piece({9, 11}, Gomoku::BLACK);
-    // game._board.add_piece({6, 11}, Gomoku::BLACK);
-    // game._board.add_piece({8, 10}, Gomoku::WHITE);
-    // game._board.add_piece({8, 9}, Gomoku::WHITE);
-    // game._board.add_piece({8, 19}, Gomoku::WHITE);
-    // game._board.add_piece({7, 10}, Gomoku::WHITE);
-    // game._board.add_piece({6, 10}, Gomoku::WHITE);
-    // game._board.add_piece({5, 10}, Gomoku::WHITE);
-    // game._board.add_piece({4, 10}, Gomoku::WHITE);
-    // // game._board.add_piece({4, 10}, Gomoku::WHITE);
-
-    // game.print_board(game._board, Gomoku::BLACK);
-    // std::cout << game.evaluate_board(game._board, Gomoku::WHITE, {0, 0}) << std::endl;
-    // std::cout << game.check_for_win(game._board, {8, 9}, Gomoku::WHITE, {-1, 0}) << std::endl;
-
-    // std::cout << game.possible_capture(game._board, {8, 9}, Gomoku::BLACK, {-1, 0}) << std::endl;
-
     return (0);
 }
-
-// int main(int argc, char **argv)
-// {
-//     Gomoku::t_coord new_move;
-//     Gomoku::t_player_type p1_type;
-//     Gomoku::t_player_type p2_type;
-//     Gomoku::t_difficulty p1_diff;
-//     Gomoku::t_difficulty p2_diff;
-//     Gomoku::t_rule rule;
-// 	uint16_t size;
-
-//     p1_type = Gomoku::HUMAN;
-//     p2_type = Gomoku::HUMAN;
-//     p1_diff = Gomoku::EASY;
-//     p2_diff = Gomoku::EASY;
-
-    
-//     if (argc < 2)
-//     {
-//         std::cout << "Usage: ./gomoku [size] [options]" << std::endl;
-//         return (1);
-//     }
-
-// 	size = std::atoi(argv[1]);
-
-//     for (int i = 2; i < argc; i++)
-//     {
-//         // Check player type
-//         if (!strcmp(argv[i], "--p1_type=human"))
-//             p1_type = Gomoku::HUMAN;
-//         else if (!strcmp(argv[i], "--p1_type=ai"))
-//             p1_type = Gomoku::AI;
-//         else if (!strcmp(argv[i], "--p2_type=human"))
-//             p2_type = Gomoku::HUMAN;
-//         else if (!strcmp(argv[i], "--p2_type=ai"))
-//             p2_type = Gomoku::AI;
-//         else {
-//             if (!strcmp(argv[i], "--rule=standard"))
-//                 rule = Gomoku::STANDARD;
-//             else if (!strcmp(argv[i], "--rule=pro"))
-//                 rule = Gomoku::PRO;
-//             else if (!strcmp(argv[i], "--rule=long_pro"))
-//                 rule = Gomoku::LONG_PRO;
-//             continue;
-//         }
-
-//         // Check difficulty
-//         if (p1_type == Gomoku::AI)
-//         {
-//             if (!strcmp(argv[i], "--p1_diff=easy"))
-//                 p1_diff = Gomoku::EASY;
-//             else if (!strcmp(argv[i], "--p1_diff=medium"))
-//                 p1_diff = Gomoku::MEDIUM;
-//             else if (!strcmp(argv[i], "--p1_diff=hard"))
-//                 p1_diff = Gomoku::HARD;
-//         }
-//         else if (p2_type == Gomoku::AI)
-//         {
-//             if (!strcmp(argv[i], "--p2_diff=easy"))
-//                 p2_diff = Gomoku::EASY;
-//             else if (!strcmp(argv[i], "--p2_diff=medium"))
-//                 p2_diff = Gomoku::MEDIUM;
-//             else if (!strcmp(argv[i], "--p2_diff=hard"))
-//                 p2_diff = Gomoku::HARD;
-//         }
-//     }
-
-//     Gomoku game(size, p1_diff, p2_diff, p1_type, p2_type, rule);
-//     game._board.add_piece({0, 1}, Gomoku::BLACK);
-//     game._board.add_piece({0, 2}, Gomoku::BLACK);
-//     // game._board.add_piece({0, 3}, Gomoku::BLACK);
-//     // game._board.add_piece({0, 4}, Gomoku::BLACK);
-//     // game._board.add_piece({0, 5}, Gomoku::BLACK);
-
-//     int32_t score = game.evaluate_move(game._board, {0, 3}, Gomoku::BLACK, {0, 1});
-//     std::cout << score << std::endl;
-
-//     // game.start_game();
-//     // 00 01 01 01 01 00
-//     return (0);
-// }

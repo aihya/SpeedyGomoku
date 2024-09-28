@@ -97,9 +97,9 @@ class Gomoku
         {
             ILLEGAL_SCORE          = -1,
             WIN_SCORE              = INT64_MAX,
-            FIVE_SCORE             = 10100000,
-            FIVE_BLOCK_SCORE       = 10000000,
-            OPEN_FOUR_SCORE        = 1000000,
+            FIVE_SCORE             = 1010000,
+            FIVE_BLOCK_SCORE       = 1000000,
+            OPEN_FOUR_SCORE        = 100000,
             CAPTURE_SCORE          = 20000,
             FOUR_SCORE             = 10000,
             OPEN_THREE_SCORE       = 10000,
@@ -367,7 +367,6 @@ class Gomoku
         void                    start_game();
         int64_t                 evaluate_board(t_board &board, t_piece player_color, t_capture_count capture_count);
         void                    print_board(t_board &board, t_piece current_piece);
-        // t_coord                 iterative_depth_search(t_moveset& moveset, t_board &board, uint8_t depth, t_prunner prunner, t_capture_count count, t_piece piece);
         t_coord                 human_move(t_player& player, t_player& opponent, t_board & board);
         t_coord                 ai_move(t_player& player, t_player& opponent, t_board & board);
         t_moveset               generate_rule_moveset(t_piece piece, t_board &board);
